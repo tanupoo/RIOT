@@ -31,8 +31,9 @@
 #include <auto_init.h>
 #endif
 
-volatile tcb_t *sched_threads[MAXTHREADS];
-volatile tcb_t *active_thread;
+#define ENABLE_DEBUG
+#include <debug.h>
+
 volatile int lpm_prevent_sleep = 0;
 
 extern int main(void);
