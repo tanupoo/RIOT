@@ -31,6 +31,9 @@
 #ifdef MODULE_UART0
 #include "board_internal.h"
 #endif
+#ifdef MODULE_CC110X_NG
+#include "tap.h"
+#endif
 
 static enum lpm_mode native_lpm;
 
@@ -43,15 +46,35 @@ void lpm_init(void)
 
 void _native_lpm_sleep()
 {
+#if (defined(MODULE_UART0) || defined(MODULE_CC110X_NG))
+    int retval, nfds, nfd;
+
+    /* set fds */
+    nfds = 0;
+    FD_ZERO(&_native_rfds);
 #ifdef MODULE_UART0
-    int retval;
-    retval = select(1, &_native_uart_rfds, NULL, NULL, NULL);
+    nfds = _native_set_uart_fds();
+#endif
+#ifdef MODULE_CC110X_NG
+    nfd = _native_set_cc110xng_fds();
+    if (nfd > nfds) {
+        nfds = nfd;
+    }
+#endif
+    nfds++;
+
+    retval = select(nfds, &_native_rfds, NULL, NULL, NULL);
     DEBUG("_native_lpm_sleep: retval: %i\n", retval);
 
     if (retval != -1) {
         /* uart ready, handle input */
         /* TODO: switch to ISR context */
+#ifdef MODULE_CC110X_NG
+        _native_handle_cc110xng_input();
+#endif
+#ifdef MODULE_UART0
         _native_handle_uart0_input();
+#endif
     }
     else if (errno != EINTR) {
         /* select failed for reason other than signal */
