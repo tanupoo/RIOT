@@ -21,7 +21,11 @@
 
 static int _native_cc110x_enabled;
 
-/* arch */
+void _native_handle_cc110xng_input(void)
+{
+    int nread;
+    char buf[BUFFER_LENGTH];
+    union eth_frame *f;
 
 /**
  * writes to SSP0 data register and reads from it once it is ready
