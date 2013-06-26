@@ -42,5 +42,6 @@
 /* for cc110x_ng */
 #define RX_BUF_SIZE (10)
 #define TRANSCEIVER_BUFFER_SIZE (3)
+#define NATIVE_ETH_PROTO 0x1234
 
 #endif /* CPUCONF_H_ */
