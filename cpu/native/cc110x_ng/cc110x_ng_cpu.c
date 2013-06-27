@@ -97,6 +97,9 @@ int send_buf(void)
     return 0;
 }
 
+
+/* cc1100 simulation */
+
 uint8_t do_strobe(void)
 {
     switch (addr) {
@@ -163,33 +166,37 @@ uint8_t parse_header(uint8_t c)
     addr = c & 0x3F;
     uint8_t mode = c & 0xC0;
 
-    /* set access mode */
+    /* set access mode, set status bute (c) */
     switch (mode) {
         case CC1100_READ_BURST:
             printf("parse_header: CC1100_READ_BURST");
             _native_cc110x_state = STATE_READ_B;
+            c = rx_bc - rx_bi;
             break;
         case CC1100_WRITE_BURST:
             printf("cc110x_txrx: CC1100_WRITE_BURST");
             _native_cc110x_state = STATE_WRITE_B;
+            c = 0x0F - tx_bc;
             break;
         case CC1100_READ_SINGLE:
             printf("cc110x_txrx: CC1100_READ_SINGLE");
             _native_cc110x_state = STATE_READ_S;
+            c = rx_bc - rx_bi;
             break;
         default:
             printf("cc110x_txrx: CC1100_WRITE_SINGLE");
             _native_cc110x_state = STATE_WRITE_S;
+            c = 0x0F - tx_bc;
     }
 
     /* parse address type */
     if (addr <= 0x2E) {
         printf(" configuration register");
     }
-    else if ((0x30 <= addr) && (addr <= 0x3D)) {
+    else if ((addr >= 0x30) && (addr <= 0x3D)) {
         if ((_native_cc110x_state == STATE_WRITE_B) || (_native_cc110x_state == STATE_WRITE_S)) {
             printf(" strobe command");
-            return do_strobe();
+            do_strobe();
         }
         else {
             printf(" status register");
@@ -209,6 +216,7 @@ uint8_t parse_header(uint8_t c)
     else {
         errx(EXIT_FAILURE, "parse_header: unhandled addr: 0x%02X", addr);
     }
+    printf("\n");
 
     return c;
 }
@@ -262,24 +270,64 @@ uint8_t read_burst(uint8_t c)
 uint8_t write_single(uint8_t c)
 {
     printf("write_single\n");
+
+    if (addr <= 0x2E) {
+        printf("write configuration register\n");
+    }
+    else if ((addr >= 0x30) && (addr <= 0x3D)) {
+        printf("issue strobe command\n");
+        do_strobe();
+    }
+    else if (addr == 0x3E) {
+        printf("write patable\n");
+    }
+    else if (addr == 0x3F) {
+        printf("write TX\n");
+    }
+    else {
+        errx(EXIT_FAILURE, "write_single: unhandled addr: 0x%02X", addr);
+    }
+
     return 0;
 }
 
 uint8_t write_burst(uint8_t c)
 {
     printf("write_burst\n");
-    if (tx_bc == BUFFER_LENGTH) {
-        errx(EXIT_FAILURE, "write_burst: buffer too small");
+
+    if (addr <= 0x2E) {
+        printf("write configuration register\n");
+        addr++;
     }
-    tx_buffer[tx_bi++] = c;
-    tx_bc++;
+    else if ((addr >= 0x30) && (addr <= 0x3D)) {
+        printf("issue strobe command\n");
+        do_strobe();
+        addr++;
+    }
+    else if (addr == 0x3E) {
+        printf("write patable\n");
+    }
+    else if (addr == 0x3F) {
+        printf("write TX\n");
+        if (tx_bc == BUFFER_LENGTH) {
+            errx(EXIT_FAILURE, "write_burst: buffer too small");
+        }
+        tx_buffer[tx_bi++] = c;
+        tx_bc++;
+    }
+    else {
+        errx(EXIT_FAILURE, "write_single: unhandled addr: 0x%02X", addr);
+    }
+
     return 0;
 }
+
 
 /* arch */
 
 /**
  * writes to SSP0 data register and reads from it once it is ready
+ * TODO: move content to simulator
  */
 uint8_t cc110x_txrx(uint8_t c)
 {
@@ -318,7 +366,6 @@ void cc110x_gdo0_enable(void)
     native_cc110x_gd0_enabled = 1;
     return;
 }
-
 
 /**
  * enables GDO0 interrupt
