@@ -18,6 +18,7 @@ extern int native_cc110x_gd2_enabled;
 extern uint8_t addr;
 extern uint8_t _native_cc110x_state;
 
+uint8_t do_txrx(uint8_t c);
 void do_sres(void);
 uint8_t do_strobe(void);
 uint8_t parse_header(uint8_t c);
