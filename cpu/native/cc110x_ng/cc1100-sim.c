@@ -273,6 +273,7 @@ uint8_t parse_header(uint8_t c)
     else if ((addr >= 0x30) && (addr <= 0x3D)) {
         if ((_native_cc110x_state == STATE_WRITE_B) || (_native_cc110x_state == STATE_WRITE_S)) {
             printf(" strobe command");
+            /* strobe commands get executed directly */
             do_strobe();
         }
         else {
@@ -324,7 +325,16 @@ uint8_t read_single(uint8_t c)
     }
     else if (addr == 0x3F) {
         printf("read rx fifo\n");
-        if (rx_fifo_idx == status_registers[CC1100_RXBYTES - 0x30]) {
+        int off = (status_registers[CC1100_RXBYTES - 0x30] - rx_fifo_idx);
+        switch (off) {
+            case 0:
+                /* CRC OK */
+                return CRC_OK;
+            case -1:
+                /* CRC OK */
+                return 0xFF;
+        }
+        if (rx_fifo_idx >= status_registers[CC1100_RXBYTES - 0x30]) {
             warnx("read_single: buffer empty");
         }
         return rx_fifo[rx_fifo_idx++];
@@ -356,7 +366,16 @@ uint8_t read_burst(uint8_t c)
     }
     else if (addr == 0x3F) {
         printf("read rx fifo\n");
-        if (rx_fifo_idx == status_registers[CC1100_RXBYTES - 0x30]) {
+        int off = (status_registers[CC1100_RXBYTES - 0x30] - rx_fifo_idx);
+        switch (off) {
+            case 0:
+                /* CRC OK */
+                return CRC_OK;
+            case -1:
+                /* CRC OK */
+                return 0xFF;
+        }
+        if (rx_fifo_idx >= status_registers[CC1100_RXBYTES - 0x30]) {
             warnx("read_burst: buffer empty");
         }
         return rx_fifo[rx_fifo_idx++];
