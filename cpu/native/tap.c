@@ -112,6 +112,19 @@ int send_buf(void)
     return 0;
 }
 
+int send_buf(void)
+{
+    uint8_t buf[BUFFER_LENGTH];
+    int nsent;
+
+    _native_marshall_ethernet(buf, tx_fifo, status_registers[CC1100_TXBYTES - 0x30]);
+    if ((nsent = write(_native_tap_fd, buf, status_registers[CC1100_TXBYTES - 0x30] + ETH_HLEN)) == -1) {;
+        warn("write");
+        return -1;
+    }
+    return 0;
+}
+
 int tap_init(char *name)
 {
     int _native_tap_ip_fd;
