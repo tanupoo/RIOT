@@ -3,6 +3,8 @@
 
 #include <net/ethernet.h>
 
+#define BUFFER_LENGTH 2048
+
 /**
  * create and/or open tap device "name"
  *
@@ -11,7 +13,8 @@
  * otherwise a device named "name" is created
  */
 int tap_init(char *name);
-void _native_marshall_ethernet(char *framebuf, char *data, int data_len);
+int send_buf(void);
+void _native_marshall_ethernet(uint8_t *framebuf, uint8_t *data, int data_len);
 void _native_handle_cc110xng_input(void);
 
 extern int _native_tap_fd;
