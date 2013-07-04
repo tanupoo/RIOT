@@ -58,7 +58,14 @@ void _native_lpm_sleep()
     if (retval != -1) {
         /* uart ready, handle input */
         /* TODO: switch to ISR context */
+#ifdef MODULE_CC110X_NG
+        _native_in_isr = 1;
+        _native_handle_cc110xng_input();
+        _native_in_isr = 0;
+#endif
+#ifdef MODULE_UART0
         _native_handle_uart0_input();
+#endif
     }
     else if (errno != EINTR) {
         /* select failed for reason other than signal */
