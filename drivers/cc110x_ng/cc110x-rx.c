@@ -139,7 +139,6 @@ static uint8_t receive_packet_variable(uint8_t *rxBuffer, uint8_t length)
         /* Read length byte (first byte in RX FIFO) */
         cc110x_read_fifo((char *) &packetLength, 1);
 
-        printf("receive_packet_variable: got packetLength: %d\n", packetLength);
         /* Read data from RX FIFO and store in rxBuffer */
         if (packetLength <= length) {
             /* Put length byte at first position in RX Buffer */
@@ -159,7 +158,6 @@ static uint8_t receive_packet_variable(uint8_t *rxBuffer, uint8_t length)
             rflags.CRC_STATE = (status[I_LQI] & CRC_OK) >> 7;
 
             if (!rflags.CRC_STATE) {
-                printf("\n\n\t\tCRC_STATE is bonkers!!!\n\n");
                 cc110x_statistic.packets_in_crc_fail++;
             }
 
