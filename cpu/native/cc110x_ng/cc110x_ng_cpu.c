@@ -42,7 +42,7 @@ void _native_handle_cc110xng_input(void)
             memcpy(rx_fifo, buf+ETH_HLEN, nread);
             status_registers[CC1100_RXBYTES - 0x30] = nread;
             rx_fifo_idx = 0;
-            printf("_native_handle_cc110xng_input: got %d bytes payload\n", nread);
+            DEBUG("_native_handle_cc110xng_input: got %d bytes payload\n", nread);
             cc110x_gdo2_irq();
         }
         else {
@@ -177,7 +177,7 @@ void cc110x_spi_cs(void)
 }
 void cc110x_spi_select(void)
 {
-    printf("___cc110x_spi_select\n");
+    DEBUG("___cc110x_spi_select\n");
     _native_cc110x_state = STATE_SEL;
     return;
 }

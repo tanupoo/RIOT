@@ -3,6 +3,8 @@
 #include <err.h>
 #include <inttypes.h>
 
+#include "debug.h"
+
 #include "cc110x-internal.h" /* CC1100_READ_BURST etc. */
 #include "tap.h"
 #include "cc1100sim.h"
@@ -173,25 +175,25 @@ void do_sres(void)
 
 uint8_t do_strobe(void)
 {
-    printf("issue strobe command\n");
+    DEBUG("issue strobe command\n");
     switch (addr) {
         case CC1100_SRES:
             do_sres();
             break;
         case CC1100_SFSTXON:
-            warnx("do_strobe: not implemented: CC1100_SFSTXON");
+            //warnx("do_strobe: not implemented: CC1100_SFSTXON");
             break;
         case CC1100_SXOFF:
-            warnx("do_strobe: not implemented: CC1100_SXOFF");
+            //warnx("do_strobe: not implemented: CC1100_SXOFF");
             break;
         case CC1100_SCAL:
-            warnx("do_strobe: not implemented: CC1100_SCAL");
+            //warnx("do_strobe: not implemented: CC1100_SCAL");
             break;
         case CC1100_SRX:
-            warnx("do_strobe: not implemented: CC1100_SRX");
+            //warnx("do_strobe: not implemented: CC1100_SRX");
             break;
         case CC1100_STX:
-            warnx("do_strobe: not properly implemented: CC1100_STX");
+            //warnx("do_strobe: not properly implemented: CC1100_STX");
             if (((status_registers[CC1100_TXBYTES - 0x30] & 0x7F) > 0) && (send_buf() == -1)) {
                 native_cc110x_gd2 = 1;
             }
@@ -200,16 +202,16 @@ uint8_t do_strobe(void)
             }
             break;
         case CC1100_SIDLE:
-            warnx("do_strobe: not implemented: CC1100_SIDLE ");
+            //warnx("do_strobe: not implemented: CC1100_SIDLE ");
             break;
         case CC1100_SAFC:
-            warnx("do_strobe: not implemented: CC1100_SAFC");
+            //warnx("do_strobe: not implemented: CC1100_SAFC");
             break;
         case CC1100_SWOR:
-            warnx("do_strobe: not implemented: CC1100_SWOR");
+            //warnx("do_strobe: not implemented: CC1100_SWOR");
             break;
         case CC1100_SPWD:
-            warnx("do_strobe: not implemented: CC1100_SPWD");
+            //warnx("do_strobe: not implemented: CC1100_SPWD");
             break;
         case CC1100_SFRX:
             status_registers[CC1100_RXBYTES - 0x30] = 0x00;
@@ -220,10 +222,10 @@ uint8_t do_strobe(void)
             tx_fifo_idx = 0x00;
             break;
         case CC1100_SWORRST:
-            warnx("do_strobe: not implemented: CC1100_SWORRST");
+            //warnx("do_strobe: not implemented: CC1100_SWORRST");
             break;
         case CC1100_SNOP:
-            warnx("do_strobe: not implemented: CC1100_SNOP");
+            //warnx("do_strobe: not implemented: CC1100_SNOP");
             break;
         default:
             errx(EXIT_FAILURE, "do_strobe: internal error");
@@ -233,7 +235,7 @@ uint8_t do_strobe(void)
 
 uint8_t parse_header(uint8_t c)
 {
-    printf("parse_header(0x%02X): ", c);
+    DEBUG("parse_header(0x%02X): ", c);
 
     addr = c & 0x3F; /* bits [5..0] */
     uint8_t mode = c & 0xC0; /* bits [76]*/
@@ -243,88 +245,88 @@ uint8_t parse_header(uint8_t c)
         case CC1100_READ_BURST:
             /* status  registers can only be read single */
             if ((addr >= 0x30) && (addr <= 0x3D)) {
-                printf(" CC1100_READ_SINGLE");
+                DEBUG(" CC1100_READ_SINGLE");
                 _native_cc110x_state = STATE_READ_S;
             }
             else {
-                printf(" CC1100_READ_BURST");
+                DEBUG(" CC1100_READ_BURST");
                 _native_cc110x_state = STATE_READ_B;
             }
             c = status_registers[CC1100_RXBYTES - 0x30] - rx_fifo_idx;
             break;
         case CC1100_WRITE_BURST:
-            printf(" CC1100_WRITE_BURST");
+            DEBUG(" CC1100_WRITE_BURST");
             _native_cc110x_state = STATE_WRITE_B;
             c = 0x0F - status_registers[CC1100_TXBYTES - 0x30];
             break;
         case CC1100_READ_SINGLE:
-            printf(" CC1100_READ_SINGLE");
+            DEBUG(" CC1100_READ_SINGLE");
             _native_cc110x_state = STATE_READ_S;
             c = status_registers[CC1100_RXBYTES - 0x30] - rx_fifo_idx;
             break;
         default:
-            printf(" CC1100_WRITE_SINGLE");
+            DEBUG(" CC1100_WRITE_SINGLE");
             _native_cc110x_state = STATE_WRITE_S;
             c = 0x0F - status_registers[CC1100_TXBYTES - 0x30];
     }
     if (addr <= 0x2E) {
-        printf(" configuration register");
+        DEBUG(" configuration register");
     }
     else if ((addr >= 0x30) && (addr <= 0x3D)) {
         if ((_native_cc110x_state == STATE_WRITE_B) || (_native_cc110x_state == STATE_WRITE_S)) {
-            printf(" strobe command");
+            DEBUG(" strobe command");
             /* strobe commands get executed directly */
             do_strobe();
         }
         else {
-            printf(" status register");
+            DEBUG(" status register");
         }
     }
     else if (addr == 0x3E) {
-        printf(" patable");
+        DEBUG(" patable");
     }
     else if (addr == 0x3F) {
         if ((_native_cc110x_state == STATE_WRITE_B) || (_native_cc110x_state == STATE_WRITE_S)) {
-            printf(" TX");
+            DEBUG(" TX");
         }
         else {
-            printf(" RX");
+            DEBUG(" RX");
         }
     }
     else {
         errx(EXIT_FAILURE, "parse_header: unhandled addr: 0x%02X", addr);
     }
-    printf("==\n");
+    DEBUG("==\n");
 
     return c;
 }
 
 uint8_t read_single(uint8_t c)
 {
-    printf("read_single\n");
+    DEBUG("read_single\n");
     if (addr <= 0x2E) {
-        printf("read configuration_registers\n");
+        DEBUG("read configuration_registers\n");
         return configuration_registers[addr++];
     }
     else if ((addr >= 0x30) && (addr <= 0x3D)) {
-        printf("read status_registers\n");
+        DEBUG("read status_registers\n");
         if (addr == 0x3B) {
-            printf("\n\n\t\treturning RXBYTES: %d\n\n", status_registers[(addr) - 0x30]);
+            DEBUG("\n\n\t\treturning RXBYTES: %d\n\n", status_registers[(addr) - 0x30]);
         }
         else {
-            printf("\n\n\t\treturning: %d\n\n", status_registers[(addr) - 0x30]);
+            DEBUG("\n\n\t\treturning: %d\n\n", status_registers[(addr) - 0x30]);
         }
         return status_registers[(addr++) - 0x30];
     }
     else if (addr == 0x3E) {
-        printf("read patable\n");
+        DEBUG("read patable\n");
         if (patable_idx > 7) {
             patable_idx = 0;
         }
         return patable[patable_idx++];
     }
     else if (addr == 0x3F) {
-        printf("read rx fifo\n");
+        DEBUG("read rx fifo\n");
         int off = (status_registers[CC1100_RXBYTES - 0x30] - rx_fifo_idx);
         switch (off) {
             case 0:
@@ -335,7 +337,7 @@ uint8_t read_single(uint8_t c)
                 return 0xFF;
         }
         if (rx_fifo_idx >= status_registers[CC1100_RXBYTES - 0x30]) {
-            warnx("read_single: buffer empty");
+            //warnx("read_single: buffer empty");
         }
         return rx_fifo[rx_fifo_idx++];
     }
@@ -347,25 +349,25 @@ uint8_t read_single(uint8_t c)
 
 uint8_t read_burst(uint8_t c)
 {
-    printf(" read_burst: ");
+    DEBUG(" read_burst: ");
 
     if (addr <= 0x2E) {
-        printf("read configuration_registers\n");
+        DEBUG("read configuration_registers\n");
         return configuration_registers[addr++];
     }
     else if ((addr >= 0x30) && (addr <= 0x3D)) {
-        printf("read status_registers\n");
+        DEBUG("read status_registers\n");
         return status_registers[(addr++) - 0x30];
     }
     else if (addr == 0x3E) {
-        printf("read patable\n");
+        DEBUG("read patable\n");
         if (patable_idx > 7) {
             patable_idx = 0;
         }
         return patable[patable_idx++];
     }
     else if (addr == 0x3F) {
-        printf("read rx fifo\n");
+        DEBUG("read rx fifo\n");
         int off = (status_registers[CC1100_RXBYTES - 0x30] - rx_fifo_idx);
         switch (off) {
             case 0:
@@ -376,7 +378,7 @@ uint8_t read_burst(uint8_t c)
                 return 0xFF;
         }
         if (rx_fifo_idx >= status_registers[CC1100_RXBYTES - 0x30]) {
-            warnx("read_burst: buffer empty");
+            //warnx("read_burst: buffer empty");
         }
         return rx_fifo[rx_fifo_idx++];
     }
@@ -387,18 +389,18 @@ uint8_t read_burst(uint8_t c)
 
 void do_write_conf(uint8_t c)
 {
-    printf("write configuration register\n");
+    DEBUG("write configuration register\n");
     configuration_registers[addr] = c;
 }
 
 void do_write_patable(uint8_t c)
 {
-    printf("write patable\n");
+    DEBUG("write patable\n");
     patable[patable_idx] = c;
 }
 void do_write_tx(uint8_t c)
 {
-    printf("write TX\n");
+    DEBUG("write TX\n");
     if (status_registers[CC1100_TXBYTES - 0x30] == BUFFER_LENGTH) {
         errx(EXIT_FAILURE, "do_write_tx: buffer too small");
     }
@@ -408,7 +410,7 @@ void do_write_tx(uint8_t c)
 
 uint8_t write_single(uint8_t c)
 {
-    printf("write_single\n");
+    DEBUG("write_single\n");
 
     if (addr <= 0x2E) {
         do_write_conf(c);
@@ -431,7 +433,7 @@ uint8_t write_single(uint8_t c)
 
 uint8_t write_burst(uint8_t c)
 {
-    printf("write_burst\n");
+    DEBUG("write_burst\n");
 
     if (addr <= 0x2E) {
         do_write_conf(c);
@@ -442,7 +444,7 @@ uint8_t write_burst(uint8_t c)
         addr++;
     }
     else if (addr == 0x3E) {
-        printf("write patable\n");
+        DEBUG("write patable\n");
     }
     else if (addr == 0x3F) {
         do_write_tx(c);
@@ -475,7 +477,7 @@ uint8_t do_txrx(uint8_t c)
             _native_cc110x_state = STATE_SEL;
             break;
         case STATE_NULL:
-            warnx("received command(?) in NULL state");
+            //warnx("received command(?) in NULL state");
             c = 0x00;
         default:
             errx(EXIT_FAILURE, "funny cc110x_ng state");
