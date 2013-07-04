@@ -26,7 +26,7 @@ int send_buf(void)
 
     _native_marshall_ethernet(buf, tx_fifo, status_registers[CC1100_TXBYTES - 0x30]);
     if ((nsent = write(_native_tap_fd, buf, status_registers[CC1100_TXBYTES - 0x30] + ETH_HLEN)) == -1) {;
-        warn("write");
+        //warn("write");
         return -1;
     }
     return 0;
@@ -46,9 +46,9 @@ int tap_init(char *name)
     strncpy(ifr.ifr_name, name, IFNAMSIZ);
 
     if (ioctl(_native_tap_fd, TUNSETIFF, (void *)&ifr) == -1) {
-        warn("ioctl");
+        //warn("ioctl");
         if (close(_native_tap_fd) == -1) {
-            warn("close");
+            //warn("close");
         }
         exit(EXIT_FAILURE);
     }
@@ -61,9 +61,9 @@ int tap_init(char *name)
     memset (&ifr, 0, sizeof (ifr));
     snprintf (ifr.ifr_name, sizeof (ifr.ifr_name), "%s", name);
     if (ioctl(_native_tap_fd, SIOCGIFHWADDR, &ifr) == -1) {
-        warn("ioctl");
+        //warn("ioctl");
         if (close(_native_tap_fd) == -1) {
-            warn("close");
+            //warn("close");
         }
         exit(EXIT_FAILURE);
     }
@@ -103,7 +103,7 @@ int main(int argc, char *argv[])
     }
     fd = tap_init(argv[1]);
 
-    printf("trying to write to fd: %i\n", _native_tap_fd);
+    //printf("trying to write to fd: %i\n", _native_tap_fd);
     char *payld = "abcdefg";
     int data_len = strlen(payld);
     _native_marshall_ethernet(buffer, payld, data_len);
@@ -111,22 +111,22 @@ int main(int argc, char *argv[])
         err(EXIT_FAILURE, "write");
     }
 
-    printf("reading\n");
+    //printf("reading\n");
     int nread;
     while (1) {
         /* Note that "buffer" should be at least the MTU size of the
          * interface, eg 1500 bytes */
         nread = read(fd,buffer,sizeof(buffer));
         if(nread < 0) {
-            warn("Reading from interface");
+            //warn("Reading from interface");
             if (close(fd) == -1) {
-                warn("close");
+                //warn("close");
             }
             exit(EXIT_FAILURE);
         }
 
         /* Do whatever with the data */
-        printf("Read %d bytes\n", nread);
+        //printf("Read %d bytes\n", nread);
     }
 
     return EXIT_SUCCESS;
