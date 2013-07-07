@@ -1,0 +1,29 @@
+If you compile RIOT for the native cpu and include the cc110x_ng
+module, you need to specify a network interface like this:
+./bin/default-native.elf tap0
+
+
+TAP NETWORKING
+==============
+
+There is a shellscript in RIOT/cpu/native called tapsetup.sh which you
+can use to create a network of tap interfaces.
+
+
+Linux
+=====
+
+Commands to create / activate / delete Interfaces:
+sudo ip tuntap add dev tap0 mode tap user YOURUSERNAME
+sudo ip link set tap0 up
+sudo ip tuntap del dev tap0 mode tap
+
+
+OSX
+===
+
+For tun/tap networking in OSX you will need:
+http://tuntaposx.sourceforge.net/
+
+Once you installed that, you can follow the steps as outlined in the
+"Linux" section.
