@@ -32,7 +32,8 @@ __attribute__((constructor)) static void startup(int argc, char **argv)
 
 #ifdef MODULE_CC110X_NG
     if (argc < 2) {
-        errx(EXIT_FAILURE, "not enough arguments");
+        printf("usage: %s <tap interface>\n", argv[0]);
+        exit(EXIT_FAILURE);
     }
     tap_init(argv[1]);
 #endif
