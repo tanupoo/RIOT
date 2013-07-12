@@ -22,10 +22,10 @@ extern char _native_tap_mac[ETHER_ADDR_LEN];
 
 union eth_frame {
     struct {
-        struct ethhdr header;
-        char data[ETH_DATA_LEN];
+        struct ether_header header;
+        char data[ETHERMTU];
     } field;
-    unsigned char buffer[ETH_FRAME_LEN];
+    unsigned char buffer[ETHER_MAX_LEN];
 };
 
 #endif /* _TAP_H */
