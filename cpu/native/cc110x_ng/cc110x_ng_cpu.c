@@ -49,7 +49,7 @@ void _native_handle_cc110xng_input(void)
                 memcpy(rx_fifo, buf+ETHER_HDR_LEN+1, nread);
                 status_registers[CC1100_RXBYTES - 0x30] = nread;
                 rx_fifo_idx = 0;
-                printf("_native_handle_cc110xng_input: got %d bytes payload\n", nread);
+                DEBUG("_native_handle_cc110xng_input: got %d bytes payload\n", nread);
                 cc110x_gdo2_irq();
             }
         }

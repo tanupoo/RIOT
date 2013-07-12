@@ -57,11 +57,13 @@
 #define MASK_CHIP_RDYn              0x80
 #define MASK_FIFO_BYTES_AVAILABLE   0x0F
 
+#if 0
+static uint8_t internal_state; /* according to table 17 */
 static uint8_t _native_cc1100_spi; /* the pins */
 /* one byte goes in, one byte goes out */
 static uint8_t _native_cc1100_serial_io;
+#endif
 
-static uint8_t internal_state; /* according to table 17 */
 uint8_t addr; /* as sent in header */
 uint8_t _native_cc110x_state;
 
@@ -350,6 +352,9 @@ uint8_t read_single(uint8_t c)
 uint8_t read_burst(uint8_t c)
 {
     DEBUG(" read_burst: ");
+    if (c != 0xFF) {
+        warnx("read_burst: unexpected value");
+    }
 
     if (addr <= 0x2E) {
         DEBUG("read configuration_registers\n");
