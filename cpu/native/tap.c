@@ -20,6 +20,8 @@
 #include <linux/if_ether.h>
 #endif
 
+#include "debug.h"
+
 #include "cpu-conf.h"
 #include "tap.h"
 #include "cc1100sim.h"
@@ -39,9 +41,9 @@ int send_buf(void)
     to_send += 1;
 
     if ((ETHER_HDR_LEN + to_send) < ETHERMIN) {
-        printf("padding data! (%d ->", to_send);
+        DEBUG("padding data! (%d ->", to_send);
         to_send = ETHERMIN - ETHER_HDR_LEN;
-        printf("%d)\n", to_send);
+        DEBUG("%d)\n", to_send);
     }
 
     if ((nsent = write(_native_tap_fd, buf, to_send + ETHER_HDR_LEN)) == -1) {;
