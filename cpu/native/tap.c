@@ -116,9 +116,19 @@ int send_buf(void)
 {
     uint8_t buf[BUFFER_LENGTH];
     int nsent;
+    uint8_t to_send;
 
-    _native_marshall_ethernet(buf, tx_fifo, status_registers[CC1100_TXBYTES - 0x30]);
-    if ((nsent = write(_native_tap_fd, buf, status_registers[CC1100_TXBYTES - 0x30] + ETH_HLEN)) == -1) {;
+    to_send = status_registers[CC1100_TXBYTES - 0x30];
+    _native_marshall_ethernet(buf, tx_fifo, to_send);
+    to_send += 1;
+
+    if ((ETHER_HDR_LEN + to_send) < ETHERMIN) {
+        printf("padding data! (%d ->", to_send);
+        to_send = ETHERMIN - ETHER_HDR_LEN;
+        printf("%d)\n", to_send);
+    }
+
+    if ((nsent = write(_native_tap_fd, buf, to_send + ETHER_HDR_LEN)) == -1) {;
         warn("write");
         return -1;
     }
