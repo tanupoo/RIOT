@@ -28,7 +28,7 @@ if [ "${COMMAND}" = 'create' ]; then
     sudo -s sh -c "echo 1  > /proc/sys/net/ipv6/conf/${BRNAME}/disable_ipv6" || exit 1
     sudo ip link set ${BRNAME} up || exit 1
 
-    for N in $(seq "${COUNT}"); do
+    for N in $(seq 0 "$((COUNT - 1))"); do
         sudo ip tuntap add dev tap${N} mode tap user ${USER} || exit 1
         sudo -s sh -c "echo 1 > /proc/sys/net/ipv6/conf/tap${N}/disable_ipv6" || exit 1
         sudo brctl addif ${BRNAME} tap${N} || exit 1
