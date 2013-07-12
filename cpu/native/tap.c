@@ -125,7 +125,7 @@ int send_buf(void)
     if ((ETHER_HDR_LEN + to_send) < ETHERMIN) {
         printf("padding data! (%d ->", to_send);
         to_send = ETHERMIN - ETHER_HDR_LEN;
-        printf("%d)\n", to_send);
+        DEBUG("%d)\n", to_send);
     }
 
     if ((nsent = write(_native_tap_fd, buf, to_send + ETHER_HDR_LEN)) == -1) {;
