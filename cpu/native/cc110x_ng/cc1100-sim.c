@@ -92,6 +92,7 @@ int native_cc110x_gd2_enabled;
 /* network layer handlers for cc1100 events: */
 void *set_channel_callback;
 void *set_power_callback;
+void *_native_cc1100_callback[255];
 
 char cc1100_reset_configuration_regs[] = {
     0x29, /* IOCFG2 */
@@ -344,7 +345,7 @@ uint8_t read_single(uint8_t c)
         return rx_fifo[rx_fifo_idx++];
     }
     else {
-        errx(EXIT_FAILURE, "write_single: unhandled addr: 0x%02X", addr);
+        errx(EXIT_FAILURE, "read_single: unhandled addr: 0x%02X", addr);
     }
     return c;
 }
@@ -488,6 +489,11 @@ uint8_t do_txrx(uint8_t c)
             errx(EXIT_FAILURE, "funny cc110x_ng state");
     }
     return c;
+}
+
+void _native_cc1100_register_callback(int event, void *cb)
+{
+    _native_cc1100_callback[event] = cb;
 }
 
 #if 0 /* future ahead */
@@ -663,25 +669,6 @@ void step(void)
 void _native_cc1100_receive(uint8_t *buf, int len)
 {
     ;
-}
-
-/**
- * TODO: implement proper events
- */
-void _native_cc1100_register_callback(int event, void *cb)
-{
-    switch (event) {
-        case (CC1100_EVENT_SET_CHANNEL):
-            set_channel_callback = cb;
-            break;
-
-        case (CC1100_EVENT_SET_POWER):
-            set_power_callback = cb;
-            break;
-
-        default:
-            errx(EXIT_FAILURE, "_native_cc1100_register_callback: unknown event type: %d", event);
-    }
 }
 
 #endif
