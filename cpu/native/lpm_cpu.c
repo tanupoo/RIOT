@@ -71,7 +71,7 @@ void _native_lpm_sleep()
         /* TODO: switch to ISR context */
 #ifdef MODULE_CC110X_NG
         _native_in_isr = 1;
-        _native_handle_cc110xng_input();
+        //_native_handle_cc110xng_input();
         _native_in_isr = 0;
 #endif
 #ifdef MODULE_UART0

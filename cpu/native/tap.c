@@ -22,6 +22,7 @@
 
 #include "debug.h"
 
+#include "cpu.h"
 #include "cpu-conf.h"
 #include "tap.h"
 #include "cc1100sim.h"
@@ -29,6 +30,50 @@
 
 int _native_tap_fd;
 char _native_tap_mac[ETHER_ADDR_LEN];
+
+
+void _native_handle_cc110xng_input(void)
+{
+    int nread;
+    char buf[BUFFER_LENGTH];
+    union eth_frame *f;
+
+    printf("_native_handle_cc110xng_input\n");
+
+    if (!FD_ISSET(_native_tap_fd, &_native_rfds)) {
+        DEBUG("_native_handle_cc110xng_input - nothing to do\n");
+        return;
+    }
+    nread = read(_native_tap_fd, buf, BUFFER_LENGTH);
+    DEBUG("_native_handle_cc110xng_input - read %d bytes\n", nread);
+    if (nread > 0) {
+        f = (union eth_frame*)&buf;
+        if (ntohs(f->field.header.ether_type) == NATIVE_ETH_PROTO) {
+            nread = nread - ETHER_HDR_LEN;
+            if ((nread - 1) <= 0) {
+                DEBUG("_native_handle_cc110xng_input: no payload");
+            }
+            else {
+                nread = buf[ETHER_HDR_LEN];
+                memcpy(rx_fifo, buf+ETHER_HDR_LEN+1, nread);
+                status_registers[CC1100_RXBYTES - 0x30] = nread;
+                rx_fifo_idx = 0;
+                DEBUG("_native_handle_cc110xng_input: got %d bytes payload\n", nread);
+                cc110x_gdo2_irq();
+            }
+        }
+        else {
+            DEBUG("ignoring non-native frame\n");
+        }
+    }
+    else if (nread == -1) {
+        err(EXIT_FAILURE, "read");
+    }
+    else {
+        errx(EXIT_FAILURE, "internal error in _native_handle_cc110xng_input");
+    }
+    cpu_switch_context_exit();
+}
 
 int send_buf(void)
 {
@@ -51,6 +96,13 @@ int send_buf(void)
         return -1;
     }
     return 0;
+}
+
+int _native_set_cc110xng_fds(void)
+{
+    DEBUG("_native_set_cc110xng_fds");
+    FD_SET(_native_tap_fd, &_native_rfds);
+    return _native_tap_fd;
 }
 
 int tap_init(char *name)
@@ -111,6 +163,20 @@ int tap_init(char *name)
     }
     memcpy(_native_tap_mac, ifr.ifr_hwaddr.sa_data, ETHER_ADDR_LEN);
 #endif
+
+    /* configure signal handler for fds */
+    register_interrupt(SIGIO, _native_handle_cc110xng_input);
+
+    /* configure fds to send signals on io */
+    if (fcntl(_native_tap_fd, F_SETOWN, getpid()) == -1) {
+        err(1, "_native_init_uart0(): fcntl()");
+    }
+
+    /* set file access mode to nonblocking */
+    if (fcntl(_native_tap_fd, F_SETFL, O_NONBLOCK|O_ASYNC) == -1) {
+        err(1, "_native_init_uart0(): fcntl()");
+    }
+
 
     puts("RIOT native tap initialized.");
     return _native_tap_fd;
