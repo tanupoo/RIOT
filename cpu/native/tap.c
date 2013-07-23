@@ -38,12 +38,14 @@ void _native_handle_cc110xng_input(void)
     char buf[BUFFER_LENGTH];
     union eth_frame *f;
 
-    printf("_native_handle_cc110xng_input\n");
+    DEBUG("_native_handle_cc110xng_input\n");
 
+    /* TODO: check whether this is an input or an output event */
     if (!FD_ISSET(_native_tap_fd, &_native_rfds)) {
         DEBUG("_native_handle_cc110xng_input - nothing to do\n");
         return;
     }
+
     nread = read(_native_tap_fd, buf, BUFFER_LENGTH);
     DEBUG("_native_handle_cc110xng_input - read %d bytes\n", nread);
     if (nread > 0) {
@@ -55,11 +57,7 @@ void _native_handle_cc110xng_input(void)
             }
             else {
                 nread = buf[ETHER_HDR_LEN];
-                memcpy(rx_fifo, buf+ETHER_HDR_LEN+1, nread);
-                status_registers[CC1100_RXBYTES - 0x30] = nread;
-                rx_fifo_idx = 0;
-                DEBUG("_native_handle_cc110xng_input: got %d bytes payload\n", nread);
-                cc110x_gdo2_irq();
+                _native_cc1100_handle_input(buf+ETHER_HDR_LEN+1, nread);
             }
         }
         else {

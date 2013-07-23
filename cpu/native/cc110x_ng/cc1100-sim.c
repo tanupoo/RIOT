@@ -496,6 +496,15 @@ void _native_cc1100_register_callback(int event, void *cb)
     _native_cc1100_callback[event] = cb;
 }
 
+void _native_cc1100_handle_input(char *buf, int size)
+{
+    status_registers[CC1100_RXBYTES - 0x30] = size;
+    rx_fifo_idx = 0;
+    memcpy(rx_fifo, buf, size);
+    DEBUG("_native_cc1100_handle_input: got %d bytes payload\n", size);
+    cc110x_gdo2_irq();
+}
+
 #if 0 /* future ahead */
 
 void step_state_idle(void)
