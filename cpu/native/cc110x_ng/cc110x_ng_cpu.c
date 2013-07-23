@@ -23,57 +23,6 @@ static int _native_cc110x_enabled;
 //static char rx_buffer[BUFFER_LENGTH], tx_buffer[BUFFER_LENGTH];
 //static int rx_bi, rx_bc, tx_bi, tx_bc;
 
-void _native_handle_cc110xng_input(void)
-{
-
-    /* TODO: partially move to tap */
-    int nread;
-    char buf[BUFFER_LENGTH];
-    union eth_frame *f;
-
-    if (!FD_ISSET(_native_tap_fd, &_native_rfds)) {
-        DEBUG("_native_handle_cc110xng_input - nothing to do\n");
-        return;
-    }
-    nread = read(_native_tap_fd, buf, BUFFER_LENGTH);
-    DEBUG("_native_handle_cc110xng_input - read %d bytes\n", nread);
-    if (nread > 0) {
-        f = (union eth_frame*)&buf;
-        if (ntohs(f->field.header.ether_type) == NATIVE_ETH_PROTO) {
-            nread = nread - ETHER_HDR_LEN;
-            if ((nread - 1) <= 0) {
-                DEBUG("_native_handle_cc110xng_input: no payload");
-            }
-            else {
-                nread = buf[ETHER_HDR_LEN];
-                memcpy(rx_fifo, buf+ETHER_HDR_LEN+1, nread);
-                status_registers[CC1100_RXBYTES - 0x30] = nread;
-                rx_fifo_idx = 0;
-                DEBUG("_native_handle_cc110xng_input: got %d bytes payload\n", nread);
-                cc110x_gdo2_irq();
-            }
-        }
-        else {
-            DEBUG("ignoring non-native frame\n");
-        }
-    }
-    else if (nread == -1) {
-        err(EXIT_FAILURE, "read");
-    }
-    else {
-        errx(EXIT_FAILURE, "internal error in _native_handle_cc110xng_input");
-    }
-    cpu_switch_context_exit();
-}
-
-/* TODO: move to tap */
-int _native_set_cc110xng_fds(void)
-{
-    DEBUG("_native_set_cc110xng_fds");
-    FD_SET(_native_tap_fd, &_native_rfds);
-    return _native_tap_fd;
-}
-
 /* arch */
 
 /**
