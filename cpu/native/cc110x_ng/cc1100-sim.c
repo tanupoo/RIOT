@@ -2,9 +2,11 @@
 #include <stdio.h>
 #include <err.h>
 #include <inttypes.h>
+#include <string.h>
 
 #include "debug.h"
 
+#include "cc110x_ng.h"
 #include "cc110x-internal.h" /* CC1100_READ_BURST etc. */
 #include "tap.h"
 #include "cc1100sim.h"
