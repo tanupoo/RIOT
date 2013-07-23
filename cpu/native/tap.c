@@ -90,7 +90,10 @@ void _native_handle_cc110xng_input(void)
     char buf[BUFFER_LENGTH];
     union eth_frame *f;
 
-    printf("_native_handle_cc110xng_input\n");
+    DEBUG("_native_handle_cc110xng_input\n");
+
+    /* TODO: check whether this is an input or an output event
+       TODO: refactor this into general io-signal multiplexer */
 
     if (!FD_ISSET(_native_tap_fd, &_native_rfds)) {
         DEBUG("_native_handle_cc110xng_input - nothing to do\n");
