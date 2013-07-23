@@ -41,10 +41,6 @@ void _native_handle_cc110xng_input(void)
     DEBUG("_native_handle_cc110xng_input\n");
 
     /* TODO: check whether this is an input or an output event */
-    if (!FD_ISSET(_native_tap_fd, &_native_rfds)) {
-        DEBUG("_native_handle_cc110xng_input - nothing to do\n");
-        return;
-    }
 
     nread = read(_native_tap_fd, buf, BUFFER_LENGTH);
     DEBUG("_native_handle_cc110xng_input - read %d bytes\n", nread);

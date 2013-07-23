@@ -15,7 +15,7 @@
 int tap_init(char *name);
 int send_buf(void);
 void _native_marshall_ethernet(uint8_t *framebuf, uint8_t *data, int data_len);
-void _native_handle_cc110xng_input(void);
+void _native_cc1100_handle_input(char *buf, int size);
 
 extern int _native_tap_fd;
 extern char _native_tap_mac[ETHER_ADDR_LEN];
