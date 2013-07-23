@@ -40,7 +40,8 @@ void _native_handle_cc110xng_input(void)
 
     DEBUG("_native_handle_cc110xng_input\n");
 
-    /* TODO: check whether this is an input or an output event */
+    /* TODO: check whether this is an input or an output event
+       TODO: refactor this into general io-signal multiplexer */
 
     nread = read(_native_tap_fd, buf, BUFFER_LENGTH);
     DEBUG("_native_handle_cc110xng_input - read %d bytes\n", nread);
@@ -94,7 +95,7 @@ int send_buf(void)
 
 int _native_set_cc110xng_fds(void)
 {
-    DEBUG("_native_set_cc110xng_fds");
+    DEBUG("_native_set_cc110xng_fds\n");
     FD_SET(_native_tap_fd, &_native_rfds);
     return _native_tap_fd;
 }
@@ -158,6 +159,7 @@ int tap_init(char *name)
     memcpy(_native_tap_mac, ifr.ifr_hwaddr.sa_data, ETHER_ADDR_LEN);
 #endif
 
+/*TODO:  check OSX vvv */
     /* configure signal handler for fds */
     register_interrupt(SIGIO, _native_handle_cc110xng_input);
 
@@ -170,7 +172,7 @@ int tap_init(char *name)
     if (fcntl(_native_tap_fd, F_SETFL, O_NONBLOCK|O_ASYNC) == -1) {
         err(1, "_native_init_uart0(): fcntl()");
     }
-
+/*TODO:  check OSX ^^^ */
 
     puts("RIOT native tap initialized.");
     return _native_tap_fd;
