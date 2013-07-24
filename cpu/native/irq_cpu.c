@@ -160,7 +160,7 @@ unsigned disableIRQ(void)
     native_interrupts_enabled = 0;
 
     // XXX: does this make sense?
-    if ((_native_sigpend > 0) && (_native_in_isr == 1)) {
+    if ((_native_sigpend > 0) && (_native_in_isr == 0)) {
         DEBUG("\n\n\t\treturn from syscall, calling native_irq_handler\n\n");
         _native_in_syscall = 0;
         printf("disableIRQ: calling swapcontext()\n");
@@ -199,7 +199,7 @@ unsigned enableIRQ(void)
 
     //print_sigmasks();
     //native_print_signals();
-    if ((_native_sigpend > 0) && (_native_in_isr == 1)) {
+    if ((_native_sigpend > 0) && (_native_in_isr == 0)) {
         DEBUG("\n\n\t\treturn from syscall, calling native_irq_handler\n\n");
         _native_in_syscall = 0;
         printf("enableIRQ: calling swapcontext()\n");
