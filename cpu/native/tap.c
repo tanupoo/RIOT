@@ -93,13 +93,6 @@ int send_buf(void)
     return 0;
 }
 
-int _native_set_cc110xng_fds(void)
-{
-    DEBUG("_native_set_cc110xng_fds\n");
-    FD_SET(_native_tap_fd, &_native_rfds);
-    return _native_tap_fd;
-}
-
 int tap_init(char *name)
 {
 
