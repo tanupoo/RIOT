@@ -44,9 +44,6 @@ uint8_t def_rtr_count = 0;
 uint8_t rtr_sol_count = 0;
 uint8_t prefix_count = 0;
 
-/* global interface*/
-iface_t iface;
-
 /* datastructures */
 abr_cache_t abr_cache[ABR_CACHE_SIZE];
 nbr_cache_t nbr_cache[NBR_CACHE_SIZE];

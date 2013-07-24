@@ -41,7 +41,6 @@ ipv6_hdr_t *ipv6_buf;
 struct icmpv6_hdr_t *icmp_buf;
 uint8_t ipv6_ext_hdr_len;
 uint8_t *nextheader;
-iface_t iface;
 uint8_t iface_addr_list_count = 0;
 int udp_packet_handler_pid = 0;
 int tcp_packet_handler_pid = 0;
