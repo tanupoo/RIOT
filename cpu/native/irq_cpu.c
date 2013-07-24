@@ -133,6 +133,10 @@ unsigned disableIRQ(void)
     _native_in_syscall = 1;
     DEBUG("disableIRQ()\n");
 
+    if (_native_in_isr == 1) {
+        printf("disableIRQ + _native_in_isr\n");
+    }
+
     if (sigfillset(&mask) == -1) {
         err(1, "disableIRQ(): sigfillset");
     }
@@ -155,10 +159,12 @@ unsigned disableIRQ(void)
     prev_state = native_interrupts_enabled;
     native_interrupts_enabled = 0;
 
-    if (_native_sigpend > 0) {
+    // XXX: does this make sense?
+    if ((_native_sigpend > 0) && (_native_in_isr == 1)) {
         DEBUG("\n\n\t\treturn from syscall, calling native_irq_handler\n\n");
         _native_in_syscall = 0;
-        printf("calling swapcontext()\n");
+        printf("disableIRQ: calling swapcontext()\n");
+        printf("disableIRQ: _native_cur_ctx == %p, _native_isr_ctx == %p\n", _native_cur_ctx, _native_isr_ctx);
         swapcontext(_native_cur_ctx, _native_isr_ctx);
     }
     else {
@@ -180,6 +186,10 @@ unsigned enableIRQ(void)
     _native_in_syscall = 1;
     DEBUG("enableIRQ()\n");
 
+    if (_native_in_isr == 1) {
+        printf("enableIRQ + _native_in_isr\n");
+    }
+
     if (sigprocmask(SIG_SETMASK, &native_sig_set, NULL) == -1) {
         err(1, "enableIRQ(): sigprocmask()");
     }
@@ -189,10 +199,11 @@ unsigned enableIRQ(void)
 
     //print_sigmasks();
     //native_print_signals();
-    if (_native_sigpend > 0) {
+    if ((_native_sigpend > 0) && (_native_in_isr == 1)) {
         DEBUG("\n\n\t\treturn from syscall, calling native_irq_handler\n\n");
         _native_in_syscall = 0;
-        printf("calling swapcontext()\n");
+        printf("enableIRQ: calling swapcontext()\n");
+        printf("enableIRQ: _native_cur_ctx == %p, _native_isr_ctx == %p\n", _native_cur_ctx, _native_isr_ctx);
         swapcontext(_native_cur_ctx, _native_isr_ctx);
     }
     else {
