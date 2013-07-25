@@ -62,7 +62,12 @@ static int update_shortterm(void)
         }
     }
 
-    hwtimer_next_absolute = shortterm_queue_root.next->priority;
+    if (shortterm_queue_root.next) {
+        hwtimer_next_absolute = shortterm_queue_root.next->priority;
+    } else {
+        DEBUG("shortterm_queue_root.next not initialized")
+        return 1;
+    }
 
     uint32_t next = hwtimer_next_absolute + longterm_tick_start;
     uint32_t now = HWTIMER_TICKS_TO_US(hwtimer_now());
