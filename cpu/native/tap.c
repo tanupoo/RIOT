@@ -43,7 +43,9 @@ void _native_handle_cc110xng_input(void)
     /* TODO: check whether this is an input or an output event
        TODO: refactor this into general io-signal multiplexer */
 
+    _native_in_syscall = 1;
     nread = read(_native_tap_fd, buf, BUFFER_LENGTH);
+    _native_in_syscall = 0;
     DEBUG("_native_handle_cc110xng_input - read %d bytes\n", nread);
     if (nread > 0) {
         f = (union eth_frame*)&buf;
