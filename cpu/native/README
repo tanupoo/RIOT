@@ -3,20 +3,17 @@ module, you need to specify a network interface like this:
 ./bin/default-native.elf tap0
 
 
-TAP NETWORKING
-==============
+SETTING UP A TAP NETWORK
+========================
 
 There is a shellscript in RIOT/cpu/native called tapsetup.sh which you
 can use to create a network of tap interfaces.
 
-
-Linux
-=====
-
-Commands to create / activate / delete Interfaces:
-sudo ip tuntap add dev tap0 mode tap user YOURUSERNAME
-sudo ip link set tap0 up
-sudo ip tuntap del dev tap0 mode tap
+Usage:
+To create a bridge and two (or count at your option) tap interfaces:
+./tapsetup.sh create [count]
+To delete the bridge and all tap interfaces:
+./tapsetup.sh delete
 
 
 OSX
@@ -25,5 +22,5 @@ OSX
 For tun/tap networking in OSX you will need:
 http://tuntaposx.sourceforge.net/
 
-Once you installed that, you can follow the steps as outlined in the
-"Linux" section.
+For OSX there is a seperate script called tapsetup-osx.sh. Usage is
+just like the other one.
