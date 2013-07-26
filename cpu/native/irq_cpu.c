@@ -49,6 +49,10 @@ struct int_handler_t {
 static struct int_handler_t native_irq_handlers[255];
 char sigalt_stk[SIGSTKSZ];
 
+
+void native_irq_handler();
+
+
 void print_thread_sigmask(ucontext_t *cp)
 {
     sigset_t *p = &cp->uc_sigmask;
@@ -165,6 +169,7 @@ unsigned disableIRQ(void)
         _native_in_syscall = 0;
         printf("disableIRQ: calling swapcontext()\n");
         printf("disableIRQ: _native_cur_ctx == %p, _native_isr_ctx == %p\n", _native_cur_ctx, _native_isr_ctx);
+        makecontext(&native_isr_context, native_irq_handler, 0);
         swapcontext(_native_cur_ctx, _native_isr_ctx);
     }
     else {
@@ -204,6 +209,7 @@ unsigned enableIRQ(void)
         _native_in_syscall = 0;
         printf("enableIRQ: calling swapcontext()\n");
         printf("enableIRQ: _native_cur_ctx == %p, _native_isr_ctx == %p\n", _native_cur_ctx, _native_isr_ctx);
+        makecontext(&native_isr_context, native_irq_handler, 0);
         swapcontext(_native_cur_ctx, _native_isr_ctx);
     }
     else {
@@ -254,6 +260,7 @@ int _native_popsig(void)
     nleft = sizeof(int);
     i = 0;
 
+    _native_in_syscall = 1;
     while ((nleft > 0) && ((nread = read(pipefd[0], &sig + i, nleft))  != -1)) {
         i += nread;
         nleft -= nread;
@@ -262,6 +269,7 @@ int _native_popsig(void)
     if (nread == -1) {
         err(1, "_native_popsig(): read()");
     }
+    _native_in_syscall = 0;
 
     return sig;
 }
