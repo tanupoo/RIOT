@@ -138,7 +138,7 @@ unsigned disableIRQ(void)
     DEBUG("disableIRQ()\n");
 
     if (_native_in_isr == 1) {
-        printf("disableIRQ + _native_in_isr\n");
+        DEBUG("disableIRQ + _native_in_isr\n");
     }
 
     if (sigfillset(&mask) == -1) {
@@ -192,7 +192,7 @@ unsigned enableIRQ(void)
     DEBUG("enableIRQ()\n");
 
     if (_native_in_isr == 1) {
-        printf("enableIRQ + _native_in_isr\n");
+        DEBUG("enableIRQ + _native_in_isr\n");
     }
 
     if (sigprocmask(SIG_SETMASK, &native_sig_set, NULL) == -1) {
