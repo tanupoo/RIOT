@@ -215,9 +215,10 @@ unsigned long hwtimer_arch_now(void)
 {
     struct timespec t;
 
+    _native_in_syscall = 1;
+
     DEBUG("hwtimer_arch_now()\n");
 
-    _native_in_syscall = 1;
 #ifdef __MACH__
     clock_serv_t cclock;
     mach_timespec_t mts;
@@ -238,7 +239,7 @@ unsigned long hwtimer_arch_now(void)
     native_hwtimer_now = ts2ticks(&t);
 
     DEBUG("hwtimer_arch_now(): it is now %lis %lins\n", t.tv_sec, t.tv_nsec);
-    DEBUG("hwtimer_arch_now(): returning %li\n", native_hwtimer_now);
+    DEBUG("hwtimer_arch_now(): returning %uli\n", native_hwtimer_now);
     return native_hwtimer_now;
 }
 
