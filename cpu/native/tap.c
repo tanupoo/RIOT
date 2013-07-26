@@ -69,7 +69,6 @@ void _native_handle_cc110xng_input(void)
     else {
         errx(EXIT_FAILURE, "internal error in _native_handle_cc110xng_input");
     }
-    cpu_switch_context_exit();
 }
 
 int send_buf(void)
