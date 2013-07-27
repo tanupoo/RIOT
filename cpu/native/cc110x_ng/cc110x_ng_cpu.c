@@ -20,8 +20,6 @@
 
 
 static int _native_cc110x_enabled;
-//static char rx_buffer[BUFFER_LENGTH], tx_buffer[BUFFER_LENGTH];
-//static int rx_bi, rx_bc, tx_bi, tx_bc;
 
 /* arch */
 
