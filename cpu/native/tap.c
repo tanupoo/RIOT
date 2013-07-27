@@ -87,7 +87,7 @@ void _native_handle_cc110xng_input(void)
 void _native_handle_cc110xng_input(void)
 {
     int nread;
-    char buf[BUFFER_LENGTH];
+    char buf[TAP_BUFFER_LENGTH];
     union eth_frame *f;
 
     DEBUG("_native_handle_cc110xng_input\n");
@@ -99,7 +99,9 @@ void _native_handle_cc110xng_input(void)
         DEBUG("_native_handle_cc110xng_input - nothing to do\n");
         return;
     }
+    _native_in_syscall = 1;
     nread = read(_native_tap_fd, buf, BUFFER_LENGTH);
+    _native_in_syscall = 0;
     DEBUG("_native_handle_cc110xng_input - read %d bytes\n", nread);
     if (nread > 0) {
         f = (union eth_frame*)&buf;
