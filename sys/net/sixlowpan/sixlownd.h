@@ -31,9 +31,9 @@
 #define PARA_PROB_NXT_HDR_UNREC        	(1)   /* Unrecognized Next Header type encountered */
 #define PARA_PROB_IPV6_OPT_UNREC       	(2)   /* Unrecognized IPv6 option encountered */
 /* echo request */
-#define ECHO_REQ_LEN                    (8)
+#define ECHO_REQ_LEN                    (4)
 /* echo reply */
-#define ECHO_REPL_LEN                   (8)
+#define ECHO_REPL_LEN                   (4)
 /* router solicitation */
 #define RTR_SOL_LEN                    	(4)
 #define RTR_SOL_INTERVAL               	(4)
