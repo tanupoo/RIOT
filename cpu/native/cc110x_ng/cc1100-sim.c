@@ -77,9 +77,9 @@ uint8_t status_registers[((0x3D-0x30)+1)]; /* address 0x30 - 0x3D */
 uint8_t patable[8]; /* address 0x3E */
 uint8_t patable_idx; /* for burst access */
 
-uint8_t tx_fifo[64];
+uint8_t tx_fifo[128];
 uint8_t tx_fifo_idx;
-uint8_t rx_fifo[64];
+uint8_t rx_fifo[128];
 uint8_t rx_fifo_idx;
 
 int native_cc110x_gd0;
