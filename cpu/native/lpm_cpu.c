@@ -31,9 +31,6 @@
 #ifdef MODULE_UART0
 #include "board_internal.h"
 #endif
-#ifdef MODULE_CC110X_NG
-#include "tap.h"
-#endif
 
 static enum lpm_mode native_lpm;
 
@@ -46,21 +43,13 @@ void lpm_init(void)
 
 void _native_lpm_sleep()
 {
-#if (defined(MODULE_UART0) || defined(MODULE_CC110X_NG))
-    int retval, nfds, nfd;
+#ifdef MODULE_UART0
+    int retval, nfds;
 
     /* set fds */
     nfds = 0;
     FD_ZERO(&_native_rfds);
-#ifdef MODULE_UART0
     nfds = _native_set_uart_fds();
-#endif
-#ifdef MODULE_CC110X_NG
-    nfd = _native_set_cc110xng_fds();
-    if (nfd > nfds) {
-        nfds = nfd;
-    }
-#endif
     nfds++;
 
     retval = select(nfds, &_native_rfds, NULL, NULL, NULL);

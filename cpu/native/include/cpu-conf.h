@@ -18,7 +18,7 @@
 #include <signal.h>
 
 /* TODO: choose more sensibly? */
-#define KERNEL_CONF_STACKSIZE_PRINTF    (81920*1024)
+#define KERNEL_CONF_STACKSIZE_PRINTF    (81920)
 
 #ifdef __MACH__ /* OSX */
 #define KERNEL_CONF_STACKSIZE_DEFAULT   (163840)

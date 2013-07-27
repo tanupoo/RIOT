@@ -22,6 +22,7 @@
 
 #include "debug.h"
 
+#include "cpu.h"
 #include "cpu-conf.h"
 #include "tap.h"
 #include "cc1100sim.h"
@@ -152,6 +153,21 @@ int tap_init(char *name)
     }
     memcpy(_native_tap_mac, ifr.ifr_hwaddr.sa_data, ETHER_ADDR_LEN);
 #endif
+
+/*TODO:  check OSX vvv */
+    /* configure signal handler for fds */
+    register_interrupt(SIGIO, _native_handle_cc110xng_input);
+
+    /* configure fds to send signals on io */
+    if (fcntl(_native_tap_fd, F_SETOWN, getpid()) == -1) {
+        err(1, "_native_init_uart0(): fcntl()");
+    }
+
+    /* set file access mode to nonblocking */
+    if (fcntl(_native_tap_fd, F_SETFL, O_NONBLOCK|O_ASYNC) == -1) {
+        err(1, "_native_init_uart0(): fcntl()");
+    }
+/*TODO:  check OSX ^^^ */
 
     puts("RIOT native tap initialized.");
     return _native_tap_fd;

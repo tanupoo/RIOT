@@ -35,11 +35,13 @@ __attribute__((constructor)) static void startup(int argc, char **argv)
         printf("usage: %s <tap interface>\n", argv[0]);
         exit(EXIT_FAILURE);
     }
-    tap_init(argv[1]);
 #endif
 
     native_cpu_init();
     native_interrupt_init();
+#ifdef MODULE_CC110X_NG
+    tap_init(argv[1]);
+#endif
 
     board_init();
 

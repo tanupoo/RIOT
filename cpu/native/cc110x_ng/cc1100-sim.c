@@ -2,9 +2,11 @@
 #include <stdio.h>
 #include <err.h>
 #include <inttypes.h>
+#include <string.h>
 
 #include "debug.h"
 
+#include "cc110x_ng.h"
 #include "cc110x-internal.h" /* CC1100_READ_BURST etc. */
 #include "tap.h"
 #include "cc1100sim.h"
@@ -348,7 +350,7 @@ uint8_t read_single(uint8_t c)
         return rx_fifo[rx_fifo_idx++];
     }
     else {
-        errx(EXIT_FAILURE, "write_single: unhandled addr: 0x%02X", addr);
+        errx(EXIT_FAILURE, "read_single: unhandled addr: 0x%02X", addr);
     }
     return c;
 }
@@ -727,25 +729,6 @@ void step(void)
 void _native_cc1100_receive(uint8_t *buf, int len)
 {
     ;
-}
-
-/**
- * TODO: implement proper events
- */
-void _native_cc1100_register_callback(int event, void *cb)
-{
-    switch (event) {
-        case (CC1100_EVENT_SET_CHANNEL):
-            set_channel_callback = cb;
-            break;
-
-        case (CC1100_EVENT_SET_POWER):
-            set_power_callback = cb;
-            break;
-
-        default:
-            errx(EXIT_FAILURE, "_native_cc1100_register_callback: unknown event type: %d", event);
-    }
 }
 
 #endif
