@@ -27,12 +27,53 @@
 #include "cc1100sim.h"
 #include "cc110x-internal.h" /* CC1100 constants */
 
+#define TAP_BUFFER_LENGTH (CC1100_FIFO_LENGTH + ETHER_HDR_LEN + 1)
+
 int _native_tap_fd;
 char _native_tap_mac[ETHER_ADDR_LEN];
 
+void _native_handle_cc110xng_input(void)
+{
+    int nread;
+    char buf[TAP_BUFFER_LENGTH];
+    union eth_frame *f;
+
+    DEBUG("_native_handle_cc110xng_input\n");
+
+    /* TODO: check whether this is an input or an output event
+       TODO: refactor this into general io-signal multiplexer */
+
+    _native_in_syscall = 1;
+    nread = read(_native_tap_fd, buf, TAP_BUFFER_LENGTH);
+    _native_in_syscall = 0;
+    DEBUG("_native_handle_cc110xng_input - read %d bytes\n", nread);
+    if (nread > 0) {
+        f = (union eth_frame*)&buf;
+        if (ntohs(f->field.header.ether_type) == NATIVE_ETH_PROTO) {
+            nread = nread - ETHER_HDR_LEN;
+            if ((nread - 1) <= 0) {
+                DEBUG("_native_handle_cc110xng_input: no payload");
+            }
+            else {
+                nread = buf[ETHER_HDR_LEN];
+                _native_cc1100_handle_packet(buf+ETHER_HDR_LEN+1, nread);
+            }
+        }
+        else {
+            DEBUG("ignoring non-native frame\n");
+        }
+    }
+    else if (nread == -1) {
+        err(EXIT_FAILURE, "read");
+    }
+    else {
+        errx(EXIT_FAILURE, "internal error in _native_handle_cc110xng_input");
+    }
+}
+
 int send_buf(void)
 {
-    uint8_t buf[BUFFER_LENGTH];
+    uint8_t buf[TAP_BUFFER_LENGTH];
     int nsent;
     uint8_t to_send;
 

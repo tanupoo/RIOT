@@ -3,8 +3,6 @@
 
 #include <net/ethernet.h>
 
-#define BUFFER_LENGTH 255
-
 /**
  * create and/or open tap device "name"
  *
