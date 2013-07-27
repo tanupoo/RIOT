@@ -15,7 +15,7 @@
 #ifdef MODULE_CC2420
 #define PAYLOAD_SIZE  (118)
 #else
-#define PAYLOAD_SIZE  (118)
+#define PAYLOAD_SIZE  (58)
 #endif
 /* The maximum of threads to register */
 #define TRANSCEIVER_MAX_REGISTERED  (4)
