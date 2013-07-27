@@ -34,3 +34,4 @@ uint8_t read_single(uint8_t c);
 #define STATE_READ_S    0x04
 #define STATE_WRITE_S   0x05
 
+void _native_cc1100_handle_packet(char *buf, int size);

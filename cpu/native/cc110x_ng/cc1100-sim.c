@@ -92,10 +92,12 @@ int native_cc110x_gd2_enabled;
 /* static uint8_t address_space_pointer; */
 
 /* network layer handlers for cc1100 events: */
-void *set_channel_callback;
-void *set_power_callback;
-void *_native_cc1100_callback[255];
+struct cc1100_callback_t {
+    void (*func)(void);
+};
+static struct cc1100_callback_t _native_cc1100_callbacks[255];
 
+/* cc1100 default configuration */
 char cc1100_reset_configuration_regs[] = {
     0x29, /* IOCFG2 */
     0x2E, /* IOCFG1 */
@@ -146,6 +148,7 @@ char cc1100_reset_configuration_regs[] = {
     0x0B  /* TEST0 */
 };
 
+/* cc1100 default status */
 char cc1100_reset_status_regs[] = {
     0x00, /* PARTNUM */
     0x03, /* VERSION */
@@ -399,6 +402,10 @@ void do_write_conf(uint8_t c)
 {
     DEBUG("write configuration register\n");
     configuration_registers[addr] = c;
+    if (_native_cc1100_callbacks[addr].func != NULL) {
+        DEBUG("calling cc1100 callback for %i\n", addr);
+        _native_cc1100_callbacks[addr].func();
+    }
 }
 
 void do_write_patable(uint8_t c)
@@ -495,15 +502,57 @@ uint8_t do_txrx(uint8_t c)
 
 void _native_cc1100_register_callback(int event, void *cb)
 {
-    _native_cc1100_callback[event] = cb;
+    _native_cc1100_callbacks[event].func = cb;
 }
 
-void _native_cc1100_handle_input(char *buf, int size)
-{
-    status_registers[CC1100_RXBYTES - 0x30] = size;
+void _native_cc1100_handle_packet(char *buf, int size)
+{ 
+    char dst_addr, data_len, *data;
+
+    data_len = buf[0];
+    dst_addr = buf[1];
+    data = buf[2];
+
+
+    /* packet filter */
+    /* monitor mode */
+    if ((configuration_registers[CC1100_PKTCTRL1] & 0x03) == 0x00) {
+        DEBUG("_native_cc1100_handle_packet: not filtering address\n");
+    }
+    /* address filter */
+    else {
+        /* own addr check */
+        if (dst_addr == configuration_registers[CC1100_ADDR]) {
+            DEBUG("_native_cc1100_handle_packet: accept packet, addressed to us\n");
+        }
+        /* 0x00 only broadcast */
+        else if (
+                ((configuration_registers[CC1100_PKTCTRL1] & 0x03) == 0x02) &&
+                (dst_addr == 0x00)
+                ) {
+            DEBUG("_native_cc1100_handle_packet: accept packet, broadcast\n");
+        }
+        /* 0x00 only broadcast */
+        else if (
+                ((configuration_registers[CC1100_PKTCTRL1] & 0x03) == 0x03) &&
+                ((dst_addr == 0x00) || (dst_addr == 0xFF))
+                ) {
+            DEBUG("_native_cc1100_handle_packet: accept packet, broadcast\n");
+        }
+        else {
+            DEBUG("_native_cc1100_handle_packet: discarding packet addressed to someone else\n");
+            return;
+        }
+    }
+
+    /* copy data to rx_fifo */
+    /* XXX: handle overflow */
     rx_fifo_idx = 0;
     memcpy(rx_fifo, buf, size);
-    DEBUG("_native_cc1100_handle_input: got %d bytes payload\n", size);
+    status_registers[CC1100_RXBYTES - 0x30] = size;
+    DEBUG("_native_cc1100_handle_packet: got %d bytes payload\n", size);
+
+    /* toggle interrupt */
     cc110x_gdo2_irq();
 }
 
