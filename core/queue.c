@@ -16,10 +16,9 @@
 
 #include <stddef.h>
 #include <inttypes.h>
+#include <stdio.h>
 
 #include "queue.h"
-
-#include "debug.h"
 
 void queue_remove(queue_node_t *root, queue_node_t *node)
 {

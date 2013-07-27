@@ -17,6 +17,9 @@
  * @}
  */
 
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
 #include "sixlowip.h"
 #include "sixlownd.h"
 #include "sixlowmac.h"
@@ -24,14 +27,11 @@
 #include "sixlowerror.h"
 #include "serialnumber.h"
 #include "sys/net/net_help/net_help.h"
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include <debug.h>
-#include <vtimer.h>
-#include <mutex.h>
+#include "vtimer.h"
+#include "mutex.h"
 
-#define ENABLE_DEBUG
+#define ENABLE_DEBUG    (0)
+#include "debug.h"
 
 /* extern variables */
 uint8_t opt_hdr_len = 0;
@@ -288,7 +288,7 @@ void init_rtr_sol(uint8_t sllao)
     icmp_buf->checksum = 0;
     icmp_buf->checksum = ~icmpv6_csum(PROTO_NUM_ICMPV6);
 
-#ifdef ENABLE_DEBUG
+#if ENABLE_DEBUG
     printf("INFO: send router solicitation to: ");
     ipv6_print_addr(&ipv6_buf->destaddr);
 #endif
@@ -383,7 +383,7 @@ void recv_rtr_sol(void)
         init_rtr_adv(&ipv6_buf->srcaddr, 0, 0, OPT_PI, 0, 0);
     }
 
-#ifdef ENABLE_DEBUG
+#if ENABLE_DEBUG
     printf("INFO: send router advertisment to: ");
     ipv6_print_addr(&ipv6_buf->destaddr);
 #endif
@@ -763,7 +763,7 @@ void recv_rtr_adv(void)
          *
          * if new address was configured, set src to newaddr(gp16) */
         init_nbr_sol(&newaddr, &(ipv6_buf->srcaddr), &(ipv6_buf->srcaddr), OPT_SLLAO, OPT_ARO);
-#ifdef ENABLE_DEBUG
+#if ENABLE_DEBUG
         printf("INFO: send neighbor solicitation to: ");
         ipv6_print_addr(&(ipv6_buf->destaddr));
 #endif
@@ -1018,7 +1018,7 @@ void recv_nbr_sol(void)
         uint8_t flags = (NBR_ADV_FLAG_O | NBR_ADV_FLAG_S);
         init_nbr_adv(&(ipv6_buf->srcaddr), &(ipv6_buf->destaddr),
                      &(alist_targ->addr), flags, 0, OPT_ARO, aro_state);
-#ifdef ENABLE_DEBUG
+#if ENABLE_DEBUG
         printf("INFO: send neighbor advertisment to: ");
         ipv6_print_addr(&ipv6_buf->destaddr);
 #endif
