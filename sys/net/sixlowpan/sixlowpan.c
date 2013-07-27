@@ -101,11 +101,11 @@ void lowpan_init(ieee_802154_long_t *addr, uint8_t *data)
     
     if (iphc_status == LOWPAN_IPHC_ENABLE) {
         lowpan_iphc_encoding(&laddr, ipv6_buf, data);
+        data = &comp_buf[0];
+        packet_length = comp_len;
     } else {
         lowpan_ipv6_set_dispatch(data);
     }
-    data = &comp_buf[0];
-    packet_length = comp_len;
 
     /* check if packet needs to be fragmented */
     if (packet_length + header_size > PAYLOAD_SIZE - IEEE_802154_MAX_HDR_LEN) {
