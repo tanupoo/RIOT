@@ -416,7 +416,7 @@ void do_write_patable(uint8_t c)
 void do_write_tx(uint8_t c)
 {
     DEBUG("write TX\n");
-    if (status_registers[CC1100_TXBYTES - 0x30] == BUFFER_LENGTH) {
+    if (status_registers[CC1100_TXBYTES - 0x30] == CC1100_FIFO_LENGTH) {
         errx(EXIT_FAILURE, "do_write_tx: buffer too small");
     }
     tx_fifo[tx_fifo_idx++] = c;
