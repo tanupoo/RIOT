@@ -31,7 +31,6 @@
 int _native_tap_fd;
 char _native_tap_mac[ETHER_ADDR_LEN];
 
-
 void _native_handle_cc110xng_input(void)
 {
     int nread;
@@ -56,7 +55,7 @@ void _native_handle_cc110xng_input(void)
             }
             else {
                 nread = buf[ETHER_HDR_LEN];
-                _native_cc1100_handle_input(buf+ETHER_HDR_LEN+1, nread);
+                _native_cc1100_handle_packet(buf+ETHER_HDR_LEN+1, nread);
             }
         }
         else {
