@@ -199,6 +199,8 @@ void init_echo_req(ipv6_addr_t *destaddr, uint16_t id, uint16_t seq, char *data,
     packet_length = IPV6_HDR_LEN + ICMPV6_HDR_LEN + ipv6_ext_hdr_len +
                     ECHO_REQ_LEN + data_len;
 
+    ipv6_buf->length = packet_length-IPV6_HDR_LEN;
+
     icmp_buf->checksum = 0;
     icmp_buf->checksum = ~icmpv6_csum(PROTO_NUM_ICMPV6);
     
