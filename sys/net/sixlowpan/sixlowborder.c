@@ -36,7 +36,11 @@
 #include "sixlowerror.h"
 #include "sys/net/net_help/net_help.h"
 
+#ifdef NATIVE_STACK
 #define READER_STACK_SIZE   512*10240
+#else
+#define READER_STACK_SIZE   512
+#endif
 
 ipv6_addr_t abr_addr;
 

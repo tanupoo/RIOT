@@ -21,10 +21,17 @@
 #ifndef SIXLOWPAN_H
 #define SIXLOWPAN_H
 
-#define IP_PROCESS_STACKSIZE           	(3072*10240)
-#define NC_STACKSIZE                   	(512*10240)
-#define CON_STACKSIZE                  	(512*10240)
-#define LOWPAN_TRANSFER_BUF_STACKSIZE  	(512*10240)
+#ifdef NATIVE_STACK
+#warning FOOOOO
+#define NATIVE_STACK_FACTOR (10240)
+#else
+#define NATIVE_STACK_FACTOR (1)
+#endif
+
+#define IP_PROCESS_STACKSIZE           	(3072*NATIVE_STACK_FACTOR)
+#define NC_STACKSIZE                   	(512*NATIVE_STACK_FACTOR)
+#define CON_STACKSIZE                  	(512*NATIVE_STACK_FACTOR)
+#define LOWPAN_TRANSFER_BUF_STACKSIZE  	(512*NATIVE_STACK_FACTOR)
 
 /* fragment size in bytes*/
 #define FRAG_PART_ONE_HDR_LEN  	(4)

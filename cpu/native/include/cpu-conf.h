@@ -17,6 +17,8 @@
 #define CPUCONF_H_
 #include <signal.h>
 
+#define NATIVE_STACK
+
 /* TODO: choose more sensibly? */
 #define KERNEL_CONF_STACKSIZE_PRINTF    (81920)
 

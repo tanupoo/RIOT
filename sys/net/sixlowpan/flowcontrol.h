@@ -38,7 +38,11 @@
 #define BORDER_RWS                1
 #define BORDER_SL_TIMEOUT         500 // microseconds, maybe smaller
 
+#ifdef NATIVE_STACK
 #define SENDING_SLOT_STACK_SIZE     (256*10240)
+#else
+#define SENDING_SLOT_STACK_SIZE     (256)
+#endif
 
 typedef struct {
     /* Sender state */
