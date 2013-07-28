@@ -36,4 +36,4 @@ uint8_t read_single(uint8_t c);
 
 void _native_cc1100_handle_packet(char *buf, int size);
 
-#define CC1100_FIFO_LENGTH  64
+#define CC1100_FIFO_LENGTH  128
