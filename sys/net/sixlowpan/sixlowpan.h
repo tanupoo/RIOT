@@ -22,7 +22,6 @@
 #define SIXLOWPAN_H
 
 #ifdef NATIVE_STACK
-#warning FOOOOO
 #define NATIVE_STACK_FACTOR (10240)
 #else
 #define NATIVE_STACK_FACTOR (1)

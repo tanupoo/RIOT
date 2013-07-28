@@ -207,6 +207,7 @@ void init_echo_req(ipv6_addr_t *destaddr, uint16_t id, uint16_t seq, char *data,
 #ifdef ENABLE_DEBUG
     printf("INFO: send echo request to: ");
     ipv6_print_addr(&ipv6_buf->destaddr);
+    ipv6_print_header(ipv6_buf);
 #endif
     lowpan_init((ieee_802154_long_t *)&(ipv6_buf->destaddr.uint16[4]),
                 (uint8_t *)ipv6_buf);

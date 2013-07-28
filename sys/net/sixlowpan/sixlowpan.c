@@ -42,6 +42,8 @@
 #include "sys/net/destiny/in.h"
 #include "sys/net/net_help/net_help.h"
 
+#define ENABLE_DEBUG    (1)
+
 uint16_t packet_length;
 uint8_t packet_dispatch;
 uint16_t tag;
@@ -252,6 +254,9 @@ void lowpan_transfer(void)
 
             if ((current_buf->packet)[0] == LOWPAN_IPV6_DISPATCH) {
                 ipv6_buf = get_ipv6_buf();
+#if ENABLE_DEBUG
+                ipv6_print_header(&ipv6_buf);
+#endif
                 memcpy(ipv6_buf, (current_buf->packet) + 1, current_buf->packet_size - 1);
                 m_send.content.ptr = (char *)ipv6_buf;
                 packet_length = current_buf->packet_size - 1;
@@ -264,6 +269,9 @@ void lowpan_transfer(void)
                                      &(current_buf->d_laddr));
 
                 ipv6_buf = get_ipv6_buf();
+#if ENABLE_DEBUG
+                ipv6_print_header(&ipv6_buf);
+#endif
                 m_send.content.ptr = (char *) ipv6_buf;
                 msg_send_receive(&m_send, &m_recv, ip_process_pid);
             }
@@ -1019,6 +1027,7 @@ void lowpan_iphc_encoding(ieee_802154_long_t *dest, ipv6_hdr_t *ipv6_buf_extra,
 
     comp_buf[0] = lowpan_iphc[0];
     comp_buf[1] = lowpan_iphc[1];
+    DEBUG("DISPATCH: %01X %01X\n", lowpan_iphc[0], lowpan_iphc[1]);
 
     /*uint8_t *ptr;
     if (ipv6_buf->nextheader == IPPROTO_TCP)

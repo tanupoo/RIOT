@@ -571,6 +571,29 @@ void ipv6_print_addr(ipv6_addr_t *ipaddr)
            ((uint8_t *)ipaddr)[15]);
 }
 
+void ipv6_print_header(ipv6_hdr_t *header)
+{
+    printf("Version:        %04X\n"\
+           "Traffic Class:  %04X\n"\
+           "Flow Label:     %04X\n"\
+           "Length:         %04X\n"\
+           "Next Header:    %04X\n"\
+           "Hop Limit:      %04X\n"\
+           "Src Address:    ",
+//           (header->version_trafficclass),
+//         (header->trafficclass_flowlabel),
+//         header->flowlabel,
+           (header->version_trafficclass & 0xF0),
+           ((header->version_trafficclass & 0x0F) | (header->trafficclass_flowlabel & 0xF0)),
+           ((header->trafficclass_flowlabel & 0x0F) | header->flowlabel),
+           header->length,
+           header->nextheader,
+           header->hoplimit);
+    ipv6_print_addr(&(header->srcaddr));
+    printf("Dst Addr:       ");
+    ipv6_print_addr(&(header->destaddr));
+}
+
 uint8_t ipv6_next_hdr_unknown(uint8_t next_hdr)
 {
     return  next_hdr == PROTO_NUM_ICMPV6 ||
@@ -617,6 +640,8 @@ uint8_t ipv6_is_router(void)
     return 0;
 }
 
+/* TODO: replace these functions by a generic way to register upper layer 
+ * callbacks */
 void set_tcp_packet_handler_pid(int pid)
 {
     tcp_packet_handler_pid = pid;
