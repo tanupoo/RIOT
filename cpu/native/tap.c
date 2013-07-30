@@ -31,12 +31,12 @@
 #define TAP_BUFFER_LENGTH (CC1100_FIFO_LENGTH + ETHER_HDR_LEN + 1)
 
 int _native_tap_fd;
-char _native_tap_mac[ETHER_ADDR_LEN];
+unsigned char _native_tap_mac[ETHER_ADDR_LEN];
 
 void _native_handle_cc110xng_input(void)
 {
     int nread;
-    char buf[TAP_BUFFER_LENGTH];
+    unsigned char buf[TAP_BUFFER_LENGTH];
     union eth_frame *f;
 
     DEBUG("_native_handle_cc110xng_input\n");
@@ -176,7 +176,7 @@ int tap_init(char *name)
 void _native_marshall_ethernet(uint8_t *framebuf, uint8_t *data, int data_len)
 {
     union eth_frame *f;
-    char addr[ETHER_ADDR_LEN];
+    unsigned char addr[ETHER_ADDR_LEN];
 
     f = (union eth_frame*)framebuf;
     addr[0] = addr[1] = addr[2] = addr[3] = addr[4] = addr[5] = (char)0xFF;
@@ -197,7 +197,7 @@ void _native_marshall_ethernet(uint8_t *framebuf, uint8_t *data, int data_len)
 int main(int argc, char *argv[])
 {
     int fd;
-    char buffer[2048];
+    unsigned char buffer[2048];
 
     if (argc < 2) {
         errx(EXIT_FAILURE, "you need to specify a tap name");
