@@ -507,14 +507,12 @@ void _native_cc1100_register_callback(int event, void *cb)
 
 void _native_cc1100_handle_packet(char *buf, int size)
 { 
-    char dst_addr, data_len, *data;
+    char dst_addr;
 
-    data_len = buf[0];
     dst_addr = buf[1];
-    data = buf[2];
 
+    /* packet automation */
 
-    /* packet filter */
     /* monitor mode */
     if ((configuration_registers[CC1100_PKTCTRL1] & 0x03) == 0x00) {
         DEBUG("_native_cc1100_handle_packet: not filtering address\n");
@@ -540,12 +538,36 @@ void _native_cc1100_handle_packet(char *buf, int size)
             DEBUG("_native_cc1100_handle_packet: accept packet, broadcast\n");
         }
         else {
-            DEBUG("_native_cc1100_handle_packet: discarding packet addressed to someone else\n");
+            DEBUG("_native_cc1100_handle_packet: discard packet addressed to someone else\n");
             return;
         }
     }
+    /* length filter */
+    /* variable packet length */
+    if ((configuration_registers[CC1100_PKTCTRL0] & 0x03) == 0x01) {
+        if (size > configuration_registers[CC1100_PKTLEN]) {
+            DEBUG("_native_cc1100_handle_packet: discard packet longer than CC1100_PKTLEN\n");
+            return;
+        }
+        else {
+            DEBUG("_native_cc1100_handle_packet: accept packet <= CC1100_PKTLEN\n");
+        }
+    }
+    /* fixed packet length */
+    else if ((configuration_registers[CC1100_PKTCTRL0] & 0x03) == 0x00) {
+        if (size != configuration_registers[CC1100_PKTLEN]) {
+            DEBUG("_native_cc1100_handle_packet: discard packet, size differs from CC1100_PKTLEN\n");
+            return;
+        }
+        else {
+            DEBUG("_native_cc1100_handle_packet: accept packet == CC1100_PKTLEN\n");
+        }
+    }
+    else {
+        errx(EXIT_FAILURE, "_native_cc1100_handle_packet: packet length mode not supported");
+    }
 
-    /* copy data to rx_fifo */
+    /* copy packet to rx_fifo */
     /* XXX: handle overflow */
     rx_fifo_idx = 0;
     memcpy(rx_fifo, buf, size);
