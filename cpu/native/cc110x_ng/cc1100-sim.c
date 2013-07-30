@@ -98,7 +98,7 @@ struct cc1100_callback_t {
 static struct cc1100_callback_t _native_cc1100_callbacks[255];
 
 /* cc1100 default configuration */
-char cc1100_reset_configuration_regs[] = {
+unsigned char cc1100_reset_configuration_regs[] = {
     0x29, /* IOCFG2 */
     0x2E, /* IOCFG1 */
     0x3F, /* IOCFG0 */
@@ -149,7 +149,7 @@ char cc1100_reset_configuration_regs[] = {
 };
 
 /* cc1100 default status */
-char cc1100_reset_status_regs[] = {
+unsigned char cc1100_reset_status_regs[] = {
     0x00, /* PARTNUM */
     0x03, /* VERSION */
     0x00, /* FREQEST */
@@ -505,9 +505,9 @@ void _native_cc1100_register_callback(int event, void *cb)
     _native_cc1100_callbacks[event].func = cb;
 }
 
-void _native_cc1100_handle_packet(char *buf, int size)
+void _native_cc1100_handle_packet(unsigned char *buf, int size)
 { 
-    char dst_addr;
+    unsigned char dst_addr;
 
     dst_addr = buf[1];
 
