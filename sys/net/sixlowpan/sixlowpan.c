@@ -27,7 +27,6 @@
 
 #include "vtimer.h"
 #include "timex.h"
-#include "debug.h"
 #include "thread.h"
 #include "mutex.h"
 #include "hwtimer.h"
@@ -42,12 +41,12 @@
 #include "sys/net/destiny/in.h"
 #include "sys/net/net_help/net_help.h"
 
-#define ENABLE_DEBUG    (1)
+#define ENABLE_DEBUG    (0)
+#include "debug.h"
 
-uint16_t packet_length;
 uint8_t packet_dispatch;
+/* datagram_tag - RFC4944 5.3 - initial value is not defined */
 uint16_t tag;
-uint8_t header_size = 0;
 uint8_t max_frame = 0;
 uint8_t max_frag_initial = 0;
 uint8_t position;
@@ -56,8 +55,6 @@ lowpan_iphc_status_t iphc_status = LOWPAN_IPHC_ENABLE;
 
 ipv6_hdr_t *ipv6_buf;
 
-/* length of compressed packet */
-uint16_t comp_len;
 uint8_t frag_size;
 uint8_t reas_buf[512];
 uint8_t comp_buf[512];
@@ -92,11 +89,13 @@ uint16_t local_address = 0;
 void lowpan_context_auto_remove(void);
 
 /* deliver packet to mac*/
-void lowpan_init(ieee_802154_long_t *addr, uint8_t *data)
+void lowpan_init(ieee_802154_long_t *addr, uint8_t *data, uint16_t len)
 {
+    /* length of compressed packet */
+    uint16_t comp_len, packet_length;
     uint8_t mcast = 0;
 
-    ipv6_buf = (ipv6_hdr_t *) data;
+    ipv6_buf = (ipv6_hdr_t *)data;
 
     memcpy(&laddr.uint8[0], &addr->uint8[0], 8);
 
@@ -106,69 +105,72 @@ void lowpan_init(ieee_802154_long_t *addr, uint8_t *data)
     }
     
     if (iphc_status == LOWPAN_IPHC_ENABLE) {
-        lowpan_iphc_encoding(&laddr, ipv6_buf, data);
+        lowpan_iphc_encoding(&laddr, ipv6_buf, data, &comp_len);
         data = &comp_buf[0];
         packet_length = comp_len;
     } else {
-        lowpan_ipv6_set_dispatch(data);
+        lowpan_ipv6_set_dispatch(data, len);
+        packet_length = len+1;
+        DEBUG("Set length to %02X\n", packet_length);
     }
 
     /* check if packet needs to be fragmented */
-    if (packet_length + header_size > PAYLOAD_SIZE - IEEE_802154_MAX_HDR_LEN) {
-        uint8_t fragbuf[packet_length + header_size];
+    if (packet_length > (PAYLOAD_SIZE - IEEE_802154_MAX_HDR_LEN - IEEE_802154_FCS_LEN)) {
+        DEBUG("Send fragmented\n");
+        uint8_t fragbuf[packet_length];
         uint8_t remaining;
-        uint8_t i = 2;
         /* first fragment */
-        max_frame = PAYLOAD_SIZE - IEEE_802154_MAX_HDR_LEN;
-        max_frag_initial = ((max_frame - 4 - header_size) / 8) * 8;
+        max_frame = PAYLOAD_SIZE - IEEE_802154_MAX_HDR_LEN - IEEE_802154_FCS_LEN;
+        max_frag_initial = ((max_frame - FRAG_PART_ONE_HDR_LEN) / 8) * 8;
 
         memcpy(fragbuf + 4, data, max_frag_initial);
 
-        fragbuf[0] = (((0xc0 << 8) | packet_length) >> 8) & 0xff;
-        fragbuf[1] = ((0xc0 << 8) | packet_length) & 0xff;
-        fragbuf[2] = (tag >> 8) & 0xff;
-        fragbuf[3] = tag & 0xff;
+        /* first fragment header - RFC4944 5.3 */
+        fragbuf[0] = (((0xc0 << 8) | packet_length) >> 8);
+        fragbuf[1] = ((0xc0 << 8) | packet_length);
+        fragbuf[2] = (tag >> 8);
+        fragbuf[3] = tag;
 
         send_ieee802154_frame(&laddr, (uint8_t *)&fragbuf,
-                              max_frag_initial + header_size + 4, mcast);
+                              max_frag_initial + FRAG_PART_ONE_HDR_LEN, mcast);
         /* subsequent fragments */
         position = max_frag_initial;
-        max_frag = ((max_frame - 5) / 8) * 8;
+        max_frag = ((max_frame - FRAG_PART_N_HDR_LEN) / 8) * 8;
 
         data += position;
 
-        while (packet_length - position > max_frame - 5) {
-            memset(&fragbuf, 0, packet_length + header_size);
-            memcpy(fragbuf + 5, data, max_frag);
+        while ((packet_length - position) > (max_frame - FRAG_PART_N_HDR_LEN)) {
+            memset(&fragbuf, 0, packet_length);
+            memcpy(fragbuf + FRAG_PART_N_HDR_LEN, data, max_frag);
 
-            fragbuf[0] = (((0xe0 << 8) | packet_length) >> 8) & 0xff;
-            fragbuf[1] = ((0xe0 << 8) | packet_length) & 0xff;
-            fragbuf[2] = (tag >> 8) & 0xff;
-            fragbuf[3] = tag & 0xff;
+            /* fragmentation header - RFC4944 5.3 */
+            fragbuf[0] = (((0xe0 << 8) | packet_length) >> 8);
+            fragbuf[1] = ((0xe0 << 8) | packet_length);
+            fragbuf[2] = (tag >> 8);
+            fragbuf[3] = tag;
             fragbuf[4] = position / 8;
 
-            send_ieee802154_frame(&laddr, (uint8_t *)&fragbuf, max_frag + 5,
-                                  mcast);
+            send_ieee802154_frame(&laddr, (uint8_t *)&fragbuf,
+                                  max_frag + FRAG_PART_N_HDR_LEN, mcast);
             data += max_frag;
             position += max_frag;
-
-            i++;
         }
 
         remaining = packet_length - position;
 
-        memset(&fragbuf, 0, packet_length + header_size);
-        memcpy(fragbuf + 5, data, remaining);
+        memset(&fragbuf, 0, packet_length);
+        memcpy(fragbuf + FRAG_PART_N_HDR_LEN, data, remaining);
 
-        fragbuf[0] = (((0xe0 << 8) | packet_length) >> 8) & 0xff;
-        fragbuf[1] = ((0xe0 << 8) | packet_length) & 0xff;
-        fragbuf[2] = (tag >> 8) & 0xff;
-        fragbuf[3] = tag & 0xff;
+        fragbuf[0] = (((0xe0 << 8) | packet_length) >> 8);
+        fragbuf[1] = ((0xe0 << 8) | packet_length);
+        fragbuf[2] = (tag >> 8);
+        fragbuf[3] = tag;
         fragbuf[4] = position / 8;
 
-        send_ieee802154_frame(&laddr, (uint8_t *)&fragbuf, remaining + 5, mcast);
+        send_ieee802154_frame(&laddr, (uint8_t *)&fragbuf, remaining + FRAG_PART_N_HDR_LEN, mcast);
     }
     else {
+        DEBUG("Send unfragmented\n");
         send_ieee802154_frame(&laddr, data, packet_length, mcast);
     }
 
@@ -240,6 +242,7 @@ void lowpan_transfer(void)
 {
     msg_t m_recv, m_send;
     ipv6_hdr_t *ipv6_buf;
+    lowpan_datagram_t datagram;
     lowpan_reas_buf_t *current_buf;
     uint8_t gotosleep;
 
@@ -258,21 +261,24 @@ void lowpan_transfer(void)
                 ipv6_print_header(ipv6_buf);
 #endif
                 memcpy(ipv6_buf, (current_buf->packet) + 1, current_buf->packet_size - 1);
-                m_send.content.ptr = (char *)ipv6_buf;
-                packet_length = current_buf->packet_size - 1;
+                datagram.length = (current_buf->packet_size - 1);
+                datagram.data = (uint8_t*)ipv6_buf;
+                m_send.content.ptr = (char *)&datagram;
                 msg_send_receive(&m_send, &m_recv, ip_process_pid);
             }
             else if (((current_buf->packet)[0] & 0xe0) == LOWPAN_IPHC_DISPATCH) {
                 lowpan_iphc_decoding(current_buf->packet,
                                      current_buf->packet_size,
                                      &(current_buf->s_laddr),
-                                     &(current_buf->d_laddr));
+                                     &(current_buf->d_laddr),
+                                     &(datagram.length));
 
                 ipv6_buf = get_ipv6_buf();
 #if ENABLE_DEBUG
                 ipv6_print_header(ipv6_buf);
 #endif
-                m_send.content.ptr = (char *) ipv6_buf;
+                datagram.data = (uint8_t*)ipv6_buf;
+                m_send.content.ptr = (char *)&datagram;
                 msg_send_receive(&m_send, &m_recv, ip_process_pid);
             }
             else {
@@ -728,16 +734,15 @@ void lowpan_read(uint8_t *data, uint8_t length, ieee_802154_long_t *s_laddr,
 
 }
 
-void lowpan_ipv6_set_dispatch(uint8_t *data)
+void lowpan_ipv6_set_dispatch(uint8_t *data, uint16_t packet_length)
 {
     memmove(data + 1, data, packet_length);
     data[0] = LOWPAN_IPV6_DISPATCH;
-    packet_length++;
 }
 
 /* draft-ietf-6lowpan-hc-13#section-3.1 */
 void lowpan_iphc_encoding(ieee_802154_long_t *dest, ipv6_hdr_t *ipv6_buf_extra,
-                          uint8_t *ptr)
+                          uint8_t *ptr, uint16_t *comp_len)
 {
     ipv6_buf = ipv6_buf_extra;
 
@@ -1041,12 +1046,13 @@ void lowpan_iphc_encoding(ieee_802154_long_t *dest, ipv6_hdr_t *ipv6_buf_extra,
     */
     memcpy(&ipv6_hdr_fields[hdr_pos], &ptr[IPV6_HDR_LEN], ipv6_buf->length);
 
-    comp_len = 2 + hdr_pos + payload_length;
+    *comp_len = (2 + hdr_pos + payload_length);
 }
 
 void lowpan_iphc_decoding(uint8_t *data, uint8_t length,
                           ieee_802154_long_t *s_laddr,
-                          ieee_802154_long_t *d_laddr)
+                          ieee_802154_long_t *d_laddr,
+                          uint16_t *decomp_length)
 {
     uint8_t hdr_pos = 0;
     uint8_t *ipv6_hdr_fields = data;
@@ -1422,7 +1428,7 @@ void lowpan_iphc_decoding(uint8_t *data, uint8_t length,
 
     /* ipv6 length */
     ipv6_buf->length = length - hdr_pos;
-    packet_length = IPV6_HDR_LEN + ipv6_buf->length;
+    *decomp_length = IPV6_HDR_LEN + ipv6_buf->length;
 }
 
 uint8_t lowpan_context_len()

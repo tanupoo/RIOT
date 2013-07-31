@@ -96,7 +96,6 @@ void sixlowpan_send(ipv6_addr_t *addr, uint8_t *payload, uint16_t p_len,
     }
 
     icmp_buf = get_icmpv6_buf(ipv6_ext_hdr_len);
-    packet_length = 0;
 
     ipv6_buf->version_trafficclass = IPV6_VER;
     ipv6_buf->trafficclass_flowlabel = 0;
@@ -110,10 +109,8 @@ void sixlowpan_send(ipv6_addr_t *addr, uint8_t *payload, uint16_t p_len,
 
     memcpy(p_ptr, payload, p_len);
 
-    packet_length = IPV6_HDR_LEN + p_len;
-
     lowpan_init((ieee_802154_long_t *)&(ipv6_buf->destaddr.uint16[4]), 
-                (uint8_t *)ipv6_buf);
+                (uint8_t *)ipv6_buf, (IPV6_HDR_LEN + p_len));
 }
 
 /* Register an upper layer thread */
@@ -133,27 +130,27 @@ uint8_t sixlowip_register(int pid)
     }
 }
 
-int icmpv6_demultiplex(const struct icmpv6_hdr_t *hdr)
+int icmpv6_demultiplex(const struct icmpv6_hdr_t *hdr, uint16_t length)
 {
     switch(hdr->type) {
         case (ICMP_ECHO_REQ): {
             puts("INFO: packet type: icmp echo request");
             /* processing echo request */
-            recv_echo_req();
+            recv_echo_req(length);
             break;
         }
 
         case (ICMP_ECHO_REPL): {
             puts("INFO: packet type: icmp echo reply");
             /* processing echo reply */
-            recv_echo_repl();
+            recv_echo_repl(length);
             break;
         }
 
         case (ICMP_RTR_SOL): {
             puts("INFO: packet type: icmp router solicitation");
             /* processing router solicitation */
-            recv_rtr_sol();
+            recv_rtr_sol(length);
             /* init solicited router advertisment*/
             break;
         }
@@ -161,20 +158,20 @@ int icmpv6_demultiplex(const struct icmpv6_hdr_t *hdr)
         case (ICMP_RTR_ADV): {
             puts("INFO: packet type: icmp router advertisment");
             /* processing router advertisment */
-            recv_rtr_adv();
+            recv_rtr_adv(length);
             /* init neighbor solicitation */
             break;
         }
 
         case (ICMP_NBR_SOL): {
             puts("INFO: packet type: icmp neighbor solicitation");
-            recv_nbr_sol();
+            recv_nbr_sol(length);
             break;
         }
 
         case (ICMP_NBR_ADV): {
             puts("INFO: packet type: icmp neighbor advertisment");
-            recv_nbr_adv();
+            recv_nbr_adv(length);
             break;
         }
 
@@ -206,6 +203,7 @@ void ipv6_process(void)
     msg_t m_recv, m_send;
     ipv6_addr_t myaddr;
     short i;
+    lowpan_datagram_t *datagram;
 
     ipv6_init_address(&myaddr, 0xabcd, 0x0, 0x0, 0x0, 0x3612, 0x00ff, 0xfe00,
                       get_radio_address());
@@ -213,17 +211,19 @@ void ipv6_process(void)
     while (1) {
         msg_receive(&m_recv_lowpan);
 
-        ipv6_buf = (ipv6_hdr_t *)m_recv_lowpan.content.ptr;
+        datagram = (lowpan_datagram_t*)m_recv_lowpan.content.ptr;
+        ipv6_buf = (ipv6_hdr_t *)datagram->data;
 
         /* identifiy packet */
         nextheader = &ipv6_buf->nextheader;
 
+        /* TODO: routing here - are you serious? And does anyone know the destination? */
         if ((ipv6_get_addr_match(&myaddr, &ipv6_buf->destaddr) >= 112) &&
            (ipv6_buf->destaddr.uint8[15] != myaddr.uint8[15])) {
             memcpy(get_ipv6_buf_send(), get_ipv6_buf(),
                    IPV6_HDR_LEN + ipv6_buf->length);
             lowpan_init((ieee_802154_long_t *)&(ipv6_buf->destaddr.uint16[4]),
-                        (uint8_t *)get_ipv6_buf_send());
+                        (uint8_t *)get_ipv6_buf_send(), datagram->length);
         }
         else {
             for (i = 0; i < SIXLOWIP_MAX_REGISTERED; i++) {
@@ -241,7 +241,7 @@ void ipv6_process(void)
                     }
 
                     icmp_buf = get_icmpv6_buf(ipv6_ext_hdr_len);
-                    icmpv6_demultiplex(icmp_buf);
+                    icmpv6_demultiplex(icmp_buf, datagram->length);
                     break;
                 }
 

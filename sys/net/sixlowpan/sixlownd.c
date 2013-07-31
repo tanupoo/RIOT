@@ -36,7 +36,6 @@
 /* extern variables */
 uint8_t opt_hdr_len = 0;
 uint8_t ipv6_ext_hdr_len = 0;
-uint16_t packet_length;
 
 /* counter */
 uint8_t abr_count = 0;
@@ -175,13 +174,12 @@ static opt_aro_t *get_opt_aro_buf(uint8_t ext_len, uint8_t opt_len)
 
 void init_echo_req(ipv6_addr_t *destaddr, uint16_t id, uint16_t seq, char *data, size_t data_len)
 {
+    uint16_t packet_length;
     ipv6_buf = get_ipv6_buf();
     icmp_buf = get_icmpv6_buf(ipv6_ext_hdr_len);
     struct echo_req_t *echo_buf = get_echo_req_buf(ipv6_ext_hdr_len);
     char *echo_data_buf = ((char *)echo_buf)+sizeof (struct echo_req_t);
     
-    packet_length = 0;
-
     icmp_buf->type = ICMP_ECHO_REQ;
     icmp_buf->code = 0;
     ipv6_buf->version_trafficclass = IPV6_VER;
@@ -199,7 +197,7 @@ void init_echo_req(ipv6_addr_t *destaddr, uint16_t id, uint16_t seq, char *data,
     packet_length = IPV6_HDR_LEN + ICMPV6_HDR_LEN + ipv6_ext_hdr_len +
                     ECHO_REQ_LEN + data_len;
 
-    ipv6_buf->length = packet_length-IPV6_HDR_LEN;
+    ipv6_buf->length = HTONS(packet_length-IPV6_HDR_LEN);
 
     icmp_buf->checksum = 0;
     icmp_buf->checksum = ~icmpv6_csum(PROTO_NUM_ICMPV6);
@@ -210,18 +208,17 @@ void init_echo_req(ipv6_addr_t *destaddr, uint16_t id, uint16_t seq, char *data,
     ipv6_print_header(ipv6_buf);
 #endif
     lowpan_init((ieee_802154_long_t *)&(ipv6_buf->destaddr.uint16[4]),
-                (uint8_t *)ipv6_buf);
+                (uint8_t *)ipv6_buf, packet_length);
 }
 
 void init_echo_repl(ipv6_addr_t *destaddr, uint16_t id, uint16_t seq, char *data, size_t data_len)
 {
+    uint16_t packet_length;
     ipv6_buf = get_ipv6_buf();
     icmp_buf = get_icmpv6_buf(ipv6_ext_hdr_len);
     struct echo_repl_t *echo_buf = get_echo_repl_buf(ipv6_ext_hdr_len);
     char *echo_data_buf = ((char *)echo_buf)+sizeof (struct echo_repl_t);
     
-    packet_length = 0;
-
     icmp_buf->type = ICMP_ECHO_REPL;
     icmp_buf->code = 0;
     ipv6_buf->version_trafficclass = IPV6_VER;
@@ -239,7 +236,7 @@ void init_echo_repl(ipv6_addr_t *destaddr, uint16_t id, uint16_t seq, char *data
     packet_length = IPV6_HDR_LEN + ICMPV6_HDR_LEN + ipv6_ext_hdr_len +
                     ECHO_REPL_LEN + data_len;
     
-    ipv6_buf->length = packet_length-IPV6_HDR_LEN;
+    ipv6_buf->length = HTONS(packet_length-IPV6_HDR_LEN);
 
     icmp_buf->checksum = 0;
     icmp_buf->checksum = ~icmpv6_csum(PROTO_NUM_ICMPV6);
@@ -249,12 +246,13 @@ void init_echo_repl(ipv6_addr_t *destaddr, uint16_t id, uint16_t seq, char *data
     ipv6_print_addr(&ipv6_buf->destaddr);
 #endif
     lowpan_init((ieee_802154_long_t *)&(ipv6_buf->destaddr.uint16[4]),
-                (uint8_t *)ipv6_buf);
+                (uint8_t *)ipv6_buf, packet_length);
 }
 
 /* send router solicitation message - RFC4861 section 4.1 */
 void init_rtr_sol(uint8_t sllao)
 {
+    uint16_t packet_length;
     ipv6_buf = get_ipv6_buf();
     icmp_buf = get_icmpv6_buf(ipv6_ext_hdr_len);
 
@@ -296,10 +294,10 @@ void init_rtr_sol(uint8_t sllao)
     ipv6_print_addr(&ipv6_buf->destaddr);
 #endif
     lowpan_init((ieee_802154_long_t *)&(ipv6_buf->destaddr.uint16[4]),
-                (uint8_t *)ipv6_buf);
+                (uint8_t *)ipv6_buf, packet_length);
 }
 
-void recv_echo_req(void)
+void recv_echo_req(uint16_t length)
 {
     ipv6_buf = get_ipv6_buf();
     struct echo_req_t *echo_buf = get_echo_req_buf(ipv6_ext_hdr_len);
@@ -322,7 +320,7 @@ void recv_echo_req(void)
             echo_data_buf, data_len);
 }
 
-void recv_echo_repl(void)
+void recv_echo_repl(uint16_t length)
 {
     ipv6_buf = get_ipv6_buf();
     struct echo_repl_t *echo_buf = get_echo_repl_buf(ipv6_ext_hdr_len);
@@ -343,7 +341,7 @@ void recv_echo_repl(void)
 #endif
 }
 
-void recv_rtr_sol(void)
+void recv_rtr_sol(uint16_t length)
 {
     opt_hdr_len = RTR_SOL_LEN;
     ipv6_buf = get_ipv6_buf();
@@ -391,7 +389,7 @@ void recv_rtr_sol(void)
     ipv6_print_addr(&ipv6_buf->destaddr);
 #endif
     lowpan_init((ieee_802154_long_t *)&(ipv6_buf->destaddr.uint16[4]),
-                (uint8_t *)ipv6_buf);
+                (uint8_t *)ipv6_buf, length);
 
 }
 
@@ -422,6 +420,7 @@ lowpan_context_t *abr_get_context(abr_cache_t *abr, uint8_t cid);
 void init_rtr_adv(ipv6_addr_t *addr, uint8_t sllao, uint8_t mtu, uint8_t pi, 
                   uint8_t sixco, uint8_t abro)
 {
+    uint16_t packet_length;
     lowpan_context_t *contexts = NULL;
 
     abr_cache_t *msg_abr = NULL;
@@ -589,7 +588,7 @@ void init_rtr_adv(ipv6_addr_t *addr, uint8_t sllao, uint8_t mtu, uint8_t pi,
     icmp_buf->checksum = ~icmpv6_csum(PROTO_NUM_ICMPV6);
 }
 
-void recv_rtr_adv(void)
+void recv_rtr_adv(uint16_t length)
 {
     int8_t trigger_ns = -1;
     int8_t abro_found = 0;
@@ -632,7 +631,7 @@ void recv_rtr_adv(void)
     mutex_lock(&lowpan_context_mutex);
 
     /* read options */
-    while (packet_length > IPV6HDR_ICMPV6HDR_LEN + opt_hdr_len) {
+    while (length > IPV6HDR_ICMPV6HDR_LEN + opt_hdr_len) {
         opt_buf = get_opt_buf(ipv6_ext_hdr_len, opt_hdr_len);
 
         switch(opt_buf->type) {
@@ -770,13 +769,14 @@ void recv_rtr_adv(void)
         printf("INFO: send neighbor solicitation to: ");
         ipv6_print_addr(&(ipv6_buf->destaddr));
 #endif
-        lowpan_init((ieee_802154_long_t *) & (ipv6_buf->destaddr.uint16[4]), (uint8_t *)ipv6_buf);
+        lowpan_init((ieee_802154_long_t *) & (ipv6_buf->destaddr.uint16[4]), (uint8_t *)ipv6_buf, length);
     }
 }
 
 void init_nbr_sol(ipv6_addr_t *src, ipv6_addr_t *dest, ipv6_addr_t *targ,
                   uint8_t sllao, uint8_t aro)
 {
+    uint16_t packet_length;
     ipv6_buf = get_ipv6_buf();
     ipv6_buf->version_trafficclass = IPV6_VER;
     ipv6_buf->trafficclass_flowlabel = 0;
@@ -841,7 +841,7 @@ void init_nbr_sol(ipv6_addr_t *src, ipv6_addr_t *dest, ipv6_addr_t *targ,
     icmp_buf->checksum = ~icmpv6_csum(PROTO_NUM_ICMPV6);
 }
 
-void recv_nbr_sol(void)
+void recv_nbr_sol(uint16_t length)
 {
     ipv6_buf = get_ipv6_buf();
     llao = NULL;
@@ -855,7 +855,7 @@ void recv_nbr_sol(void)
      * option condition is that a sllao option is set. thus that we don't
      * know which option comes first we need to this here */
 
-    while (packet_length > IPV6HDR_ICMPV6HDR_LEN + opt_hdr_len) {
+    while (length > IPV6HDR_ICMPV6HDR_LEN + opt_hdr_len) {
         opt_buf = get_opt_buf(ipv6_ext_hdr_len, opt_hdr_len);
 
         if (opt_buf->type == OPT_SLLAO_TYPE) {
@@ -867,7 +867,7 @@ void recv_nbr_sol(void)
 
     opt_hdr_len = NBR_SOL_LEN;
 
-    while (packet_length > IPV6HDR_ICMPV6HDR_LEN + opt_hdr_len) {
+    while (length > IPV6HDR_ICMPV6HDR_LEN + opt_hdr_len) {
         opt_buf = get_opt_buf(ipv6_ext_hdr_len, opt_hdr_len);
 
         switch(opt_buf->type) {
@@ -1025,13 +1025,14 @@ void recv_nbr_sol(void)
         printf("INFO: send neighbor advertisment to: ");
         ipv6_print_addr(&ipv6_buf->destaddr);
 #endif
-        lowpan_init((ieee_802154_long_t *) & (ipv6_buf->destaddr.uint16[4]), (uint8_t *)ipv6_buf);
+        lowpan_init((ieee_802154_long_t *) & (ipv6_buf->destaddr.uint16[4]), (uint8_t *)ipv6_buf, length);
     }
 }
 
 void init_nbr_adv(ipv6_addr_t *src, ipv6_addr_t *dst, ipv6_addr_t *tgt,
                   uint8_t rso, uint8_t sllao, uint8_t aro, uint8_t aro_state)
 {
+    uint16_t packet_length;
     ipv6_buf = get_ipv6_buf();
     ipv6_buf->version_trafficclass = IPV6_VER;
     ipv6_buf->trafficclass_flowlabel = 0;
@@ -1084,7 +1085,7 @@ void init_nbr_adv(ipv6_addr_t *src, ipv6_addr_t *dst, ipv6_addr_t *tgt,
     icmp_buf->checksum = ~icmpv6_csum(PROTO_NUM_ICMPV6);
 }
 
-void recv_nbr_adv(void)
+void recv_nbr_adv(uint16_t length)
 {
     opt_hdr_len = NBR_ADV_LEN;
     llao = NULL;
@@ -1093,7 +1094,7 @@ void recv_nbr_adv(void)
     nbr_adv_buf = get_nbr_adv_buf(ipv6_ext_hdr_len);
 
     /* check if options are present */
-    while (packet_length > IPV6HDR_ICMPV6HDR_LEN + opt_hdr_len) {
+    while (length > IPV6HDR_ICMPV6HDR_LEN + opt_hdr_len) {
         opt_buf = get_opt_buf(ipv6_ext_hdr_len, opt_hdr_len);
 
         switch(opt_buf->type) {
@@ -1206,7 +1207,7 @@ uint16_t icmpv6_csum(uint8_t proto)
 {
     ipv6_buf = get_ipv6_buf();
     uint16_t sum;
-    uint16_t len = ipv6_buf->length;
+    uint16_t len = NTOHS(ipv6_buf->length);
     sum = len + proto;
 
     sum = csum(sum, (uint8_t *)&ipv6_buf->srcaddr, 2 * sizeof(ipv6_addr_t));
@@ -1219,7 +1220,7 @@ uint16_t icmpv6_csum(uint8_t proto)
 void init_para_prob(ipv6_addr_t *src, ipv6_addr_t *dest, uint8_t code, uint32_t pointer, uint8_t *packet, uint8_t packet_len)
 {
     struct para_prob_t *para_prob_buf;
-
+    uint16_t packet_length;
 
     packet_length = IPV6_HDR_LEN + ICMPV6_HDR_LEN + PARA_PROB_LEN;
 

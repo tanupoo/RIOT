@@ -245,13 +245,13 @@ typedef struct __attribute__((packed)) {
 } def_rtr_lst_t;
 
 void init_rtr_sol(uint8_t sllao);
-void recv_rtr_sol(void);
-void recv_rtr_adv(void);
+void recv_rtr_sol(uint16_t length);
+void recv_rtr_adv(uint16_t length);
 void init_rtr_adv(ipv6_addr_t *addr, uint8_t sllao, uint8_t mtu, uint8_t pi,
                   uint8_t sixco, uint8_t abro);
-void recv_echo_req(void);
+void recv_echo_req(uint16_t length);
 void init_echo_req(ipv6_addr_t *destaddr, uint16_t id, uint16_t seq, char *data, size_t data_len);
-void recv_echo_repl(void);
+void recv_echo_repl(uint16_t length);
 void init_echo_repl(ipv6_addr_t *destaddr, uint16_t id, uint16_t seq, char *data, size_t data_len);
 uint8_t plist_search(ipv6_addr_t *addr);
 uint8_t plist_cmp(ipv6_addr_t *addr1, ipv6_addr_t *addr2);
@@ -280,6 +280,6 @@ void init_nbr_sol(ipv6_addr_t *src, ipv6_addr_t *dest, ipv6_addr_t *targ,
                   uint8_t slloa, uint8_t aro);
 void init_nbr_adv(ipv6_addr_t *src, ipv6_addr_t *dst, ipv6_addr_t *tgt,
                   uint8_t rso, uint8_t sllao, uint8_t aro, uint8_t aro_state);
-void recv_nbr_adv(void);
-void recv_nbr_sol(void);
+void recv_nbr_adv(uint16_t length);
+void recv_nbr_sol(uint16_t length);
 #endif /* SIXLOWND_H*/

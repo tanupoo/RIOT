@@ -49,8 +49,6 @@
 /* extern variables */
 extern uint8_t ipv6_ext_hdr_len;
 extern uint8_t opt_hdr_len;
-extern uint16_t packet_length;
-extern uint8_t packet_dispatch;
 extern uint8_t iface_addr_list_count;
 extern mutex_t buf_mutex;
 
@@ -155,7 +153,7 @@ ipv6_hdr_t *get_ipv6_buf(void);
 uint8_t *get_payload_buf(uint8_t ext_len);
 uint8_t *get_payload_buf_send(uint8_t ext_len);
 
-int icmpv6_demultiplex(const struct icmpv6_hdr_t *hdr);
+int icmpv6_demultiplex(const struct icmpv6_hdr_t *hdr, uint16_t length);
 void ipv6_init_iface_as_router(void);
 uint8_t ipv6_is_router(void);
 void ipv6_set_ll_prefix(ipv6_addr_t *ipaddr);

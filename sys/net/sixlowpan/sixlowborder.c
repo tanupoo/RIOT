@@ -173,17 +173,19 @@ void border_send_ipv6_over_lowpan(ipv6_hdr_t *packet, uint8_t aro_flag, uint8_t 
     memset(buffer, 0, BUFFER_SIZE);
     memcpy(buffer + LL_HDR_LEN, packet, offset);
 
-    lowpan_init((ieee_802154_long_t *)&(packet->destaddr.uint16[4]), (uint8_t *)packet);
+    lowpan_init((ieee_802154_long_t *)&(packet->destaddr.uint16[4]), (uint8_t *)packet, offset);
 }
 
 void border_process_lowpan(void)
 {
     msg_t m;
     ipv6_hdr_t *ipv6_buf;
+    lowpan_datagram_t *datagram;
 
     while (1) {
         msg_receive(&m);
-        ipv6_buf = (ipv6_hdr_t *)m.content.ptr;
+        datagram = (lowpan_datagram_t*)m.content.ptr;
+        ipv6_buf = (ipv6_hdr_t *)datagram->data;
 
         if (ipv6_buf->nextheader == PROTO_NUM_ICMPV6) {
             struct icmpv6_hdr_t *icmp_buf = (struct icmpv6_hdr_t *)(((uint8_t *)ipv6_buf) + IPV6_HDR_LEN);
@@ -192,7 +194,7 @@ void border_process_lowpan(void)
                 continue;
             }
 
-            if (icmpv6_demultiplex(icmp_buf) == 0) {
+            if (icmpv6_demultiplex(icmp_buf, datagram->length) == 0) {
                 continue;
             }
 

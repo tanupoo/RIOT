@@ -109,7 +109,7 @@ typedef struct lowpan_reas_buf_t {
 } lowpan_reas_buf_t;
 
 typedef struct {
-    uint8_t length;
+    uint16_t length;
     uint8_t *data;
 } lowpan_datagram_t;
 
@@ -138,14 +138,33 @@ void sixlowpan_init(transceiver_type_t trans, uint8_t r_addr, int as_border);
  */
 void sixlowpan_adhoc_init(transceiver_type_t trans, ipv6_addr_t *prefix, 
                           uint8_t r_addr);
-void lowpan_init(ieee_802154_long_t *addr, uint8_t *data);
+
+/**
+ * @brief Initialize datagram and deliver it to the MAC layer
+ *
+ * @param[in] addr      IEEE802.15.4 desgination address (long address)
+ * @param[in] data      Pointer to IP datagram
+ * @param[in] len       Length of IP datagram (including header)
+ **/
+void lowpan_init(ieee_802154_long_t *addr, uint8_t *data, uint16_t len);
 void lowpan_set_iphc_status(lowpan_iphc_status_t status);
 void lowpan_read(uint8_t *data, uint8_t length, ieee_802154_long_t *s_laddr,
                  ieee_802154_long_t *d_laddr);
-void lowpan_iphc_encoding(ieee_802154_long_t *dest, ipv6_hdr_t *ipv6_buf_extra, uint8_t *ptr);
+void lowpan_iphc_encoding(ieee_802154_long_t *dest, ipv6_hdr_t *ipv6_buf_extra, uint8_t *ptr, uint16_t *comp_len);
+
+/**
+ * @brief Decode a header compressed datagram
+ *
+ * @param[in] data              Pointer to the datagram
+ * @param[in] length            Length of the datagram
+ * @param[in] s_laddr           IEEE802.15.4 source address (long address)
+ * @param[in] d_laddr           IEEE802.15.4 destination address (long address)
+ * @param[out] decomp_length    Packet length of the uncompressed packet
+ */
 void lowpan_iphc_decoding(uint8_t *data, uint8_t length,
                           ieee_802154_long_t *s_laddr,
-                          ieee_802154_long_t *d_laddr);
+                          ieee_802154_long_t *d_laddr,
+                          uint16_t *decomp_length);
 uint8_t lowpan_context_len(void);
 void add_fifo_packet(lowpan_reas_buf_t *current_packet);
 lowpan_context_t *lowpan_context_update(
@@ -158,7 +177,7 @@ lowpan_context_t *lowpan_context_num_lookup(uint8_t num);
 lowpan_reas_buf_t *collect_garbage_fifo(lowpan_reas_buf_t *current_buf);
 lowpan_reas_buf_t *collect_garbage(lowpan_reas_buf_t *current_buf);
 void check_timeout(void);
-void lowpan_ipv6_set_dispatch(uint8_t *data);
+void lowpan_ipv6_set_dispatch(uint8_t *data, uint16_t packet_length);
 void init_reas_bufs(lowpan_reas_buf_t *buf);
 void printReasBuffers(void);
 void printFIFOBuffers(void);
