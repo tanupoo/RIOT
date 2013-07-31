@@ -4,6 +4,7 @@
 #include <inttypes.h>
 #include <string.h>
 
+#define ENABLE_DEBUG    (0)
 #include "debug.h"
 
 #include "cc110x_ng.h"

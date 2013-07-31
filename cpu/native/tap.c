@@ -21,6 +21,7 @@
 #include <netinet/ip.h>       // struct ip and IP_MAXPACKET (which is 65535)
 #endif
 
+#define ENABLE_DEBUG    (0)
 #include "debug.h"
 
 #include "packet-zep.h"
@@ -39,7 +40,7 @@ char _native_tap_brcast[INET_ADDRSTRLEN];
 
 void _native_handle_cc110xng_input(void)
 {
-    int nread;
+    int nread, offset;
     char buf[TAP_BUFFER_LENGTH];
     union eth_frame *f;
 
@@ -61,7 +62,8 @@ void _native_handle_cc110xng_input(void)
             }
             else {
                 nread = buf[ETHER_HDR_LEN];
-                _native_cc1100_handle_packet(buf+ETHER_HDR_LEN+IP4_HDRLEN+UDP_HDRLEN+ZEP_V1_HEADER_LEN, nread);
+                offset = ETHER_HDR_LEN + IP4_HDRLEN + UDP_HDRLEN;
+                _native_cc1100_handle_packet(buf+offset+ZEP_V1_HEADER_LEN, nread);
             }
         }
         else {
@@ -214,8 +216,9 @@ void _native_marshall_ethernet(uint8_t *framebuf, uint8_t *data, int data_len)
     memcpy(f->field.header.ether_dhost, addr, ETHER_ADDR_LEN);
     //memcpy(f->field.header.ether_shost, src, ETHER_ADDR_LEN);
     memcpy(f->field.header.ether_shost, _native_tap_mac, ETHER_ADDR_LEN);
-    //f->field.header.ether_type = htons(NATIVE_ETH_PROTO);
-    f->field.header.ether_type = htons(ETHERTYPE_IP);
+    /* use our own ethertype, to filter frames at receiving side */
+    f->field.header.ether_type = htons(NATIVE_ETH_PROTO);
+    /* f->field.header.ether_type = htons(ETHERTYPE_IP); */
     _native_create_ipv4(f->field.data, data, data_len);
 }
 
@@ -317,17 +320,22 @@ void _native_zep(char *databuf, uint8_t *data, int data_len)
     databuf[6] = zep.lqi_mode;
     databuf[7] = zep.lqi;
     /* misusing reserved bytes */
+    /* cc110x length */
+    databuf[8] = data[0];
     /* cc110x dst address */
-    databuf[8] = data[1];
+    databuf[9] = data[1];
     /* cc110x flags */
-    databuf[9] = data[3];
-    databuf[10] = databuf[11] = databuf[12] = databuf[13] = databuf[14] = 0;
+    databuf[10] = data[3];
+    databuf[11] = databuf[12] = databuf[13] = databuf[14] = 0;
     databuf[15] = data_len;
 
     /* why -2 - maybe 802.15.4 checksum is missing at all? */
     memcpy(databuf+ZEP_V1_HEADER_LEN, data+4, data_len-2);
-    databuf[ZEP_V1_HEADER_LEN+data_len-2] = 0xA0;
-    databuf[ZEP_V1_HEADER_LEN+data_len-1] = 0xF4;
+
+    /* RSSI = 0 */
+    databuf[ZEP_V1_HEADER_LEN+data_len-2] = 0x0;
+    /* FCS Valid = 1 / LQI Correlation Value = 0 */
+    databuf[ZEP_V1_HEADER_LEN+data_len-1] = 0x80;
 }
 
 uint16_t checksum(uint16_t *addr, int len)
