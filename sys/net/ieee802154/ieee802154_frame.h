@@ -23,19 +23,19 @@
 #include <stdint.h>
 
 /* maximum 802.15.4 header length */
-#define IEEE_802154_MAX_HDR_LEN         23
-/* mininmum */
-#define IEEE_802154_PAYLOAD_LEN         21
+#define IEEE_802154_MAX_HDR_LEN         (23)
+/* ...and FCS*/
+#define IEEE_802154_FCS_LEN             (2)
 
-#define IEEE_802154_BEACON_FRAME        0
-#define IEEE_802154_DATA_FRAME          1
-#define IEEE_802154_ACK_FRAME           2
-#define IEEE_802154_MAC_CMD_FRAME       3
+#define IEEE_802154_BEACON_FRAME        (0)
+#define IEEE_802154_DATA_FRAME          (1)
+#define IEEE_802154_ACK_FRAME           (2)
+#define IEEE_802154_MAC_CMD_FRAME       (3)
 
-#define IEEE_802154_SHORT_ADDR_M        2
-#define IEEE_802154_LONG_ADDR_M         3
+#define IEEE_802154_SHORT_ADDR_M        (2)
+#define IEEE_802154_LONG_ADDR_M         (3)
 
-#define IEEE_802154_PAN_ID              0x1234
+#define IEEE_802154_PAN_ID              (0x1234)
 
 typedef struct __attribute__((packed)) {
     uint8_t frame_type;
