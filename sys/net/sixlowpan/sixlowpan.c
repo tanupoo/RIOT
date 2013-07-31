@@ -255,7 +255,7 @@ void lowpan_transfer(void)
             if ((current_buf->packet)[0] == LOWPAN_IPV6_DISPATCH) {
                 ipv6_buf = get_ipv6_buf();
 #if ENABLE_DEBUG
-                ipv6_print_header(&ipv6_buf);
+                ipv6_print_header(ipv6_buf);
 #endif
                 memcpy(ipv6_buf, (current_buf->packet) + 1, current_buf->packet_size - 1);
                 m_send.content.ptr = (char *)ipv6_buf;
@@ -270,7 +270,7 @@ void lowpan_transfer(void)
 
                 ipv6_buf = get_ipv6_buf();
 #if ENABLE_DEBUG
-                ipv6_print_header(&ipv6_buf);
+                ipv6_print_header(ipv6_buf);
 #endif
                 m_send.content.ptr = (char *) ipv6_buf;
                 msg_send_receive(&m_send, &m_recv, ip_process_pid);
