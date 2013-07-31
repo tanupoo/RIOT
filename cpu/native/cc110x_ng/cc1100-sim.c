@@ -99,7 +99,7 @@ struct cc1100_callback_t {
 static struct cc1100_callback_t _native_cc1100_callbacks[255];
 
 /* cc1100 default configuration */
-char cc1100_reset_configuration_regs[] = {
+unsigned char cc1100_reset_configuration_regs[] = {
     0x29, /* IOCFG2 */
     0x2E, /* IOCFG1 */
     0x3F, /* IOCFG0 */
@@ -150,7 +150,7 @@ char cc1100_reset_configuration_regs[] = {
 };
 
 /* cc1100 default status */
-char cc1100_reset_status_regs[] = {
+unsigned char cc1100_reset_status_regs[] = {
     0x00, /* PARTNUM */
     0x03, /* VERSION */
     0x00, /* FREQEST */
@@ -379,19 +379,22 @@ uint8_t read_burst(uint8_t c)
         return patable[patable_idx++];
     }
     else if (addr == 0x3F) {
-        DEBUG("read rx fifo\n");
+        DEBUG("read rx fifo: %u - %u\n", status_registers[CC1100_RXBYTES - 0x30], rx_fifo_idx);
         int off = (status_registers[CC1100_RXBYTES - 0x30] - rx_fifo_idx);
         switch (off) {
             case 0:
                 /* CRC OK */
+                DEBUG("CRC okay\n");
                 return CRC_OK;
             case -1:
                 /* CRC OK */
+                DEBUG("CRC not okay\n");
                 return 0xFF;
         }
         if (rx_fifo_idx >= status_registers[CC1100_RXBYTES - 0x30]) {
-            //warnx("read_burst: buffer empty");
+            warnx("read_burst: buffer empty");
         }
+        DEBUG("return %u\n", rx_fifo[rx_fifo_idx]);
         return rx_fifo[rx_fifo_idx++];
     }
     else {
@@ -506,16 +509,14 @@ void _native_cc1100_register_callback(int event, void *cb)
     _native_cc1100_callbacks[event].func = cb;
 }
 
-void _native_cc1100_handle_packet(char *buf, int size)
+void _native_cc1100_handle_packet(unsigned char *buf, int size)
 { 
-    char dst_addr, data_len, *data;
+    unsigned char dst_addr;
 
-    data_len = buf[0];
     dst_addr = buf[1];
-    data = buf[2];
 
+    /* packet automation */
 
-    /* packet filter */
     /* monitor mode */
     if ((configuration_registers[CC1100_PKTCTRL1] & 0x03) == 0x00) {
         DEBUG("_native_cc1100_handle_packet: not filtering address\n");
@@ -541,12 +542,36 @@ void _native_cc1100_handle_packet(char *buf, int size)
             DEBUG("_native_cc1100_handle_packet: accept packet, broadcast\n");
         }
         else {
-            DEBUG("_native_cc1100_handle_packet: discarding packet addressed to someone else\n");
+            DEBUG("_native_cc1100_handle_packet: discard packet addressed to someone else (%u)\n", dst_addr);
             return;
         }
     }
+    /* length filter */
+    /* variable packet length */
+    if ((configuration_registers[CC1100_PKTCTRL0] & 0x03) == 0x01) {
+        if (size > configuration_registers[CC1100_PKTLEN]) {
+            DEBUG("_native_cc1100_handle_packet: discard packet longer than CC1100_PKTLEN (%u > %u)\n", size, configuration_registers[CC1100_PKTLEN]);
+            return;
+        }
+        else {
+            DEBUG("_native_cc1100_handle_packet: accept packet <= CC1100_PKTLEN\n");
+        }
+    }
+    /* fixed packet length */
+    else if ((configuration_registers[CC1100_PKTCTRL0] & 0x03) == 0x00) {
+        if (size != configuration_registers[CC1100_PKTLEN]) {
+            DEBUG("_native_cc1100_handle_packet: discard packet, size differs from CC1100_PKTLEN\n");
+            return;
+        }
+        else {
+            DEBUG("_native_cc1100_handle_packet: accept packet == CC1100_PKTLEN\n");
+        }
+    }
+    else {
+        errx(EXIT_FAILURE, "_native_cc1100_handle_packet: packet length mode not supported");
+    }
 
-    /* copy data to rx_fifo */
+    /* copy packet to rx_fifo */
     /* XXX: handle overflow */
     rx_fifo_idx = 0;
     memcpy(rx_fifo, buf, size);

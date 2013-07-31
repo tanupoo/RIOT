@@ -21,7 +21,7 @@
 #include <netinet/ip.h>       // struct ip and IP_MAXPACKET (which is 65535)
 #endif
 
-#define ENABLE_DEBUG    (0)
+#define ENABLE_DEBUG    (1)
 #include "debug.h"
 
 #include "packet-zep.h"
@@ -34,14 +34,14 @@
 #define TAP_BUFFER_LENGTH (CC1100_FIFO_LENGTH + ETHER_HDR_LEN + IP4_HDRLEN + UDP_HDRLEN + ZEP_V1_HEADER_LEN)
 
 int _native_tap_fd;
-char _native_tap_mac[ETHER_ADDR_LEN];
+unsigned char _native_tap_mac[ETHER_ADDR_LEN];
 char _native_tap_ip[INET_ADDRSTRLEN];
 char _native_tap_brcast[INET_ADDRSTRLEN];
 
 void _native_handle_cc110xng_input(void)
 {
     int nread, offset;
-    char buf[TAP_BUFFER_LENGTH];
+    unsigned char buf[TAP_BUFFER_LENGTH];
     union eth_frame *f;
 
     DEBUG("_native_handle_cc110xng_input\n");
@@ -63,11 +63,16 @@ void _native_handle_cc110xng_input(void)
             else {
                 nread = buf[ETHER_HDR_LEN];
                 offset = ETHER_HDR_LEN + IP4_HDRLEN + UDP_HDRLEN;
+                buf[offset+ZEP_V1_HEADER_LEN] = buf[offset+8];
+                buf[offset+ZEP_V1_HEADER_LEN+1] = buf[offset+9];
+                buf[offset+ZEP_V1_HEADER_LEN+2] = buf[offset+5];
+                buf[offset+ZEP_V1_HEADER_LEN+3] = buf[offset+10];
                 _native_cc1100_handle_packet(buf+offset+ZEP_V1_HEADER_LEN, nread);
             }
         }
         else {
-            DEBUG("ignoring non-native frame\n");
+            DEBUG("ignoring non-native frame of type: %02X\n", ntohs(f->field.header.ether_type));
+            return;
         }
     }
     else if (nread == -1) {
@@ -85,8 +90,14 @@ int send_buf(void)
     uint8_t to_send;
 
     to_send = status_registers[CC1100_TXBYTES - 0x30];
-    _native_marshall_ethernet(buf, tx_fifo, to_send-2);
-    to_send += IP4_HDRLEN + UDP_HDRLEN + ZEP_V1_HEADER_LEN-2;
+    for (int i = 0; i < to_send; i++) {
+        DEBUG("tx_fifo[%i}: %02X\n", i, tx_fifo[i]);
+    }
+    _native_marshall_ethernet(buf, tx_fifo, to_send-4);
+    to_send += IP4_HDRLEN + UDP_HDRLEN + ZEP_V1_HEADER_LEN-4;
+    for (int i = 0; i < to_send + ETHER_HDR_LEN; i++) {
+        DEBUG("buf[%i}: %02X\n", i, buf[i]);
+    }
 
     if ((ETHER_HDR_LEN + to_send) < ETHERMIN) {
         DEBUG("padding data! (%d ->", to_send);
@@ -207,7 +218,7 @@ int tap_init(char *name)
 void _native_marshall_ethernet(uint8_t *framebuf, uint8_t *data, int data_len)
 {
     union eth_frame *f;
-    char addr[ETHER_ADDR_LEN];
+    unsigned char addr[ETHER_ADDR_LEN];
 
     f = (union eth_frame*)framebuf;
     addr[0] = addr[1] = addr[2] = addr[3] = addr[4] = addr[5] = (char)0xFF;
@@ -222,7 +233,7 @@ void _native_marshall_ethernet(uint8_t *framebuf, uint8_t *data, int data_len)
     _native_create_ipv4(f->field.data, data, data_len);
 }
 
-void _native_create_ipv4(char *framebuf, uint8_t *data, int data_len)
+void _native_create_ipv4(unsigned char *framebuf, uint8_t *data, int data_len)
 {
   struct ip iphdr;
   int status;
@@ -287,7 +298,7 @@ void _native_create_ipv4(char *framebuf, uint8_t *data, int data_len)
   _native_udp(&iphdr, framebuf+IP4_HDRLEN, data, data_len);
 }
 
-void _native_udp(struct ip *iphdr, char *databuf, uint8_t *data, int data_len)
+void _native_udp(struct ip *iphdr, unsigned char *databuf, uint8_t *data, int data_len)
 {
     struct udphdr header;
 
@@ -299,7 +310,7 @@ void _native_udp(struct ip *iphdr, char *databuf, uint8_t *data, int data_len)
     _native_zep(databuf+UDP_HDRLEN, data, data_len);
 }
 
-void _native_zep(char *databuf, uint8_t *data, int data_len)
+void _native_zep(unsigned char *databuf, uint8_t *data, int data_len)
 {
     zep_info zep;
 
@@ -330,12 +341,7 @@ void _native_zep(char *databuf, uint8_t *data, int data_len)
     databuf[15] = data_len;
 
     /* why -2 - maybe 802.15.4 checksum is missing at all? */
-    memcpy(databuf+ZEP_V1_HEADER_LEN, data+4, data_len-2);
-
-    /* RSSI = 0 */
-    databuf[ZEP_V1_HEADER_LEN+data_len-2] = 0x0;
-    /* FCS Valid = 1 / LQI Correlation Value = 0 */
-    databuf[ZEP_V1_HEADER_LEN+data_len-1] = 0x80;
+    memcpy(databuf+ZEP_V1_HEADER_LEN, data+4, data_len);
 }
 
 uint16_t checksum(uint16_t *addr, int len)
@@ -439,7 +445,7 @@ uint16_t udp4_checksum(struct ip *iphdr, struct udphdr *udphdr, uint8_t *payload
 int main(int argc, char *argv[])
 {
     int fd;
-    char buffer[2048];
+    unsigned char buffer[2048];
 
     if (argc < 2) {
         errx(EXIT_FAILURE, "you need to specify a tap name");
