@@ -18,20 +18,24 @@
 #include <net/if.h>
 #include <linux/if_tun.h>
 #include <linux/if_ether.h>
+#include <netinet/ip.h>       // struct ip and IP_MAXPACKET (which is 65535)
 #endif
 
 #include "debug.h"
 
+#include "packet-zep.h"
 #include "cpu.h"
 #include "cpu-conf.h"
 #include "tap.h"
 #include "cc1100sim.h"
 #include "cc110x-internal.h" /* CC1100 constants */
 
-#define TAP_BUFFER_LENGTH (CC1100_FIFO_LENGTH + ETHER_HDR_LEN + 1)
+#define TAP_BUFFER_LENGTH (CC1100_FIFO_LENGTH + ETHER_HDR_LEN + IP4_HDRLEN + UDP_HDRLEN + ZEP_V1_HEADER_LEN)
 
 int _native_tap_fd;
 char _native_tap_mac[ETHER_ADDR_LEN];
+char _native_tap_ip[INET_ADDRSTRLEN];
+char _native_tap_brcast[INET_ADDRSTRLEN];
 
 void _native_handle_cc110xng_input(void)
 {
@@ -57,7 +61,7 @@ void _native_handle_cc110xng_input(void)
             }
             else {
                 nread = buf[ETHER_HDR_LEN];
-                _native_cc1100_handle_packet(buf+ETHER_HDR_LEN+1, nread);
+                _native_cc1100_handle_packet(buf+ETHER_HDR_LEN+IP4_HDRLEN+UDP_HDRLEN+ZEP_V1_HEADER_LEN, nread);
             }
         }
         else {
@@ -79,8 +83,8 @@ int send_buf(void)
     uint8_t to_send;
 
     to_send = status_registers[CC1100_TXBYTES - 0x30];
-    _native_marshall_ethernet(buf, tx_fifo, to_send);
-    to_send += 1;
+    _native_marshall_ethernet(buf, tx_fifo, to_send-2);
+    to_send += IP4_HDRLEN + UDP_HDRLEN + ZEP_V1_HEADER_LEN-2;
 
     if ((ETHER_HDR_LEN + to_send) < ETHERMIN) {
         DEBUG("padding data! (%d ->", to_send);
@@ -97,6 +101,7 @@ int send_buf(void)
 
 int tap_init(char *name)
 {
+    int _native_tap_ip_fd;
 
 #ifdef __MACH__ /* OSX */
     char clonedev[255] = "/dev/"; /* XXX bad size */
@@ -140,10 +145,9 @@ int tap_init(char *name)
     /* TODO: use strncpy */
     strcpy(name, ifr.ifr_name);
 
-
     /* get MAC address */
-    memset (&ifr, 0, sizeof (ifr));
-    snprintf (ifr.ifr_name, sizeof (ifr.ifr_name), "%s", name);
+    memset (&ifr, 0, sizeof(ifr));
+    snprintf (ifr.ifr_name, sizeof(ifr.ifr_name), "%s", name);
     if (ioctl(_native_tap_fd, SIOCGIFHWADDR, &ifr) == -1) {
         warn("ioctl");
         if (close(_native_tap_fd) == -1) {
@@ -152,6 +156,31 @@ int tap_init(char *name)
         exit(EXIT_FAILURE);
     }
     memcpy(_native_tap_mac, ifr.ifr_hwaddr.sa_data, ETHER_ADDR_LEN);
+
+    _native_tap_ip_fd = socket(AF_INET, SOCK_DGRAM, 0);
+    /* I want to get an IPv4 IP address */
+    ifr.ifr_addr.sa_family = AF_INET;
+
+    /* I want IP address attached to "eth0" */
+    strncpy(ifr.ifr_name, name, IFNAMSIZ-1);
+
+    if (ioctl(_native_tap_ip_fd, SIOCGIFADDR, &ifr) == -1) {
+        warn("ioctl2");
+        if (close(_native_tap_ip_fd) == -1) {
+            warn("close");
+        }
+        exit(EXIT_FAILURE);
+    }
+    memcpy(_native_tap_ip, inet_ntoa(((struct sockaddr_in *)&ifr.ifr_addr)->sin_addr), INET_ADDRSTRLEN);
+    
+    if (ioctl(_native_tap_ip_fd, SIOCGIFBRDADDR, &ifr) == -1) {
+        warn("ioctl2");
+        if (close(_native_tap_ip_fd) == -1) {
+            warn("close");
+        }
+        exit(EXIT_FAILURE);
+    }
+    memcpy(_native_tap_brcast, inet_ntoa(((struct sockaddr_in *)&ifr.ifr_broadaddr)->sin_addr), INET_ADDRSTRLEN);
 #endif
 
 /*TODO:  check OSX vvv */
@@ -185,10 +214,215 @@ void _native_marshall_ethernet(uint8_t *framebuf, uint8_t *data, int data_len)
     memcpy(f->field.header.ether_dhost, addr, ETHER_ADDR_LEN);
     //memcpy(f->field.header.ether_shost, src, ETHER_ADDR_LEN);
     memcpy(f->field.header.ether_shost, _native_tap_mac, ETHER_ADDR_LEN);
-    f->field.header.ether_type = htons(NATIVE_ETH_PROTO);
-    memcpy(f->field.data+1, data, data_len);
-    f->field.data[0] = (uint8_t)data_len;
+    //f->field.header.ether_type = htons(NATIVE_ETH_PROTO);
+    f->field.header.ether_type = htons(ETHERTYPE_IP);
+    _native_create_ipv4(f->field.data, data, data_len);
 }
+
+void _native_create_ipv4(char *framebuf, uint8_t *data, int data_len)
+{
+  struct ip iphdr;
+  int status;
+  int ip_flags[4];
+
+  /* IPv4 header length (4 bits): Number of 32-bit words in header = 5 */
+  iphdr.ip_hl = IP4_HDRLEN / sizeof(uint32_t);
+
+  /* Internet Protocol version (4 bits): IPv4 */
+  iphdr.ip_v = 4;
+
+  /* Type of service (8 bits) */
+  iphdr.ip_tos = 0;
+
+  /* Total length of datagram (16 bits): IP header + UDP header + datalen */
+  iphdr.ip_len = htons(IP4_HDRLEN + UDP_HDRLEN + ZEP_V1_HEADER_LEN + data_len);
+
+  /* ID sequence number (16 bits): unused, since single datagram */
+  iphdr.ip_id = htons (0);
+
+  /* Flags, and Fragmentation offset (3, 13 bits): 0 since single datagram */
+  /* Zero (1 bit) */
+  ip_flags[0] = 0;
+
+  /* Do not fragment flag (1 bit) */
+  ip_flags[1] = 0;
+
+  /* More fragments following flag (1 bit) */
+  ip_flags[2] = 0;
+
+  /* Fragmentation offset (13 bits) */
+  ip_flags[3] = 0;
+
+  iphdr.ip_off = htons ((ip_flags[0] << 15)
+                      + (ip_flags[1] << 14)
+                      + (ip_flags[2] << 13)
+                      +  ip_flags[3]);
+
+  /* Time-to-Live (8 bits): default to maximum value */
+  iphdr.ip_ttl = 255;
+
+  /* Transport layer protocol (8 bits): 17 for UDP */
+  iphdr.ip_p = IPPROTO_UDP;
+
+  /* Source IPv4 address (32 bits) */
+  if ((status = inet_pton(AF_INET, _native_tap_ip, &(iphdr.ip_src))) != 1) {
+    fprintf (stderr, "#1 inet_pton() failed.\nError message: %s", strerror(status));
+    exit (EXIT_FAILURE);
+  }
+
+  /* Destination IPv4 address (32 bits) */
+  if ((status = inet_pton (AF_INET, _native_tap_brcast, &(iphdr.ip_dst))) != 1) {
+    fprintf (stderr, "#2 inet_pton() failed.\nError message: %s", strerror (status));
+    exit (EXIT_FAILURE);
+  }
+
+  /* IPv4 header checksum (16 bits): set to 0 when calculating checksum */
+  iphdr.ip_sum = 0;
+  iphdr.ip_sum = checksum((uint16_t *)&iphdr, IP4_HDRLEN);
+  
+  memcpy(framebuf, &iphdr, IP4_HDRLEN);
+  _native_udp(&iphdr, framebuf+IP4_HDRLEN, data, data_len);
+}
+
+void _native_udp(struct ip *iphdr, char *databuf, uint8_t *data, int data_len)
+{
+    struct udphdr header;
+
+    header.source = htons(0);
+    header.dest = htons(ZEP_DEFAULT_PORT);
+    header.len = htons(UDP_HDRLEN + ZEP_V1_HEADER_LEN + data_len);
+    header.check = udp4_checksum(iphdr, &header, data, CC1100_FIFO_LENGTH);
+    memcpy(databuf, &header, UDP_HDRLEN);
+    _native_zep(databuf+UDP_HDRLEN, data, data_len);
+}
+
+void _native_zep(char *databuf, uint8_t *data, int data_len)
+{
+    zep_info zep;
+
+    zep.version = 1;
+    zep.channel_id = 26;
+    zep.device_id = data[2];
+    /* disabling checksum */
+    zep.lqi_mode = 0;
+    zep.lqi = 0;
+    
+    databuf[0] = ZEP_PREAMBLE[0];
+    databuf[1] = ZEP_PREAMBLE[1];
+    databuf[2] = zep.version;
+    databuf[3] = zep.channel_id;
+    /* ZEP header has two bytes for device_id */
+    databuf[4] = 0;
+    databuf[5] = zep.device_id;
+    databuf[6] = zep.lqi_mode;
+    databuf[7] = zep.lqi;
+    /* misusing reserved bytes */
+    /* cc110x dst address */
+    databuf[8] = data[1];
+    /* cc110x flags */
+    databuf[9] = data[3];
+    databuf[10] = databuf[11] = databuf[12] = databuf[13] = databuf[14] = 0;
+    databuf[15] = data_len;
+
+    /* why -2 - maybe 802.15.4 checksum is missing at all? */
+    memcpy(databuf+ZEP_V1_HEADER_LEN, data+4, data_len-2);
+    databuf[ZEP_V1_HEADER_LEN+data_len-2] = 0xA0;
+    databuf[ZEP_V1_HEADER_LEN+data_len-1] = 0xF4;
+}
+
+uint16_t checksum(uint16_t *addr, int len)
+{
+  int nleft = len;
+  int sum = 0;
+  uint16_t *w = addr;
+  uint16_t answer = 0;
+
+  while (nleft > 1) {
+    sum += *w++;
+    nleft -= sizeof(uint16_t);
+  }
+
+  if (nleft == 1) {
+    *(uint8_t *) (&answer) = *(uint8_t *) w;
+    sum += answer;
+  }
+
+  sum = (sum >> 16) + (sum & 0xFFFF);
+  sum += (sum >> 16);
+  answer = ~sum;
+  return (answer);
+}
+
+// Build IPv4 UDP pseudo-header and call checksum function.
+uint16_t udp4_checksum(struct ip *iphdr, struct udphdr *udphdr, uint8_t *payload, int payloadlen)
+{
+  char buf[IP_MAXPACKET];
+  char *ptr;
+  int chksumlen = 0;
+  int i;
+
+  ptr = &buf[0];  // ptr points to beginning of buffer buf
+
+  // Copy source IP address into buf (32 bits)
+  memcpy (ptr, &(iphdr->ip_src.s_addr), sizeof(iphdr->ip_src.s_addr));
+  ptr += sizeof(iphdr->ip_src.s_addr);
+  chksumlen += sizeof(iphdr->ip_src.s_addr);
+
+  // Copy destination IP address into buf (32 bits)
+  memcpy (ptr, &(iphdr->ip_dst.s_addr), sizeof(iphdr->ip_dst.s_addr));
+  ptr += sizeof(iphdr->ip_dst.s_addr);
+  chksumlen += sizeof(iphdr->ip_dst.s_addr);
+
+  // Copy zero field to buf (8 bits)
+  *ptr = 0; ptr++;
+  chksumlen += 1;
+
+  // Copy transport layer protocol to buf (8 bits)
+  memcpy (ptr, &(iphdr->ip_p), sizeof(iphdr->ip_p));
+  ptr += sizeof(iphdr->ip_p);
+  chksumlen += sizeof(iphdr->ip_p);
+
+  // Copy UDP length to buf (16 bits)
+  memcpy (ptr, &(udphdr->len), sizeof(udphdr->len));
+  ptr += sizeof(udphdr->len);
+  chksumlen += sizeof(udphdr->len);
+
+  // Copy UDP source port to buf (16 bits)
+  memcpy (ptr, &(udphdr->source), sizeof(udphdr->source));
+  ptr += sizeof(udphdr->source);
+  chksumlen += sizeof(udphdr->source);
+
+  // Copy UDP destination port to buf (16 bits)
+  memcpy (ptr, &(udphdr->dest), sizeof(udphdr->dest));
+  ptr += sizeof(udphdr->dest);
+  chksumlen += sizeof(udphdr->dest);
+
+  // Copy UDP length again to buf (16 bits)
+  memcpy (ptr, &(udphdr->len), sizeof(udphdr->len));
+  ptr += sizeof(udphdr->len);
+  chksumlen += sizeof(udphdr->len);
+
+  // Copy UDP checksum to buf (16 bits)
+  // Zero, since we don't know it yet
+  *ptr = 0; ptr++;
+  *ptr = 0; ptr++;
+  chksumlen += 2;
+
+  // Copy payload to buf
+  memcpy (ptr, payload, payloadlen);
+  ptr += payloadlen;
+  chksumlen += payloadlen;
+
+  // Pad to the next 16-bit boundary
+  for (i=0; i<payloadlen%2; i++, ptr++) {
+    *ptr = 0;
+    ptr++;
+    chksumlen++;
+  }
+
+  return checksum ((uint16_t *) buf, chksumlen);
+}
+
 
 #ifdef TAPTESTBINARY
 /**

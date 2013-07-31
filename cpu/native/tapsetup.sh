@@ -5,6 +5,9 @@ COUNT=${2}
 
 DEFCOUNT="2"
 DEFBRNAME="tapbr0"
+IPPREFIX="10.0.0."
+NETMASK="8"
+BRCAST="10.255.255.255"
 
 if [ -z "${USER}" ]; then
     echo 'need to export $USER'
@@ -33,6 +36,7 @@ if [ "${COMMAND}" = 'create' ]; then
         sudo -s sh -c "echo 1 > /proc/sys/net/ipv6/conf/tap${N}/disable_ipv6" || exit 1
         sudo brctl addif ${BRNAME} tap${N} || exit 1
         sudo ip link set tap${N} up || exit 1
+        sudo ip addr add ${IPPREFIX}$((N+1))/${NETMASK} broadcast ${BRCAST} dev tap${N} || exit 1
     done
 
 elif [ "${COMMAND}" = 'delete' ]; then
