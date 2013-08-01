@@ -273,7 +273,7 @@ void init_rtr_sol(uint8_t sllao)
     ipv6_get_saddr(&(ipv6_buf->srcaddr), &(ipv6_buf->destaddr));
 
     opt_hdr_len = RTR_SOL_LEN;
-    ipv6_buf->length = ICMPV6_HDR_LEN + RTR_SOL_LEN + OPT_STLLAO_MAX_LEN;
+    ipv6_buf->length = HTONS(ICMPV6_HDR_LEN + RTR_SOL_LEN + OPT_STLLAO_MAX_LEN);
 
     if (sllao == OPT_SLLAO) {
         opt_stllao_buf = get_opt_stllao_buf(ipv6_ext_hdr_len, opt_hdr_len);
@@ -302,7 +302,7 @@ void recv_echo_req(uint16_t length)
     ipv6_buf = get_ipv6_buf();
     struct echo_req_t *echo_buf = get_echo_req_buf(ipv6_ext_hdr_len);
     char *echo_data_buf = ((char *)echo_buf)+sizeof (struct echo_repl_t);
-    size_t data_len = ipv6_buf->length - (IPV6_HDR_LEN + ICMPV6_HDR_LEN +
+    size_t data_len = NTOHS(ipv6_buf->length) - (IPV6_HDR_LEN + ICMPV6_HDR_LEN +
                       ipv6_ext_hdr_len + ECHO_REQ_LEN);
 #ifdef ENABLE_DEBUG
     printf("INFO: received echo request from: ");
@@ -325,7 +325,7 @@ void recv_echo_repl(uint16_t length)
     ipv6_buf = get_ipv6_buf();
     struct echo_repl_t *echo_buf = get_echo_repl_buf(ipv6_ext_hdr_len);
     char *echo_data_buf = ((char *)echo_buf)+sizeof (struct echo_repl_t);
-    size_t data_len = ipv6_buf->length - (IPV6_HDR_LEN + ICMPV6_HDR_LEN +
+    size_t data_len = NTOHS(ipv6_buf->length) - (IPV6_HDR_LEN + ICMPV6_HDR_LEN +
                       ipv6_ext_hdr_len + ECHO_REPL_LEN);
 #ifdef ENABLE_DEBUG
     printf("INFO: received echo reply from: ");
@@ -581,7 +581,7 @@ void init_rtr_adv(ipv6_addr_t *addr, uint8_t sllao, uint8_t mtu, uint8_t pi,
         }
     }
 
-    ipv6_buf->length = packet_length - IPV6_HDR_LEN;
+    ipv6_buf->length = HTONS(packet_length - IPV6_HDR_LEN);
 
     /* calculate checksum */
     icmp_buf->checksum = 0;
@@ -835,7 +835,7 @@ void init_nbr_sol(ipv6_addr_t *src, ipv6_addr_t *dest, ipv6_addr_t *targ,
         packet_length += OPT_ARO_HDR_LEN;
     }
 
-    ipv6_buf->length = packet_length - IPV6_HDR_LEN;
+    ipv6_buf->length = HTONS(packet_length - IPV6_HDR_LEN);
 
     icmp_buf->checksum = 0;
     icmp_buf->checksum = ~icmpv6_csum(PROTO_NUM_ICMPV6);
@@ -1079,7 +1079,7 @@ void init_nbr_adv(ipv6_addr_t *src, ipv6_addr_t *dst, ipv6_addr_t *tgt,
         packet_length += OPT_ARO_HDR_LEN;
     }
 
-    ipv6_buf->length = packet_length - IPV6_HDR_LEN;
+    ipv6_buf->length = HTONS(packet_length - IPV6_HDR_LEN);
 
     icmp_buf->checksum = 0;
     icmp_buf->checksum = ~icmpv6_csum(PROTO_NUM_ICMPV6);
@@ -1247,7 +1247,7 @@ void init_para_prob(ipv6_addr_t *src, ipv6_addr_t *dest, uint8_t code, uint32_t 
 
     packet_length += min(MTU - packet_length, packet_len);
 
-    ipv6_buf->length = packet_length - IPV6_HDR_LEN;
+    ipv6_buf->length = HTONS(packet_length - IPV6_HDR_LEN);
 
     icmp_buf->checksum = 0;
     icmp_buf->checksum = ~icmpv6_csum(PROTO_NUM_ICMPV6);
