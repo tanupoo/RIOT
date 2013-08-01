@@ -68,8 +68,8 @@
 #define OPT_MTU_TYPE                   	(5)
 #define OPT_MTU_LEN                    	(1)
 #define OPT_MTU_HDR_LEN                	(8)
-/* aro - address registration option draft-ietf-6lowpan-nd-14 4.2 */
-#define OPT_ARO_TYPE                   	(31) /* TBD1  */
+/* aro - address registration option - RFC6775 */
+#define OPT_ARO_TYPE                   	(33)
 #define OPT_ARO_LEN                    	(2)
 #define OPT_ARO_HDR_LEN                	(16)
 #define OPT_ARO_LTIME                  	(300) /* geeigneten wert finden */
@@ -77,7 +77,7 @@
 #define OPT_ARO_STATE_DUP_ADDR         	(1)
 #define OPT_ARO_STATE_NBR_CACHE_FULL   	(2)
 /* 6lowpan context option */
-#define OPT_6CO_TYPE                   	(32)
+#define OPT_6CO_TYPE                   	(34)
 #define OPT_6CO_MIN_LEN                	(2)
 #define OPT_6CO_MAX_LEN                	(3)
 #define OPT_6CO_HDR_LEN                	(8)
@@ -87,7 +87,7 @@
 #define OPT_6CO_FLAG_C_VALUE_SET       	(1)
 #define OPT_6CO_FLAG_C_VALUE_UNSET     	(0)
 /* authoritative border router option */
-#define OPT_ABRO_TYPE                  	(33)
+#define OPT_ABRO_TYPE                  	(34)
 #define OPT_ABRO_LEN                   	(3)
 #define OPT_ABRO_HDR_LEN               	(24)
 /* authoritive border router cache size */
