@@ -1,3 +1,4 @@
+# set undefined variables
 ifeq ($(strip $(RIOTCPU)),)
 	export RIOTCPU =$(RIOTBASE)/cpu
 endif
@@ -11,8 +12,9 @@ BB = $(shell echo $(BOARD)|tr 'a-z' 'A-Z')
 CFLAGS += -DBOARD=$(BB)
 export CFLAGS
 
-# mandatory include! 
+# mandatory includes!
 include $(RIOTBOARD)/$(BOARD)/Makefile.include
+include $(RIOTCPU)/Makefile.include
 include $(RIOTBASE)/Makefile.modules 
 
 # your binaries to link
@@ -71,13 +73,14 @@ ${PROJBINDIR}/$(PROJECT).a:  $(OBJ)
 
 ${PROJBINDIR}/%.o: %.c
 	@echo; echo "Compiling.... $*.c"; echo
+	@test -d $(PROJBINDIR) || mkdir -p $(PROJBINDIR)
 	$(CC) $(CFLAGS) $(INCLUDES) -c $*.c -o bin/$*.o
 
 clean:
 	$(MAKE) -C $(RIOTBOARD) clean
 	$(MAKE) -C $(RIOTBASE) clean
 	@for i in $(EXTERNAL_MODULES) ; do $(MAKE) -C $$i clean ; done ;
-	rm -f $(PROJBINDIR)/*
+	rm -rf $(PROJBINDIR)
 
 flash: all
 	$(FLASHER) $(FFLAGS)

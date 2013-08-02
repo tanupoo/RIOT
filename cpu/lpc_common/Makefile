@@ -1,4 +1,4 @@
-MODULE = auto_init
+MODULE =lpc_common
 
 include $(RIOTBASE)/Makefile.base
 
