@@ -269,8 +269,8 @@ typedef struct rpl_of_t {
     rpl_dodag_t *(*which_dodag)(rpl_dodag_t *, rpl_dodag_t *);
     void (*reset)(rpl_dodag_t *);
     void (*parent_state_callback)(rpl_parent_t *, int, int);
-    void (*init) (void); //OF specific init function
-    void (*process_dio) (); //DIO processing callback (acc. to OF0 spec, chpt 5)
+    void (*init)(void); /* OF specific init function */
+    void (*process_dio)(void); /* DIO processing callback (acc. to OF0 spec, chpt 5) */
 } rpl_of_t;
 
 typedef struct {

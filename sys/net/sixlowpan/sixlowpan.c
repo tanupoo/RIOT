@@ -114,6 +114,7 @@ void lowpan_init(ieee_802154_long_t *addr, uint8_t *data, uint16_t len)
         DEBUG("Set length to %02X\n", packet_length);
     }
 
+
     /* check if packet needs to be fragmented */
     if (packet_length > (PAYLOAD_SIZE - IEEE_802154_MAX_HDR_LEN - IEEE_802154_FCS_LEN)) {
         DEBUG("Send fragmented\n");
@@ -254,6 +255,13 @@ void lowpan_transfer(void)
 
         if (current_buf != NULL) {
             mutex_unlock(&fifo_mutex, 0);
+
+            DEBUG("LEN:%u", current_buf->current_packet_size);
+            DEBUG("DISPATCH %u\n", (current_buf->packet)[0]);
+            for (int i = 0; i < current_buf->current_packet_size; i++) {
+                DEBUG("%02x ", current_buf->packet[i]);
+            }
+            DEBUG("\n");
 
             if ((current_buf->packet)[0] == LOWPAN_IPV6_DISPATCH) {
                 ipv6_buf = get_ipv6_buf();
@@ -1522,6 +1530,7 @@ lowpan_context_t *lowpan_context_num_lookup(uint8_t num)
     return NULL;
 }
 
+/* TODO: buggy in agilefox? */
 void lowpan_context_auto_remove(void)
 {
     timex_t minute = timex_set(60, 0);
@@ -1613,12 +1622,15 @@ void sixlowpan_init(transceiver_type_t trans, uint8_t r_addr, int as_border)
                                        ipv6_process, "ip_process");
     }
 
+    /* TODO: buggy in agilefox? */
     nd_nbr_cache_rem_pid = thread_create(nc_buf, NC_STACKSIZE,
                                          PRIORITY_MAIN - 1, CREATE_STACKTEST,
                                          nbr_cache_auto_rem, "nbr_cache_rem");
+ 
     contexts_rem_pid = thread_create(con_buf, CON_STACKSIZE,
                                      PRIORITY_MAIN + 1, CREATE_STACKTEST,
                                      lowpan_context_auto_remove, "lowpan_context_rem");
+ 
     transfer_pid = thread_create(lowpan_transfer_buf, LOWPAN_TRANSFER_BUF_STACKSIZE,
                                  PRIORITY_MAIN - 1, CREATE_STACKTEST,
                                  lowpan_transfer, "lowpan_transfer");

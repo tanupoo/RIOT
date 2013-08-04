@@ -136,7 +136,6 @@ void recv_ieee802154_frame(void)
         msg_receive(&m);
 
         if (m.type == PKT_PENDING) {
-
             p = (radio_packet_t *) m.content.ptr;
             hdrlen = read_802154_frame(p->data, &frame, p->length);
             length = p->length - hdrlen;
@@ -226,6 +225,7 @@ void send_ieee802154_frame(ieee_802154_long_t *addr, uint8_t *payload,
     /* mutex unlock */
     mutex_unlock(&buf_mutex, 0);
 
+    /* TODO: fix for transceivers with 802.15.4 support */
     p.length = hdrlen + frame.payload_len + IEEE_802154_FCS_LEN;
 
     if (mcast == 0) {
@@ -235,10 +235,9 @@ void send_ieee802154_frame(ieee_802154_long_t *addr, uint8_t *payload,
         p.dst = 0;
     }
 
+    memcpy(&buf[1], frame.payload, frame.payload_len);      // TODO : ALA : HACK
     p.data = buf;
     msg_send_receive(&mesg, &transceiver_rsp, transceiver_pid);
-
-    hwtimer_wait(5000);
 }
 
 void sixlowmac_init(transceiver_type_t type)
