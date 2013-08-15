@@ -40,8 +40,8 @@
 #include "ip.h"
 #include "icmp.h"
 
-#include "sys/net/ieee802154/ieee802154_frame.h"
-#include "sys/net/destiny/in.h"
+#include "sys/net/linklayer/ieee802154/ieee802154_frame.h"
+#include "sys/net/transportlayer/destiny/in.h"
 #include "sys/net/net_help/net_help.h"
 
 #define IP_PROCESS_STACKSIZE           	(KERNEL_CONF_STACKSIZE_DEFAULT * 6)

@@ -34,7 +34,7 @@
 #include "icmp.h"
 #include "serialnumber.h"
 
-#include "sys/net/ieee802154/ieee802154_frame.h"
+#include "sys/net/linklayer/ieee802154/ieee802154_frame.h"
 #include "sys/net/net_help/net_help.h"
 
 #define READER_STACK_SIZE   (KERNEL_CONF_STACKSIZE_DEFAULT)

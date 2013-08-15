@@ -36,7 +36,7 @@
 #include "ip.h"
 #include "icmp.h"
 #include "lowpan.h"
-#include "sys/net/ieee802154/ieee802154_frame.h"
+#include "sys/net/linklayer/ieee802154/ieee802154_frame.h"
 #include "sys/net/net_help/net_help.h"
 
 #define ENABLE_DEBUG    (0)

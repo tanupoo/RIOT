@@ -31,7 +31,7 @@
 #include "icmp.h"
 #include "lowpan.h"
 
-#include "sys/net/destiny/socket.h"
+#include "sys/net/transportlayer/destiny/socket.h"
 #include "sys/net/net_help/net_help.h"
 #include "sys/net/net_help/msg_help.h"
 
