@@ -53,10 +53,10 @@ ifneq (,$(findstring vtimer,$(USEMODULE)))
     DIRS += vtimer
 endif
 ifneq (,$(findstring destiny,$(USEMODULE)))
-    DIRS += net/destiny
+    DIRS += net/transportlayer/destiny
 endif
 ifneq (,$(findstring net_mm,$(USEMODULE)))
-    DIRS += net/mm
+    DIRS += net/routing/mm
 endif
 ifneq (,$(findstring net_help,$(USEMODULE)))
     DIRS += net/net_help
@@ -65,13 +65,13 @@ ifneq (,$(findstring protocol_multiplex,$(USEMODULE)))
     DIRS += net/protocol-multiplex
 endif
 ifneq (,$(findstring sixlowpan,$(USEMODULE)))
-    DIRS += net/sixlowpan
+    DIRS += net/netlayer/sixlowpan
 endif
 ifneq (,$(findstring rpl,$(USEMODULE)))
-    DIRS += net/rpl
+    DIRS += net/routing/rpl
 endif
 ifneq (,$(findstring ieee802154,$(USEMODULE)))
-    DIRS += net/ieee802154
+    DIRS += net/linklayer/ieee802154
 endif
 ifneq (,$(findstring bloom,$(USEMODULE)))
     DIRS += bloom
