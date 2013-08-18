@@ -23,29 +23,104 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <unistd.h>
 #include <err.h>
+#include <string.h>
+#include <fcntl.h>
+#include <sys/types.h>
+#include <sys/stat.h>
 
+#include <kernel_internal.h>
+#include <cpu.h>
 
 #include "kernel_internal.h"
 #include "cpu.h"
 
+#include "board_internal.h"
 #include "native_internal.h"
 #include "tap.h"
 
+int (*real_printf)(const char *format, ...);
+char *argv0;
+int _native_null_in_pipe[2];
+int _native_null_out_file;
+
+void daemonize()
+{
+    pid_t pid;
+
+    /* fork */
+    if ((pid = fork()) == -1) {
+        err(EXIT_FAILURE, "daemonize: fork");
+    }
+
+    if (pid > 0) {
+        real_printf("RIOT pid: %d\n", pid);
+        exit(EXIT_SUCCESS);
+    }
+
+}
+
+void usage_exit()
+{
+    real_printf("usage: %s", argv0);
+#ifdef MODULE_NATIVENET
+    real_printf(" <tap interface>");
+#endif
+    real_printf(" [-t|-u]");
+    real_printf(" [-d] [-e]\n");
+
+    real_printf("\nOptions:\n\
+-d      daeomize\n");
+    real_printf("\
+-u      redirect stdio to unix socket\n\
+-t      redirect stdio to tcp socket\n\
+-e      redirect stderr file\n");
+    real_printf("\n\
+The order of command line arguments matters.\n");
+    exit(EXIT_FAILURE);
+}
+
 __attribute__((constructor)) static void startup(int argc, char **argv)
 {
-    /* get system read/write */
+    /* get system read/write/printf */
     *(void **)(&real_read) = dlsym(RTLD_NEXT, "read");
     *(void **)(&real_write) = dlsym(RTLD_NEXT, "write");
+    *(void **)(&real_printf) = dlsym(RTLD_NEXT, "printf");
+
+    argv0 = argv[0];
+    char argp = 0;
 
 #ifdef MODULE_NATIVENET
     if (argc < 2) {
-        printf("usage: %s <tap interface>\n", argv[0]);
-        exit(EXIT_FAILURE);
+        usage_exit();
     }
-#else /* args unused here */
-    (void) argc;
-    (void) argv;
+    argp++;
+#endif
+#ifdef MODULE_UART0
+    for (; argp < argc; argp++) {
+        char *arg = argv[argp];
+        if (strcmp("-d", arg) == 0) {
+            daemonize();
+        }
+        else if (strcmp("-e", arg) == 0) {
+            stderrtype = "file";
+        }
+        else if (strcmp("-t", arg) == 0) {
+            stdiotype = "tcp";
+        }
+        else if (strcmp("-u", arg) == 0) {
+            stdiotype = "unix";
+        }
+        else {
+            usage_exit();
+        }
+    }
+#endif
+
+
+#ifdef MODULE_UART0
+    _native_init_uart0(stdiotype, stderrtype);
 #endif
 
     native_hwtimer_pre_init();
