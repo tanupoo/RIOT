@@ -28,6 +28,8 @@
 #include "tcp_timer.h"
 #include "udp.h"
 
+#include "socket.h"
+
 char tcp_stack_buffer[TCP_STACK_SIZE];
 char udp_stack_buffer[UDP_STACK_SIZE];
 
