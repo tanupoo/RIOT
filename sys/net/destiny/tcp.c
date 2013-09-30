@@ -35,8 +35,6 @@
 
 #include "tcp.h"
 
-#include "socket.h"
-
 void printTCPHeader(tcp_hdr_t *tcp_header)
 {
     printf("\nBEGIN: TCP HEADER\n");

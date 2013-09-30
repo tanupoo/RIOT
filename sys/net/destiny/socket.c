@@ -38,10 +38,6 @@
 
 #define EPHEMERAL_PORTS 	49152
 
-#include "socket.h"
-
-#define EPHEMERAL_PORTS 	49152
-
 socket_internal_t sockets[MAX_SOCKETS];
 
 void print_socket(socket_t *current_socket);

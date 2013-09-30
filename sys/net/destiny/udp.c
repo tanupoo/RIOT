@@ -32,8 +32,6 @@
 
 #include "udp.h"
 
-#include "socket.h"
-
 uint16_t udp_csum(ipv6_hdr_t *ipv6_header, udp_hdr_t *udp_header)
 {
     uint16_t sum;

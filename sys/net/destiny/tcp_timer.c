@@ -32,8 +32,6 @@
 #include "tcp_timer.h"
 
 
-#include "socket.h"
-
 void handle_synchro_timeout(socket_internal_t *current_socket)
 {
     msg_t send;
