@@ -10,7 +10,7 @@
 
 #include "sixlowpan.h"
 
-#include "destiny/socket.h"
+#include "destiny.h"
 
 #include "tcp.h"
 

@@ -24,8 +24,7 @@
 
 #include "net_help.h"
 
-#include "socket.h"
-#include "tcp.h"
+#include "destiny.h"
 
 #include "tcp_hc.h"
 
