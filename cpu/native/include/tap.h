@@ -21,6 +21,12 @@
 #include "board.h"
 #include "radio/types.h"
 
+/* Define some constants. */
+/* IPv6 header length */
+#define IP4_HDRLEN  (20)
+/* UDP header length, excludes data */
+#define UDP_HDRLEN  (8)
+
 /**
  * create and/or open tap device "name"
  *
@@ -52,6 +58,14 @@ union eth_frame {
     struct {
         struct ether_header header;
         struct nativenet_packet payload;
+    } field;
+    unsigned char buffer[ETHER_MAX_LEN];
+} __attribute__((packed));
+
+union eth_frame2 {
+    struct {
+        struct ether_header header;
+        unsigned char data[ETHERMTU - sizeof(struct nativenet_header)];
     } field;
     unsigned char buffer[ETHER_MAX_LEN];
 } __attribute__((packed));
