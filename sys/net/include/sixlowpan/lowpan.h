@@ -152,6 +152,37 @@
  */
 #define SIXLOWPAN_FRAGN_HDR_LEN    	(5)
 
+/**
+ * @brief LOWPAN_NHC header type: UDP Header
+ * @see <a href="http://tools.ietf.org/html/rfc6282#section-4.3.3">
+ *         RFC 6282, section 4.3.3
+ *      </a>
+ */
+#define LOWPAN_NHC_UDP (0xf0)
+
+/**
+ * @brief UDP LOWPAN_NHC Checksum
+ * @see <a href="http://tools.ietf.org/html/rfc6282#section-4.3.3">
+ *         RFC 6282, section 4.3.3
+ *      </a>
+ */
+#define LOWPAN_NHC_UDP_C (0x04)
+
+/**
+ * @brief UDP LOWPAN_NHC Ports
+ * @see <a href="http://tools.ietf.org/html/rfc6282#section-4.3.3">
+ *         RFC 6282, section 4.3.3
+ *      </a>
+ */
+#define LOWPAN_NHC_UDP_P (0x03)
+
+/**
+ * @brief UDP port prefix for elision
+ * @see <a href="http://tools.ietf.org/html/rfc6282#section-4.3.3">
+ *         RFC 6282, section 4.3.3
+ *      </a>
+ */
+#define LOWPAN_NHC_UDP_PORT_PREFIX  (0xf0)
 
 /**
  * @brief   Data type to configure 6LoWPAN IPv6 header compression.
