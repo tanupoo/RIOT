@@ -79,7 +79,18 @@ inline void __restore_context_isr(void)
 
 inline void __enter_isr(void)
 {
-    __save_context_isr();
+    __asm__("push r15");
+    __asm__("push r14");
+    __asm__("push r13");
+    __asm__("push r12");
+    __asm__("push r11");
+    __asm__("push r10");
+    __asm__("push r9");
+    __asm__("push r8");
+    __asm__("push r7");
+    __asm__("push r6");
+    __asm__("push r5");
+    __asm__("push r4");
     __asm__("mov.w %0,r1" : : "i"(__isr_stack+MSP430_ISR_STACK_SIZE));
     __inISR = 1;
 }
