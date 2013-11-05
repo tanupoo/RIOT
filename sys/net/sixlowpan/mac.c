@@ -24,7 +24,6 @@
 #include <stdint.h>
 #include <string.h>
 
-#include "ltc4150.h"
 #include "hwtimer.h"
 #include "thread.h"
 #include "msg.h"
