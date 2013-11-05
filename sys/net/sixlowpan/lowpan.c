@@ -387,6 +387,23 @@ uint8_t ll_get_addr_match(ieee_802154_long_t *src, ieee_802154_long_t *dst)
     return val;
 }
 
+/**
+ * @brief   Allocates a new buffer for the given datagram
+ *
+ * @param[in] datagram_size Length of the datagram
+ * @param[in] datagram_tag  Identifier of datagram
+ * @param[in] s_laddr       Long IEEE 802.15.4 source address
+ * @param[in] d_laddr       Long IEEE 802.15.4 destination address
+ * @param[in] current_buf   The last packet in the reassembly queue
+ * @param[in] temp_buf      The current head of the packet fifo
+ *
+ * @see <a href="http://tools.ietf.org/html/rfc4944#section-5.3">
+ *      RFC4944, section 5.3
+ *      </a>
+ *
+ * @return  A pointer to the newly created buffer, maybe NULL if no memory is
+ * left
+ */
 lowpan_reas_buf_t *new_packet_buffer(uint16_t datagram_size,
                                      uint16_t datagram_tag,
                                      ieee_802154_long_t *s_laddr,
@@ -433,6 +450,16 @@ lowpan_reas_buf_t *new_packet_buffer(uint16_t datagram_size,
     }
 }
 
+/**
+ * @brief
+ *
+ * @param[in]   datagram_size   Total size of the full datagram
+ * @param[in]   datagram_tag    The datagram tag
+ * @param[in]   s_laddr         Long IEEE 802.15.4 source address
+ * @param[in]   d_laddr         Long IEEE 802.15.4 destination address
+ *
+ * @return  The corresponding IP packet buffer, if already existing - a new one otherwise
+ */
 lowpan_reas_buf_t *get_packet_frag_buf(uint16_t datagram_size,
                                        uint16_t datagram_tag,
                                        ieee_802154_long_t *s_laddr,
@@ -454,10 +481,15 @@ lowpan_reas_buf_t *get_packet_frag_buf(uint16_t datagram_size,
             return current_buf;
         }
 
+        /* no buffer for this datagram found, push a new one on fifo */
         temp_buf = current_buf;
         current_buf = current_buf->next;
     }
 
+    /* current_buf = NULL & temp_buf = head
+     * or
+     * current_buf = NULL & temp_buf = last buffer
+     */
     return new_packet_buffer(datagram_size, datagram_tag, s_laddr, d_laddr,
                              current_buf, temp_buf);
 }
@@ -595,6 +627,18 @@ lowpan_reas_buf_t *collect_garbage(lowpan_reas_buf_t *current_buf)
     return return_buf;
 }
 
+/**
+ * @brief   Handles a single 6lowpan datagram fragment
+ *
+ * @param[in]   data            Pointer to the packet
+ * @param[in]   datagram_offset Offset in bytes
+ * @param[in]   datagram_size   Total size of the full datagram
+ * @param[in]   datagram_tag    Identifier of datagram
+ * @param[in]   s_laddr         Long IEEE 802.15.4 source address
+ * @param[in]   d_laddr         Long IEEE 802.15.4 destination address
+ * @param[in]   hdr_length      Length of the packet header
+ * @param[in]   frag_size       Length of the packet's payload
+ */
 void handle_packet_fragment(uint8_t *data, uint8_t datagram_offset,
                             uint16_t datagram_size, uint16_t datagram_tag,
                             ieee_802154_long_t *s_laddr,
@@ -1617,6 +1661,11 @@ void lowpan_context_auto_remove(void)
     }
 }
 
+/**
+ * @brief Initializes a newly created reassembly buffer
+ *
+ * @param[in] buf   Pointer to the reassembly buffer
+ */
 void init_reas_bufs(lowpan_reas_buf_t *buf)
 {
     memset(&buf->s_laddr, 0, IPV6_LL_ADDR_LEN);
