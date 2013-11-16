@@ -27,12 +27,17 @@ rpl_instance_t instances[RPL_MAX_INSTANCES];
 rpl_dodag_t dodags[RPL_MAX_DODAGS];
 rpl_parent_t parents[RPL_MAX_PARENTS];
 
+void rpl_instance_init(void)
+{
+    memset(instances, 0, (RPL_MAX_PARENTS * sizeof(rpl_instance_t)));
+}
+
 rpl_instance_t *rpl_new_instance(uint8_t instanceid)
 {
     rpl_instance_t *inst;
     rpl_instance_t *end ;
 
-    for (inst = &instances[0], end = inst + RPL_MAX_INSTANCES; inst < end; inst++) {
+    for (inst = &instances[0], end = (inst + RPL_MAX_INSTANCES); inst < end; inst++) {
         if (inst->used == 0) {
             memset(inst, 0, sizeof(*inst));
             inst->used = 1;

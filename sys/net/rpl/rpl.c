@@ -30,6 +30,9 @@
 
 #include "sixlowpan.h"
 
+#define ENABLE_DEBUG    (0)
+#include "debug.h"
+
 char rpl_process_buf[RPL_PROCESS_STACKSIZE];
 /* global variables */
 char i_am_root = 0;
@@ -178,6 +181,7 @@ uint8_t rpl_init(transceiver_type_t trans, uint16_t rpl_address)
 {
     mutex_init(&rpl_send_mutex);
     mutex_init(&rpl_recv_mutex);
+    rpl_instance_init();
 
     if (rpl_address == 0) {
         return SIXLOWERROR_ADDRESS;

@@ -12,8 +12,6 @@
 #include "sixlowpan.h"
 
 //For debugging purposes
-#define ENABLE_DEBUG (0)
-#include <debug.h>
 
 #if ENABLE_DEBUG
 #define ETX_BEACON_STACKSIZE    (4500)
