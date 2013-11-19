@@ -35,8 +35,7 @@
 #include <net/if.h>
 #include <linux/if_tun.h>
 #include <linux/if_ether.h>
-#include <netinet/ip.h>       // struct ip and IP_MAXPACKET (which is 65535)
-#include <netinet/udp.h>       // struct ip and IP_MAXPACKET (which is 65535)
+#define IP_MAXPACKET (65535)
 #endif
 
 #define ENABLE_DEBUG    (0)
