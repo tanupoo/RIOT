@@ -437,6 +437,14 @@ static void receive_packet(uint16_t type, uint8_t pos)
         }
 #endif
     }
+#ifdef DBG_IGN
+    for (uint8_t i = 0; (i < MAX_IGNORED_ADDR) && (ignored_addr[i]); i++) {
+        if (trans_p->src == ignored_addr[i]) {
+            DEBUG("ignored packet from %"PRIu16"\n", trans_p->src);
+            return;
+        }
+    }
+#endif
 
     /* finally notify waiting upper layers
      * this is done non-blocking, so packets can get lost */
