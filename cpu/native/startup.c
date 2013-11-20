@@ -89,7 +89,9 @@ __attribute__((constructor)) static void startup(int argc, char **argv)
     *(void **)(&real_printf) = dlsym(RTLD_NEXT, "printf");
 
     argv0 = argv[0];
-    char argp = 0;
+    int argp = 1;
+    char *stderrtype = "stdio";
+    char *stdiotype = "stdio";
 
 #ifdef MODULE_NATIVENET
     if (argc < 2) {
