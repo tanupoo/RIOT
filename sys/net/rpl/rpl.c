@@ -370,6 +370,11 @@ void send_DAO(ipv6_addr_t *destination, uint8_t lifetime, bool default_lifetime,
     icmp_send_buf->type = ICMPV6_TYPE_RPL_CONTROL;
     icmp_send_buf->code = ICMP_CODE_DAO;
 
+    if (my_dodag == NULL) {
+        mutex_unlock(&rpl_send_mutex);
+        return;
+    }
+
     rpl_send_dao_buf = get_rpl_send_dao_buf();
     memset(rpl_send_dao_buf, 0, sizeof(*rpl_send_dao_buf));
     rpl_send_dao_buf->rpl_instanceid = my_dodag->instance->id;
