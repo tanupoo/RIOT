@@ -43,7 +43,7 @@ void recv_rpl_dio(void);
 void recv_rpl_dis(void);
 void recv_rpl_dao(void);
 void recv_rpl_dao_ack(void);
-void rpl_send(ipv6_addr_t *destination, uint8_t *payload, uint16_t p_len, uint8_t next_header, void *tcp_socket);
+void rpl_send(ipv6_addr_t *destination, uint8_t *payload, uint16_t p_len, uint8_t next_header);
 ipv6_addr_t *rpl_get_next_hop(ipv6_addr_t *addr);
 void rpl_add_routing_entry(ipv6_addr_t *addr, ipv6_addr_t *next_hop, uint16_t lifetime);
 void rpl_del_routing_entry(ipv6_addr_t *addr);
