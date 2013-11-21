@@ -19,6 +19,9 @@
 #include "sixlowpan/ip.h"
 #include "ieee802154_frame.h"
 
+#define ENABLE_DEBUG    (0)
+#include "debug.h"
+
 //prototytpes
 static uint8_t etx_count_packet_tx(etx_neighbor_t *candidate);
 static void etx_set_packets_received(void);
