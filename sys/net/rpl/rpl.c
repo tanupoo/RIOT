@@ -200,6 +200,8 @@ uint8_t rpl_init(transceiver_type_t trans, uint16_t rpl_address)
     my_l2_addr = rpl_address;
 #endif
 
+    rpl_instances_init();
+
     /* initialize routing table */
     rpl_clear_routing_table();
     init_trickle();

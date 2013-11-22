@@ -35,6 +35,11 @@ rpl_parent_t parents[RPL_MAX_PARENTS];
 extern radio_address_t my_l2_addr;
 #endif
 
+void rpl_instances_init(void)
+{
+    memset(instances, 0, sizeof(rpl_instance_t) * RPL_MAX_INSTANCES);
+}
+
 rpl_instance_t *rpl_new_instance(uint8_t instanceid)
 {
     rpl_instance_t *inst;
