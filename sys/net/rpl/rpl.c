@@ -47,6 +47,12 @@ unsigned int rpl_process_pid;
 ipv6_addr_t my_address;
 mutex_t rpl_send_mutex;
 mutex_t rpl_recv_mutex;
+
+#define SAFEST_DEMO
+#ifdef SAFEST_DEMO
+radio_address_t my_l2_addr;
+#endif
+
 /* receive buffer without LL_HDR */
 uint8_t rpl_buffer[BUFFER_SIZE - LL_HDR_LEN];
 /* in send buffer we need space fpr LL_HDR */
@@ -190,6 +196,9 @@ uint8_t rpl_init(transceiver_type_t trans, uint16_t rpl_address)
     if (rpl_address == 0) {
         return SIXLOWERROR_ADDRESS;
     }
+#ifdef SAFEST_DEMO
+    my_l2_addr = rpl_address;
+#endif
 
     /* initialize routing table */
     rpl_clear_routing_table();

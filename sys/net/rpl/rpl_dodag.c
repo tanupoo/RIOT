@@ -30,6 +30,11 @@ rpl_instance_t instances[RPL_MAX_INSTANCES];
 rpl_dodag_t dodags[RPL_MAX_DODAGS];
 rpl_parent_t parents[RPL_MAX_PARENTS];
 
+#define SAFEST_DEMO
+#ifdef SAFEST_DEMO
+extern radio_address_t my_l2_addr;
+#endif
+
 rpl_instance_t *rpl_new_instance(uint8_t instanceid)
 {
     rpl_instance_t *inst;
@@ -125,6 +130,10 @@ void rpl_del_dodag(rpl_dodag_t *dodag)
 void rpl_leave_dodag(rpl_dodag_t *dodag)
 {
     dodag->joined = 0;
+#ifdef SAFEST_DEMO
+    printf("p_d: ID sn%u deleted ID sn%u as parent #color15\n", my_l2_addr,
+            dodag->my_preferred_parent->addr.uint8[15]);
+#endif
     dodag->my_preferred_parent = NULL;
     rpl_delete_all_parents();
 }
@@ -145,10 +154,6 @@ rpl_parent_t *rpl_new_parent(rpl_dodag_t *dodag, ipv6_addr_t *address, uint16_t 
 {
     rpl_parent_t *parent;
     rpl_parent_t *end;
-    ipv6_addr_t ll_address;
-    ipv6_addr_t my_address;
-    ipv6_addr_set_link_local_prefix(&ll_address);
-    ipv6_iface_get_best_src_addr(&my_address, &ll_address);
 
     for (parent = &parents[0], end = parents + RPL_MAX_PARENTS; parent < end; parent++) {
         if (parent->used == 0) {
@@ -159,8 +164,6 @@ rpl_parent_t *rpl_new_parent(rpl_dodag_t *dodag, ipv6_addr_t *address, uint16_t 
             parent->dodag = dodag;
             /* dtsn is set at the end of recv_dio function */
             parent->dtsn = 0;
-            printf("p_s: ID sn%u selected ID sn%u as parent #color15\n",
-                    my_address.uint8[15], parent->addr.uint8[15]);
             return parent;
         }
     }
@@ -185,10 +188,6 @@ rpl_parent_t *rpl_find_parent(ipv6_addr_t *address)
 
 void rpl_delete_parent(rpl_parent_t *parent)
 {
-    ipv6_addr_t ll_address;
-    ipv6_addr_t my_address;
-    ipv6_addr_set_link_local_prefix(&ll_address);
-    ipv6_iface_get_best_src_addr(&my_address, &ll_address);
 
     rpl_dodag_t *my_dodag = rpl_get_my_dodag();
 
@@ -197,8 +196,10 @@ void rpl_delete_parent(rpl_parent_t *parent)
         my_dodag->my_preferred_parent = NULL;
     }
 
-    printf("p_d: ID sn%u deleted ID sn%u as parent #color15\n", my_address.uint8[15],
-           parent->addr.uint8[15]);
+#ifdef SAFEST_DEMO
+    printf("p_d: ID sn%u deleted ID sn%u as parent #color15\n", my_l2_addr,
+            parent->addr.uint8[15]);
+#endif
 
     memset(parent, 0, sizeof(*parent));
 }
@@ -268,6 +269,10 @@ rpl_parent_t *rpl_find_preferred_parent(void)
 
     if (my_dodag->my_preferred_parent == NULL) {
         my_dodag->my_preferred_parent = best;
+#ifdef SAFEST_DEMO
+        printf("p_s: ID sn%u selected ID sn%u as parent #color15\n",
+                my_l2_addr, best->addr.uint8[15]);
+#endif
     }
 
     if (!rpl_equal_id(&my_dodag->my_preferred_parent->addr, &best->addr)) {
@@ -277,6 +282,10 @@ rpl_parent_t *rpl_find_preferred_parent(void)
         }
 
         my_dodag->my_preferred_parent = best;
+#ifdef SAFEST_DEMO
+        printf("p_s: ID sn%u selected ID sn%u as parent #color15\n",
+                my_l2_addr, best->addr.uint8[15]);
+#endif
 
         if (my_dodag->mop != NO_DOWNWARD_ROUTES) {
             delay_dao();
@@ -354,6 +363,11 @@ void rpl_join_dodag(rpl_dodag_t *dodag, ipv6_addr_t *parent, uint16_t parent_ran
     my_dodag->dao_seq = RPL_COUNTER_INIT;
     my_dodag->min_rank = my_dodag->my_rank;
 
+#ifdef SAFEST_DEMO
+        printf("p_s: ID sn%u selected ID sn%u as parent #color15\n",
+                my_l2_addr, preferred_parent->addr.uint8[15]);
+#endif
+
     start_trickle(my_dodag->dio_min, my_dodag->dio_interval_doubling, my_dodag->dio_redundancy);
     delay_dao();
 }
@@ -372,6 +386,10 @@ void rpl_global_repair(rpl_dodag_t *dodag, ipv6_addr_t *p_addr, uint16_t rank)
     my_dodag->version = dodag->version;
     my_dodag->dtsn++;
     my_dodag->my_preferred_parent = rpl_new_parent(my_dodag, p_addr, rank);
+#ifdef SAFEST_DEMO
+        printf("p_s: ID sn%u selected ID sn%u as parent #color15\n",
+                my_l2_addr, my_dodag->my_preferred_parent->addr.uint8[15]);
+#endif
 
     if (my_dodag->my_preferred_parent == NULL) {
         printf("[Error] no more parent after global repair\n");
