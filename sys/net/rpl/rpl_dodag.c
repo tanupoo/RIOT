@@ -278,10 +278,6 @@ rpl_parent_t *rpl_find_preferred_parent(void)
 
     if (my_dodag->my_preferred_parent == NULL) {
         my_dodag->my_preferred_parent = best;
-#ifdef SAFEST_DEMO
-        printf("p_s: ID sn%u selected ID sn%u as parent #color15\n",
-                my_l2_addr, best->addr.uint8[15]);
-#endif
     }
 
     if (!rpl_equal_id(&my_dodag->my_preferred_parent->addr, &best->addr)) {
@@ -291,10 +287,6 @@ rpl_parent_t *rpl_find_preferred_parent(void)
         }
 
         my_dodag->my_preferred_parent = best;
-#ifdef SAFEST_DEMO
-        printf("p_s: ID sn%u selected ID sn%u as parent #color15\n",
-                my_l2_addr, best->addr.uint8[15]);
-#endif
 
         if (my_dodag->mop != NO_DOWNWARD_ROUTES) {
             delay_dao();
