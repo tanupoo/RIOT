@@ -39,6 +39,8 @@
 #include "ieee802154_frame.h"
 #include "net_help.h"
 
+#define SAFEST_DEMO (1)
+
 #define ENABLE_DEBUG    (0)
 #if ENABLE_DEBUG
 #define DEBUG_ENABLED
@@ -254,7 +256,13 @@ void sixlowpan_mac_send_ieee802154_frame(const ieee_802154_long_t *addr,
 
     p.data = buf;
     msg_send_receive(&mesg, &transceiver_rsp, transceiver_pid);
+#ifdef SAFEST_DEMO
+    if (transceiver_rsp.content.value < 1) {
+        printf("Sending returned: %"PRIi32"\n", (int32_t) transceiver_rsp.content.value);
+    }
+#else
     DEBUG("Sending returned: %"PRIi32"\n", (int32_t) transceiver_rsp.content.value);
+#endif
 
     hwtimer_wait(5000);
 }

@@ -308,7 +308,7 @@ void ipv6_process(void)
                 if (sixlowip_reg[i]) {
                     msg_t m_send;
                     m_send.type = IPV6_PACKET_RECEIVED;
-                    m_send.content.ptr = (char *) &ipv6_buf;
+                    m_send.content.ptr = (char *) ipv6_buf;
                     msg_send(&m_send, sixlowip_reg[i], 1);
                 }
             }

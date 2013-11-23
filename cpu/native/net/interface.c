@@ -112,7 +112,7 @@ int8_t nativenet_send(radio_packet_t *packet)
     packet->src = _native_net_addr;
     DEBUG("nativenet_send:  Sending packet of length %"PRIu16" from %"PRIu16" to %"PRIu16"\n", packet->length, packet->src, packet->dst);
 
-    return send_buf(packet) {
+    return send_buf(packet);
 }
 
 void nativenet_switch_to_rx()
