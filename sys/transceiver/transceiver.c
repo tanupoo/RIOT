@@ -64,6 +64,8 @@
 #endif
 #include "debug.h"
 
+#define DBG_IGNORE (1)
+
 /*------------------------------------------------------------------------------------*/
 /* used transceiver types */
 transceiver_type_t transceivers = TRANSCEIVER_NONE;
@@ -615,7 +617,7 @@ static int8_t send_packet(transceiver_type_t t, void *pkt)
             memcpy(cc1100_pkt, p.data, p.length);
 
             res = cc1100_send_csmaca(p.dst, 4, 0, (char *) cc1100_pkt, p.length);
-            DEBUG("transceiver: snd_ret (%u) = %i\n", p.length, snd_ret);
+            DEBUG("transceiver: res (%u) = %i\n", p.length, res);
 #else
             puts("Unknown transceiver");
 #endif
