@@ -107,7 +107,7 @@ void switch_to_rx(void)
 
 void sixlowpan_mac_init_802154_short_addr(ieee_802154_short_t *saddr)
 {
-    DEBUG("sixlowpan_mac_init_802154_short_addr(saddr=%02X)\n", *saddr);
+    DEBUG("sixlowpan_mac_init_802154_short_addr(saddr=%02X)\n", saddr->uint16[0]);
     saddr->uint8[0] = 0;
     saddr->uint8[1] = sixlowpan_mac_get_radio_address();
 }
@@ -254,6 +254,7 @@ void sixlowpan_mac_send_ieee802154_frame(const ieee_802154_long_t *addr,
 
     p.data = buf;
     msg_send_receive(&mesg, &transceiver_rsp, transceiver_pid);
+    DEBUG("Sending returned: %"PRIi32"\n", (int32_t) transceiver_rsp.content.value);
 
     hwtimer_wait(5000);
 }
