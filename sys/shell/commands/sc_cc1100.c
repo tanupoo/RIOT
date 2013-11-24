@@ -35,6 +35,10 @@ void _cc1100_get_set_address_handler(char *addr)
 {
     int16_t a;
 
+    if (transceiver_pid < 0) {
+        puts("Transceiver not initialized");
+        return;
+    }
     tcmd.transceivers = TRANSCEIVER_CC1100;
     tcmd.data = &a;
     mesg.content.ptr = (char *) &tcmd;
@@ -56,6 +60,10 @@ void _cc1100_get_set_channel_handler(char *chan)
 {
     int16_t c;
 
+    if (transceiver_pid < 0) {
+        puts("Transceiver not initialized");
+        return;
+    }
     tcmd.transceivers = TRANSCEIVER_CC1100;
     tcmd.data = &c;
     mesg.content.ptr = (char *) &tcmd;
@@ -80,6 +88,10 @@ void _cc1100_send_handler(char *pkt)
     uint16_t addr;
     char *tok;
 
+    if (transceiver_pid < 0) {
+        puts("Transceiver not initialized");
+        return;
+    }
     tcmd.transceivers = TRANSCEIVER_CC1100;
     tcmd.data = &p;
 
