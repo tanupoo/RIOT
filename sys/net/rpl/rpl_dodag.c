@@ -173,6 +173,10 @@ rpl_parent_t *rpl_new_parent(rpl_dodag_t *dodag, ipv6_addr_t *address, uint16_t 
             parent->lifetime = dodag->default_lifetime * dodag->lifetime_unit;
             /* dtsn is set at the end of recv_dio function */
             parent->dtsn = 0;
+#ifdef SAFEST_DEMO
+            printf("p_s: ID sn%u selected ID sn%u as parent #color15\n",
+                    my_l2_addr, parent->addr.uint8[15]);
+#endif
             return parent;
         }
     }
@@ -278,6 +282,10 @@ rpl_parent_t *rpl_find_preferred_parent(void)
 
     if (my_dodag->my_preferred_parent == NULL) {
         my_dodag->my_preferred_parent = best;
+#ifdef SAFEST_DEMO
+        printf("p_s: ID sn%u selected ID sn%u as parent #color12\n",
+                my_l2_addr, my_dodag->my_preferred_parent->addr.uint8[15]);
+#endif
     }
 
     if (!rpl_equal_id(&my_dodag->my_preferred_parent->addr, &best->addr)) {
@@ -286,7 +294,15 @@ rpl_parent_t *rpl_find_preferred_parent(void)
             send_DAO(&my_dodag->my_preferred_parent->addr, 0, false, 0);
         }
 
+#ifdef SAFEST_DEMO
+    printf("p_d: ID sn%u deleted ID sn%u as parent #color15\n", my_l2_addr,
+            my_dodag->my_preferred_parent->addr.uint8[15]);
+#endif
         my_dodag->my_preferred_parent = best;
+#ifdef SAFEST_DEMO
+        printf("p_s: ID sn%u selected ID sn%u as parent #color12\n",
+                my_l2_addr, my_dodag->my_preferred_parent->addr.uint8[15]);
+#endif
 
         if (my_dodag->mop != NO_DOWNWARD_ROUTES) {
             delay_dao();
@@ -373,7 +389,7 @@ void rpl_join_dodag(rpl_dodag_t *dodag, ipv6_addr_t *parent, uint16_t parent_ran
     DEBUG("\tmy_preferred_parent lifetime\t%04X\n", my_dodag->my_preferred_parent->lifetime);
 
 #ifdef SAFEST_DEMO
-        printf("p_s: ID sn%u selected ID sn%u as parent #color15\n",
+        printf("p_s: ID sn%u selected ID sn%u as parent #color12\n",
                 my_l2_addr, preferred_parent->addr.uint8[15]);
 #endif
 
@@ -396,7 +412,7 @@ void rpl_global_repair(rpl_dodag_t *dodag, ipv6_addr_t *p_addr, uint16_t rank)
     my_dodag->dtsn++;
     my_dodag->my_preferred_parent = rpl_new_parent(my_dodag, p_addr, rank);
 #ifdef SAFEST_DEMO
-        printf("p_s: ID sn%u selected ID sn%u as parent #color15\n",
+        printf("p_s: ID sn%u selected ID sn%u as parent #color12\n",
                 my_l2_addr, my_dodag->my_preferred_parent->addr.uint8[15]);
 #endif
 
