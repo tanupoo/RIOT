@@ -67,7 +67,7 @@ void usage_exit()
 #ifdef MODULE_NATIVENET
     real_printf(" <tap interface>");
 #endif
-    real_printf(" [-t|-u]");
+    real_printf(" [-t <port>|-u]");
     real_printf(" [-d] [-e]\n");
 
     real_printf("\nOptions:\n\
@@ -92,6 +92,7 @@ __attribute__((constructor)) static void startup(int argc, char **argv)
     int argp = 1;
     char *stderrtype = "stdio";
     char *stdiotype = "stdio";
+    char *ioparam = NULL;
 
 #ifdef MODULE_NATIVENET
     if (argc < 2) {
@@ -110,6 +111,12 @@ __attribute__((constructor)) static void startup(int argc, char **argv)
         }
         else if (strcmp("-t", arg) == 0) {
             stdiotype = "tcp";
+            if (argp+1 < argc) {
+                ioparam = argv[++argp];
+            }
+            else {
+                usage_exit();
+            }
         }
         else if (strcmp("-u", arg) == 0) {
             stdiotype = "unix";
@@ -122,7 +129,7 @@ __attribute__((constructor)) static void startup(int argc, char **argv)
 
 
 #ifdef MODULE_UART0
-    _native_init_uart0(stdiotype, stderrtype);
+    _native_init_uart0(stdiotype, stderrtype, ioparam);
 #endif
 
     native_hwtimer_pre_init();

@@ -89,11 +89,13 @@ void *get_in_addr(struct sockaddr *sa)
 #ifndef UART_TCPPORT
 #define UART_TCPPORT "4711"
 #endif
-int init_tcp_socket()
+int init_tcp_socket(char *tcpport)
 {
     struct addrinfo hints, *info, *p;
     int i, s;
-    char *tcpport = UART_TCPPORT;
+    if (tcpport == NULL) {
+        tcpport = UART_TCPPORT;
+    }
 
     memset(&hints, 0, sizeof hints);
     hints.ai_family = AF_UNSPEC;
@@ -294,11 +296,11 @@ void _native_log_stderr(char *stderrtype)
     }
 }
 
-void _native_init_uart0_stdio(char *stdiotype)
+void _native_init_uart0_stdio(char *stdiotype, char *ioparam)
 {
     if (strcmp(stdiotype, "tcp") == 0) {
         _native_null_io();
-        _native_uart_sock = init_tcp_socket();
+        _native_uart_sock = init_tcp_socket(ioparam);
     }
     else if (strcmp(stdiotype, "unix") == 0) {
         _native_null_io();
@@ -312,12 +314,12 @@ void _native_init_uart0_stdio(char *stdiotype)
     }
 }
 
-void _native_init_uart0(char *stdiotype, char *stderrtype)
+void _native_init_uart0(char *stdiotype, char *stderrtype, char *ioparam)
 {
     _native_uart_out = STDOUT_FILENO;
     _native_uart_in = STDIN_FILENO;
 
-    _native_init_uart0_stdio(stdiotype);
+    _native_init_uart0_stdio(stdiotype, ioparam);
     _native_log_stderr(stderrtype);
 
     puts("RIOT native uart0 initialized.");
