@@ -89,11 +89,13 @@ void *get_in_addr(struct sockaddr *sa)
 #ifndef UART_TCPPORT
 #define UART_TCPPORT "4711"
 #endif
-int init_tcp_socket()
+int init_tcp_socket(char *tcpport)
 {
     struct addrinfo hints, *info, *p;
     int i, s;
-    char *tcpport = UART_TCPPORT;
+    if (tcpport == NULL) {
+        tcpport = UART_TCPPORT;
+    }
 
     memset(&hints, 0, sizeof hints);
     hints.ai_family = AF_UNSPEC;
@@ -247,19 +249,23 @@ int _native_set_uart_fds(void)
     }
 }
 
-void _native_null_io()
+void _native_null_io(char *nullouttype)
 {
-#ifdef NATIVE_LOGOUT
-    char logname[255];
-    snprintf(logname, sizeof(logname), "/tmp/riot.log.%d", getpid());
-    if ((_native_null_out_file = creat(logname, 0666)) == -1) {
-        err(EXIT_FAILURE, "daemonize: open");
+    if (nullouttype == NULL) {
+        if ((_native_null_out_file = open("/dev/null", O_WRONLY)) == -1) {
+            err(EXIT_FAILURE, "daemonize: open");
+        }
     }
-#else
-    if ((_native_null_out_file = open("/dev/null", O_WRONLY)) == -1) {
-        err(EXIT_FAILURE, "daemonize: open");
+    else if (strcmp(nullouttype, "file") == 0) {
+        char logname[255];
+        snprintf(logname, sizeof(logname), "/tmp/riot.log.%d", getpid());
+        if ((_native_null_out_file = creat(logname, 0666)) == -1) {
+            err(EXIT_FAILURE, "daemonize: open");
+        }
     }
-#endif
+    else {
+        errx(EXIT_FAILURE, "_native_null_out_file: unknown log type");
+    }
     if (pipe(_native_null_in_pipe) == -1) {
         err(1, "daemonize(): pipe()");
     }
@@ -294,17 +300,20 @@ void _native_log_stderr(char *stderrtype)
     }
 }
 
-void _native_init_uart0_stdio(char *stdiotype)
+void _native_init_uart0_stdio(char *stdiotype, char *nullouttype, char *ioparam)
 {
     if (strcmp(stdiotype, "tcp") == 0) {
-        _native_null_io();
-        _native_uart_sock = init_tcp_socket();
+        _native_null_io(nullouttype);
+        _native_uart_sock = init_tcp_socket(ioparam);
     }
     else if (strcmp(stdiotype, "unix") == 0) {
-        _native_null_io();
+        _native_null_io(nullouttype);
         _native_uart_sock = init_unix_socket();
     }
     else if (strcmp(stdiotype, "stdio") == 0) {
+        if (nullouttype) {
+            _native_null_io(nullouttype);
+        }
         _native_uart_sock = -1;
     }
     else {
@@ -312,12 +321,12 @@ void _native_init_uart0_stdio(char *stdiotype)
     }
 }
 
-void _native_init_uart0(char *stdiotype, char *stderrtype)
+void _native_init_uart0(char *stdiotype, char *stderrtype, char *nullouttype, char *ioparam)
 {
     _native_uart_out = STDOUT_FILENO;
     _native_uart_in = STDIN_FILENO;
 
-    _native_init_uart0_stdio(stdiotype);
+    _native_init_uart0_stdio(stdiotype, nullouttype, ioparam);
     _native_log_stderr(stderrtype);
 
     puts("RIOT native uart0 initialized.");
