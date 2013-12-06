@@ -125,3 +125,16 @@ To redirect stderr to a file:
 
 Read from it:
     tail -f /tmp/riot.stderr.18663
+
+To redirect stdout to a file:
+    ./bin/default.elf -d -o
+    RIOT pid: 18663
+
+Read from it:
+    tail -f /tmp/riot.log.18663
+
+The stdout redirection only writes to the file while no socket
+connection is established.
+
+Note that all of this only works when the uart module has been
+compiled in.

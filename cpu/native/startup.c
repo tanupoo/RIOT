@@ -75,7 +75,8 @@ void usage_exit()
     real_printf("\
 -u      redirect stdio to unix socket\n\
 -t      redirect stdio to tcp socket\n\
--e      redirect stderr file\n");
+-e      redirect stderr file\n\
+-o      redirect stdout to file when not attached to terminal\n");
     real_printf("\n\
 The order of command line arguments matters.\n");
     exit(EXIT_FAILURE);
@@ -92,6 +93,7 @@ __attribute__((constructor)) static void startup(int argc, char **argv)
     int argp = 1;
     char *stderrtype = "stdio";
     char *stdiotype = "stdio";
+    char *nullouttype = NULL;
     char *ioparam = NULL;
 
 #ifdef MODULE_NATIVENET
@@ -108,6 +110,9 @@ __attribute__((constructor)) static void startup(int argc, char **argv)
         }
         else if (strcmp("-e", arg) == 0) {
             stderrtype = "file";
+        }
+        else if (strcmp("-o", arg) == 0) {
+            nullouttype = "file";
         }
         else if (strcmp("-t", arg) == 0) {
             stdiotype = "tcp";
@@ -129,7 +134,7 @@ __attribute__((constructor)) static void startup(int argc, char **argv)
 
 
 #ifdef MODULE_UART0
-    _native_init_uart0(stdiotype, stderrtype, ioparam);
+    _native_init_uart0(stdiotype, stderrtype, nullouttype, ioparam);
 #endif
 
     native_hwtimer_pre_init();
