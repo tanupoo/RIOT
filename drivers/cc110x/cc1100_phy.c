@@ -6,7 +6,7 @@ and Telematics group (http://cst.mi.fu-berlin.de).
  * ----------------------------------------------------------------------------
  *  This file is part of RIOT.
  *
- * This file subject to the terms and conditions of the GNU Lesser General
+ * This file is subject to the terms and conditions of the GNU Lesser General
  * Public License. See the file LICENSE in the top level directory for more
  * details.
  *
@@ -279,7 +279,7 @@ void cc1100_print_config(void)
 
 inline uint16_t iround(double d)
 {
-    return (uint16_t) (d < 0 ? d - .5 : d + .5);
+    return (uint16_t) (d + 0.5);
 }
 
 int cc1100_phy_calc_wor_settings(uint16_t millis)

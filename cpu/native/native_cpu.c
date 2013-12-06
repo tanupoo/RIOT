@@ -6,7 +6,7 @@
  *
  * Copyright (C) 2013 Ludwig Ortmann
  *
- * This file subject to the terms and conditions of the GNU Lesser General
+ * This file is subject to the terms and conditions of the GNU Lesser General
  * Public License. See the file LICENSE in the top level directory for more
  * details.
  *
@@ -16,7 +16,7 @@
  * @author  Ludwig Ortmann <ludwig.ortmann@fu-berlin.de>
  */
 #include <stdio.h>
-#include <stdlib.h>
+
 #ifdef __MACH__
 #define _XOPEN_SOURCE
 #endif
@@ -36,6 +36,8 @@
 #define VALGRIND_STACK_REGISTER(...)
 #define VALGRIND_DEBUG(...)
 #endif
+
+#include <stdlib.h>
 
 #include "kernel_internal.h"
 #include "sched.h"

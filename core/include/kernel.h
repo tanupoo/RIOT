@@ -3,7 +3,7 @@
  *
  * Copyright (C) 2013 Freie Universität Berlin
  *
- * This file subject to the terms and conditions of the GNU Lesser General
+ * This file is subject to the terms and conditions of the GNU Lesser General
  * Public License. See the file LICENSE in the top level directory for more
  * details.
  *
@@ -52,6 +52,15 @@
  */
 #ifndef KERNEL_CONF_STACKSIZE_IDLE
 #error KERNEL_CONF_STACKSIZE_IDLE must be defined per CPU
+#endif
+
+/**
+ * @def KERNEL_CONF_STACKSIZE_PRINTF
+ * @ingroup conf
+ * @brief Size of the task's printf stack in bytes
+ */
+#ifndef KERNEL_CONF_STACKSIZE_PRINTF
+#error KERNEL_CONF_STACKSIZE_PRINTF must be defined per CPU
 #endif
 
 /**

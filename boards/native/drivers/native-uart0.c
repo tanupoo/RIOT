@@ -1,5 +1,16 @@
-/*
- * native uart0 implementation
+/**
+ * Native uart0 implementation
+ *
+ * Copyright (C) 2013 Ludwig Ortmann
+ *
+ * This file is subject to the terms and conditions of the LGPLv2. See
+ * the file LICENSE in the top level directory for more details.
+ *
+ * @ingroup native_board
+ * @{
+ * @file
+ * @author  Ludwig Ortmann <ludwig.ortmann@fu-berlin.de>
+ * @}
  */
 
 #include <err.h>
@@ -8,6 +19,15 @@
 #include <stdlib.h>
 #include <string.h>
 #include <stdarg.h>
+#include <sys/types.h>
+#include <sys/socket.h>
+#include <netinet/in.h>
+#include <netdb.h>
+#include <arpa/inet.h>
+#include <sys/un.h>
+#include <fcntl.h>
+#include <sys/types.h>
+#include <sys/stat.h>
 
 #include <sys/select.h>
 
@@ -17,9 +37,16 @@
 
 #include "native_internal.h"
 
-static int _native_uart_in;
+int _native_uart_in;
+int _native_uart_out;
+int _native_uart_sock;
+int _native_uart_conn;
+int _native_null_in_pipe[2];
+int _native_null_out_file;
 
 fd_set _native_uart_rfds;
+
+/* uart API */
 
 int uart0_puts(char *astring, int length)
 {
@@ -31,7 +58,7 @@ int uart0_puts(char *astring, int length)
     while (
             (length - offset > 0) && (
                 (nwritten = write(
-                               STDOUT_FILENO,
+                               _native_uart_out,
                                astring+offset,
                                length-offset)
                 ) > 0)
@@ -49,28 +76,115 @@ int uart0_puts(char *astring, int length)
     return length;
 }
 
-void _native_handle_uart0_input()
+/* internal */
+
+void *get_in_addr(struct sockaddr *sa)
+{
+    if (sa->sa_family == AF_INET) {
+        return &(((struct sockaddr_in*)sa)->sin_addr);
+    }
+    return &(((struct sockaddr_in6*)sa)->sin6_addr);
+}
+
+#ifndef UART_TCPPORT
+#define UART_TCPPORT "4711"
+#endif
+int init_tcp_socket()
+{
+    struct addrinfo hints, *info, *p;
+    int i, s;
+    char *tcpport = UART_TCPPORT;
+
+    memset(&hints, 0, sizeof hints);
+    hints.ai_family = AF_UNSPEC;
+    hints.ai_socktype = SOCK_STREAM;
+    hints.ai_flags = AI_PASSIVE;
+
+    if ((i = getaddrinfo(NULL, tcpport, &hints, &info)) != 0) {
+        errx(EXIT_FAILURE,
+                "init_uart_socket: getaddrinfo: %s", gai_strerror(i));
+    }
+
+    for (p = info; p != NULL; p = p->ai_next) {
+        if ((s = socket(p->ai_family, p->ai_socktype, p->ai_protocol)) == -1) {
+            warn("init_uart_socket: socket");
+            continue;
+        }
+
+        i = 1;
+        if (setsockopt(s, SOL_SOCKET, SO_REUSEADDR, &i, sizeof(int)) == -1) {
+            err(EXIT_FAILURE, "init_uart_socket: setsockopt");
+        }
+
+        if (bind(s, p->ai_addr, p->ai_addrlen) == -1) {
+            close(s);
+            warn("init_uart_socket: bind");
+            continue;
+        }
+
+        break;
+    }
+    if (p == NULL)  {
+        errx(EXIT_FAILURE, "init_uart_socket: failed to bind\n");
+    }
+    freeaddrinfo(info);
+
+    if (listen(s, 1) == -1) {
+        err(EXIT_FAILURE, "init_uart_socket: listen");
+    }
+
+    return s;
+}
+
+int init_unix_socket()
+{
+    int s, len;
+    struct sockaddr_un sa;
+
+    if ((s = socket(AF_UNIX, SOCK_STREAM, 0)) == -1) {
+        err(EXIT_FAILURE, "init_unix_socket: socket");
+    }
+
+    sa.sun_family = AF_UNIX;
+    snprintf(sa.sun_path, sizeof(sa.sun_path), "/tmp/riot.tty.%d", getpid());
+    unlink(sa.sun_path); /* remove stale socket */
+    len = strlen(sa.sun_path) + sizeof(sa.sun_family);
+    if (bind(s, (struct sockaddr *)&sa, len) == -1) {
+        err(EXIT_FAILURE, "init_unix_socket: bind");
+    }
+
+    if (listen(s, 5) == -1) {
+        err(EXIT_FAILURE, "init_unix_socket: listen");
+    }
+
+    return s;
+}
+
+void handle_uart_in()
 {
     char buf[42];
     int nread;
 
-    if (!FD_ISSET(_native_uart_in, &_native_rfds)) {
-        DEBUG("_native_handle_uart0_input - nothing to do\n");
-        return;
-    }
-    DEBUG("_native_handle_uart0_input\n");
+    DEBUG("handle_uart_in\n");
 
     nread = read(_native_uart_in, buf, sizeof(buf));
     if (nread == -1) {
-        err(1, "_native_handle_uart0_input(): read()");
+        err(1, "handle_uart_in(): read()");
     }
     else if (nread == 0) {
-        /* XXX:
-         * preliminary resolution for this situation, will be coped
-         * with properly in #161 */
-        close(_native_uart_in);
-        _native_uart_in = -1;
-        printf("stdin closed");
+        /* end of file / socket closed */
+        if (_native_uart_conn != 0) {
+            if (dup2(_native_null_out_file, _native_uart_out) == -1) {
+                err(EXIT_FAILURE, "handle_uart_in: dup2(STDOUT_FILENO)");
+            }
+            if (dup2(_native_null_in_pipe[0], _native_uart_in) == -1) {
+                err(EXIT_FAILURE, "handle_uart_in: dup2(STDIN_FILENO)");
+            }
+            _native_uart_conn = 0;
+        }
+        else {
+            errx(EXIT_FAILURE, "handle_uart_in: unhandled situation!!");
+        }
     }
     for(int pos = 0; pos < nread; pos++) {
         uart0_handle_incoming(buf[pos]);
@@ -80,18 +194,131 @@ void _native_handle_uart0_input()
     thread_yield();
 }
 
+void handle_uart_sock()
+{
+    int s;
+    socklen_t t;
+    struct sockaddr remote;
+
+    t = sizeof(remote);
+
+    _native_syscall_enter();
+    if ((s = accept(_native_uart_sock, &remote, &t)) == -1) {
+        err(EXIT_FAILURE, "handle_uart_sock: accept");
+    }
+    else {
+        warnx("handle_uart_sock: successfully accepted socket");
+    }
+
+    if (dup2(s, _native_uart_out) == -1) {
+        err(EXIT_FAILURE, "handle_uart_sock: dup2()");
+    }
+    if (dup2(s, _native_uart_in) == -1) {
+        err(EXIT_FAILURE, "handle_uart_sock: dup2()");
+    }
+    _native_syscall_leave();
+
+    _native_uart_conn = s;
+}
+
+void _native_handle_uart0_input()
+{
+    if (FD_ISSET(_native_uart_in, &_native_rfds)) {
+        handle_uart_in();
+    }
+    else if ((_native_uart_sock != -1) && (FD_ISSET(_native_uart_sock, &_native_rfds))) {
+        handle_uart_sock();
+    }
+    else {
+        DEBUG("_native_handle_uart0_input - nothing to do\n");
+    }
+}
+
 int _native_set_uart_fds(void)
 {
     DEBUG("_native_set_uart_fds");
-    if (_native_uart_in != -1) {
-        FD_SET(_native_uart_in, &_native_rfds);
+    FD_SET(_native_uart_in, &_native_rfds);
+    if (_native_uart_sock == -1) {
+        return (_native_uart_in);
     }
-    return _native_uart_in;
+    else {
+        FD_SET(_native_uart_sock, &_native_rfds);
+        return ((_native_uart_in > _native_uart_sock) ? _native_uart_in : _native_uart_sock);
+    }
 }
 
-void _native_init_uart0()
+void _native_null_io()
 {
+#ifdef NATIVE_LOGOUT
+    char logname[255];
+    snprintf(logname, sizeof(logname), "/tmp/riot.log.%d", getpid());
+    if ((_native_null_out_file = creat(logname, 0666)) == -1) {
+        err(EXIT_FAILURE, "daemonize: open");
+    }
+#else
+    if ((_native_null_out_file = open("/dev/null", O_WRONLY)) == -1) {
+        err(EXIT_FAILURE, "daemonize: open");
+    }
+#endif
+    if (pipe(_native_null_in_pipe) == -1) {
+        err(1, "daemonize(): pipe()");
+    }
+
+    if (dup2(_native_null_out_file, STDOUT_FILENO) == -1) {
+        err(EXIT_FAILURE, "daemonize: dup2(STDOUT_FILENO)");
+    }
+
+    if (dup2(_native_null_in_pipe[0], STDIN_FILENO) == -1) {
+        err(EXIT_FAILURE, "daemonize: dup2(STDIN_FILENO)");
+    }
+}
+
+void _native_log_stderr(char *stderrtype)
+{
+    char stderr_logname[255];
+    int stderr_outfile;
+
+    if (strcmp(stderrtype, "stdio") == 0) {
+        return;
+    }
+    else if (strcmp(stderrtype, "file") != 0) {
+        errx(EXIT_FAILURE, "_native_log_stderr: unknown log type");
+    }
+
+    snprintf(stderr_logname, sizeof(stderr_logname), "/tmp/riot.stderr.%d", getpid());
+    if ((stderr_outfile = creat(stderr_logname, 0666)) == -1) {
+        err(EXIT_FAILURE, "daemonize: open");
+    }
+    if (dup2(stderr_outfile, STDERR_FILENO) == -1) {
+        err(EXIT_FAILURE, "daemonize: dup2(STDERR_FILENO)");
+    }
+}
+
+void _native_init_uart0_stdio(char *stdiotype)
+{
+    if (strcmp(stdiotype, "tcp") == 0) {
+        _native_null_io();
+        _native_uart_sock = init_tcp_socket();
+    }
+    else if (strcmp(stdiotype, "unix") == 0) {
+        _native_null_io();
+        _native_uart_sock = init_unix_socket();
+    }
+    else if (strcmp(stdiotype, "stdio") == 0) {
+        _native_uart_sock = -1;
+    }
+    else {
+        errx(EXIT_FAILURE, "_native_init_uart0: unknown stdio type");
+    }
+}
+
+void _native_init_uart0(char *stdiotype, char *stderrtype)
+{
+    _native_uart_out = STDOUT_FILENO;
     _native_uart_in = STDIN_FILENO;
+
+    _native_init_uart0_stdio(stdiotype);
+    _native_log_stderr(stderrtype);
 
     puts("RIOT native uart0 initialized.");
 }
