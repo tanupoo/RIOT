@@ -18,10 +18,22 @@
 #include <vtimer.h>
 #include <thread.h>
 
-#define TRICKLE_TIMER_STACKSIZE (KERNEL_CONF_STACKSIZE_DEFAULT)
+#define TRICKLE_EH_STACKSIZE (KERNEL_CONF_STACKSIZE_MAIN)
 #define TRICKLE_INTERVAL_STACKSIZE (KERNEL_CONF_STACKSIZE_MAIN)
 #define DAO_DELAY_STACKSIZE (KERNEL_CONF_STACKSIZE_MAIN)
 #define RT_STACKSIZE (KERNEL_CONF_STACKSIZE_DEFAULT)
+
+#define MSG_QUEUE_SIZE  (8)
+
+/**
+ * @brief message types for periodic trickle events
+ */
+enum trickle_event_type_t {
+    TRICKLE_SEND_DIO,   /**< periodic DIO sender */
+    TRICKLE_SEND_DAO,   /**< periodic DAO sender */
+    TRICKLE_RT_UPDATE,  /**< update routing table entries */
+};
+
 
 void reset_trickletimer(void);
 void init_trickle(void);

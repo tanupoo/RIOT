@@ -29,12 +29,12 @@
 #include "debug.h"
 
 /* thread stacks */
-char timer_over_buf[TRICKLE_TIMER_STACKSIZE];
+char trickle_eh_buf[TRICKLE_EH_STACKSIZE];
 char interval_over_buf[TRICKLE_INTERVAL_STACKSIZE];
 char dao_delay_over_buf[DAO_DELAY_STACKSIZE];
 char routing_table_buf[RT_STACKSIZE];
 
-int timer_over_pid;
+int trickle_eh_pid;
 int interval_over_pid;
 int dao_delay_over_pid;
 int rt_timer_over_pid;
@@ -57,8 +57,12 @@ timex_t I_time;
 timex_t dao_time;
 timex_t rt_time;
 
+/* message queue for trickle timer events */
+msg_t msq_q[MSG_QUEUE_SIZE];
+
 void reset_trickletimer(void)
 {
+    trickle_event_type_t t_ev_dio = TRICKLE_SEND_DIO;
     I = Imin;
     c = 0;
     /* start timer */
@@ -69,7 +73,7 @@ void reset_trickletimer(void)
     timex_normalize(&I_time);
     vtimer_remove(&trickle_t_timer);
     vtimer_remove(&trickle_I_timer);
-    vtimer_set_wakeup(&trickle_t_timer, t_time, timer_over_pid);
+    vtimer_set_msg(&trickle_t_timer, t_time, trickle_eh_pid, (void*)&t_ev_dio);
     vtimer_set_wakeup(&trickle_I_timer, I_time, interval_over_pid);
 
 }
@@ -79,9 +83,9 @@ void init_trickle(void)
     /* Create threads */
     ack_received = true;
     dao_counter = 0;
-    timer_over_pid = thread_create(timer_over_buf, TRICKLE_TIMER_STACKSIZE,
+    trickle_eh_pid = thread_create(trickle_eh_buf, TRICKLE_EH_STACKSIZE,
                                    PRIORITY_MAIN - 1, CREATE_STACKTEST,
-                                   trickle_timer_over, "trickle_timer_over");
+                                   trickle_event_handler, "trickle_event_handler");
 
     interval_over_pid = thread_create(interval_over_buf, TRICKLE_INTERVAL_STACKSIZE,
                                       PRIORITY_MAIN - 1, CREATE_STACKTEST,
@@ -97,6 +101,7 @@ void init_trickle(void)
 void start_trickle(uint8_t DIOIntMin, uint8_t DIOIntDoubl,
                    uint8_t DIORedundancyConstant)
 {
+    trickle_event_type_t t_ev_dio = TRICKLE_SEND_DIO;
     c = 0;
     k = DIORedundancyConstant;
     Imin = pow(2, DIOIntMin);
@@ -112,31 +117,18 @@ void start_trickle(uint8_t DIOIntMin, uint8_t DIOIntDoubl,
     timex_normalize(&I_time);
     vtimer_remove(&trickle_t_timer);
     vtimer_remove(&trickle_I_timer);
-    vtimer_set_wakeup(&trickle_t_timer, t_time, timer_over_pid);
+    vtimer_set_msg(&trickle_t_timer, t_time, trickle_eh_pid, (void*) &t_ev_dio);
     vtimer_set_wakeup(&trickle_I_timer, I_time, interval_over_pid);
 }
 
+/* XXX: never called */
 void trickle_increment_counter(void)
 {
     /* call this function, when received DIO message */
     c++;
 }
 
-void trickle_timer_over(void)
-{
-    ipv6_addr_t mcast;
-    ipv6_addr_set_all_nodes_addr(&mcast);
-
-    while (1) {
-        thread_sleep();
-
-        /* Handle k=0 like k=infinity (according to RFC6206, section 6.5) */
-        if ((c < k) || (k == 0)) {
-            send_DIO(&mcast);
-        }
-    }
-}
-
+/* maximum interval */
 void trickle_interval_over(void)
 {
     while (1) {
@@ -179,6 +171,7 @@ void trickle_interval_over(void)
 
 }
 
+/* NOT called at the moment */
 void delay_dao(void)
 {
     dao_time = timex_set(DEFAULT_DAO_DELAY, 0);
@@ -198,21 +191,18 @@ void long_delay_dao(void)
     vtimer_set_wakeup(&dao_timer, dao_time, dao_delay_over_pid);
 }
 
-void dao_delay_over(void)
+/* peridocal DAOs */
+void dao_sender(void)
 {
-    while (1) {
-        thread_sleep();
-
-        if ((ack_received == false) && (dao_counter < DAO_SEND_RETRIES)) {
-            dao_counter++;
-            send_DAO(NULL, 0, true, 0);
-            dao_time = timex_set(DEFAULT_WAIT_FOR_DAO_ACK, 0);
-            vtimer_remove(&dao_timer);
-            vtimer_set_wakeup(&dao_timer, dao_time, dao_delay_over_pid);
-        }
-        else if (ack_received == false) {
-            long_delay_dao();
-        }
+    if ((ack_received == false) && (dao_counter < DAO_SEND_RETRIES)) {
+        dao_counter++;
+        send_DAO(NULL, 0, true, 0);
+        dao_time = timex_set(DEFAULT_WAIT_FOR_DAO_ACK, 0);
+        vtimer_remove(&dao_timer);
+        vtimer_set_msg(&dao_timer, dao_time, dao_delay_over_pid);
+    }
+    else if (ack_received == false) {
+        long_delay_dao();
     }
 }
 
@@ -222,6 +212,7 @@ void dao_ack_received()
     long_delay_dao();
 }
 
+/* peridocally update routing table */
 void rt_timer_over(void)
 {
     rpl_routing_entry_t *rt;
@@ -257,5 +248,35 @@ void rt_timer_over(void)
 
         /* Wake up every second */
         vtimer_usleep(1000000);
+    }
+}
+
+void trickle_event_handler(void)
+{
+    msg_init_queue(msg_q, MSG_QUEUE_SIZE);
+
+    ipv6_addr_t mcast;
+    ipv6_addr_set_all_nodes_addr(&mcast);
+
+    msg_t m;
+    while (1) {
+        msg_receive(&m);
+        if (m.type != MSG_TIMER) {
+            DEBUG("%s, %d: Unknown message received, discarding\n", __FILE__, __LINE__);
+            continue;
+        }
+        switch ((trickle_event_type_t) m.content.value) {
+            case (TRICKLE_SEND_DIO):
+                /* Handle k=0 like k=infinity (according to RFC6206, section 6.5) */
+                if ((c < k) || (k == 0)) {
+                    send_DIO(&mcast);
+                }
+                break;
+            case (TRICKLE_SEND_DAO):
+                break;
+            case (TRICKLE_RT_UPDATE):
+                break;
+            default:
+                DEBUG("%s, %d: Unknown event, discarding\n", __FILE__, __LINE__);
     }
 }

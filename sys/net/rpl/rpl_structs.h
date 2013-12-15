@@ -236,7 +236,8 @@ typedef struct {
 
 } rpl_instance_t;
 
-//Node-internal representation of a DODAG, with nodespecific information
+/* Node-internal representation of a DODAG, with nodespecific information */
+/* TODO: convert some members into bitfields */
 typedef struct rpl_dodag_t {
     rpl_instance_t *instance;
     ipv6_addr_t dodag_id;
