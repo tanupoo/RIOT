@@ -180,7 +180,7 @@ int writepacket(uint8_t *packet_buf, size_t size)
     uint8_t *byte_ptr = packet_buf;
 
     while ((byte_ptr - packet_buf) < size) {
-        if ((byte_ptr - packet_buf) > BORDER_BUFFER_SIZE) {
+        if ((byte_ptr - packet_buf) > BORDER_SIXLOWPAN_BUFFER_SIZE) {
             return -1;
         }
 

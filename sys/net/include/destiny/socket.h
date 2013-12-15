@@ -28,6 +28,8 @@
 
 #include "destiny/in.h"
 
+#define DESTINY_BUFFER_SIZE (1024)
+
 typedef uint8_t sa_family_t;    ///< POSIX compatible type for address family.
 typedef uint32_t  socklen_t;    ///< POSIX compatible type for address length.
 

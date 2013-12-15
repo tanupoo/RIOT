@@ -48,7 +48,7 @@ typedef struct {
     sem_t send_win_not_full;
     struct send_slot {
         vtimer_t timeout;
-        uint8_t frame[BORDER_BUFFER_SIZE];
+        uint8_t frame[BORDER_SIXLOWPAN_BUFFER_SIZE];
         size_t frame_len;
     } send_win[BORDER_SWS];
 
@@ -56,7 +56,7 @@ typedef struct {
     uint8_t next_exp;
     struct recv_slot {
         int8_t received;
-        uint8_t frame[BORDER_BUFFER_SIZE];
+        uint8_t frame[BORDER_SIXLOWPAN_BUFFER_SIZE];
         size_t frame_len;
     } recv_win[BORDER_RWS];
 } flowcontrol_stat_t;

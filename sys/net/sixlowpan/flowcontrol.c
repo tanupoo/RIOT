@@ -170,7 +170,7 @@ void flowcontrol_deliver_from_uart(border_packet_t *packet, int len)
                 struct send_slot *slot;
                 slot = &(slwin_stat.send_win[++slwin_stat.last_ack % BORDER_SWS]);
                 vtimer_remove(&slot->timeout);
-                memset(&slot->frame, 0, BORDER_BUFFER_SIZE);
+                memset(&slot->frame, 0, BORDER_SIXLOWPAN_BUFFER_SIZE);
                 sem_post(&slwin_stat.send_win_not_full);
             }
             while (slwin_stat.last_ack != packet->seq_num);
@@ -193,7 +193,7 @@ void flowcontrol_deliver_from_uart(border_packet_t *packet, int len)
         if (packet->seq_num == slwin_stat.next_exp) {
             while (slot->received) {
                 demultiplex((border_packet_t *)slot->frame);
-                memset(&slot->frame, 0, BORDER_BUFFER_SIZE);
+                memset(&slot->frame, 0, BORDER_SIXLOWPAN_BUFFER_SIZE);
                 slot->received = 0;
                 slot = &slwin_stat.recv_win[++(slwin_stat.next_exp) % BORDER_RWS];
             }

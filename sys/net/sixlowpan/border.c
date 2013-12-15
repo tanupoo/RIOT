@@ -44,12 +44,12 @@ ipv6_addr_t abr_addr;
 char serial_reader_stack[READER_STACK_SIZE];
 uint16_t serial_reader_pid;
 
-uint8_t serial_out_buf[BORDER_BUFFER_SIZE];
-uint8_t serial_in_buf[BORDER_BUFFER_SIZE];
+uint8_t serial_out_buf[BORDER_SIXLOWPAN_BUFFER_SIZE];
+uint8_t serial_in_buf[BORDER_SIXLOWPAN_BUFFER_SIZE];
 
 uint8_t *get_serial_out_buffer(int offset)
 {
-    if (offset > BUFFER_SIZE) {
+    if (offset > SIXLOWPAN_BUFFER_SIZE) {
         return NULL;
     }
 
@@ -58,7 +58,7 @@ uint8_t *get_serial_out_buffer(int offset)
 
 uint8_t *get_serial_in_buffer(int offset)
 {
-    if (offset > BUFFER_SIZE) {
+    if (offset > SIXLOWPAN_BUFFER_SIZE) {
         return NULL;
     }
 
@@ -84,7 +84,7 @@ void serial_reader_f(void)
 
     while (1) {
         posix_open(uart0_handler_pid, 0);
-        bytes = readpacket(get_serial_in_buffer(0), BORDER_BUFFER_SIZE);
+        bytes = readpacket(get_serial_in_buffer(0), BORDER_SIXLOWPAN_BUFFER_SIZE);
 
         if (bytes < 0) {
             switch (bytes) {

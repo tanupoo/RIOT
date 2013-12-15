@@ -48,9 +48,9 @@ ipv6_addr_t my_address;
 mutex_t rpl_send_mutex;
 mutex_t rpl_recv_mutex;
 /* receive buffer without LL_HDR */
-uint8_t rpl_buffer[BUFFER_SIZE - LL_HDR_LEN];
+uint8_t rpl_buffer[SIXLOWPAN_BUFFER_SIZE - LL_HDR_LEN];
 /* in send buffer we need space fpr LL_HDR */
-uint8_t rpl_send_buffer[BUFFER_SIZE];
+uint8_t rpl_send_buffer[SIXLOWPAN_BUFFER_SIZE];
 
 msg_t msg_queue[RPL_PKT_RECV_BUF_SIZE];
 /* SEND BUFFERS */
