@@ -490,7 +490,7 @@ void rpl_process(void)
         code = ((uint8_t *)m_recv.content.ptr);
         /* differentiate packet types */
         ipv6_buf = ipv6_get_buf();
-        memcpy(&rpl_buffer, ipv6_buf, ipv6_buf->length + IPV6_HDR_LEN);
+        memcpy(&rpl_buffer, ipv6_buf, NTOHS(ipv6_buf->length) + IPV6_HDR_LEN);
 
         switch (*code) {
             case (ICMP_CODE_DIS): {
