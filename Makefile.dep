@@ -8,13 +8,29 @@ ifneq (,$(filter pnet,$(USEMODULE)))
 	ifeq (,$(filter posix,$(USEMODULE)))
 		USEMODULE += posix
 	endif
-	ifeq (,$(filter destiny,$(USEMODULE)))
-		USEMODULE += destiny
+	ifeq (,$(filter udp,$(USEMODULE)))
+		USEMODULE += udp 
+	endif
+	ifeq (,$(filter tcp,$(USEMODULE)))
+		USEMODULE += tcp 
 	endif
 	ifeq (,$(filter net_help,$(USEMODULE)))
 		USEMODULE += net_help
 	endif
 endif
+
+ifneq (,$(filter udp,$(USEMODULE)))
+	ifeq (,$(filter tl_socket,$(USEMODULE)))
+		USEMODULE += tl_socket
+	endif
+endif
+
+ifneq (,$(filter tcp,$(USEMODULE)))
+	ifeq (,$(filter tl_socket,$(USEMODULE)))
+		USEMODULE += tl_socket
+	endif
+endif
+
 
 ifneq (,$(filter posix,$(USEMODULE)))
 	ifeq (,$(filter uart0,$(USEMODULE)))
@@ -67,7 +83,7 @@ ifneq (,$(filter at86rf231,$(USEMODULE)))
 	endif
 endif
 
-ifneq (,$(filter destiny,$(USEMODULE)))
+ifneq (,$(filter tl_socket,$(USEMODULE)))
 	ifeq (,$(filter sixlowpan,$(USEMODULE)))
 		USEMODULE += sixlowpan
 	endif
