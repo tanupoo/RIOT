@@ -13,6 +13,9 @@ endif
 ifneq (,$(filter ltc4150,$(USEMODULE)))
     DIRS += ltc4150
 endif
+ifneq (,$(filter rgbled,$(USEMODULE)))
+    DIRS += rgbled
+endif
 ifneq (,$(filter cc110x,$(USEMODULE)))
     DIRS += cc110x
 endif
