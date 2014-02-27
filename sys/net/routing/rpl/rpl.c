@@ -579,7 +579,7 @@ void recv_rpl_dio(void)
      * ipv6_buf->length contains the packet length minus ipv6 and
      * icmpv6 header, so only ICMPV6_HDR_LEN remains to be
      * subtracted.  */
-    while (len < (ipv6_buf->length - ICMPV6_HDR_LEN)) {
+    while (len < (NTOHS(ipv6_buf->length) - ICMPV6_HDR_LEN)) {
         DEBUG("parsing DIO options\n");
         rpl_opt_buf = get_rpl_opt_buf(len);
 

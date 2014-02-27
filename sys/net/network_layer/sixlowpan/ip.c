@@ -395,7 +395,7 @@ void ipv6_process(void)
         }
         /* destination is foreign address */
         else {
-            packet_length = IPV6_HDR_LEN + ipv6_buf->length;
+            packet_length = IPV6_HDR_LEN + NTOHS(ipv6_buf->length);
             ndp_neighbor_cache_t *nce;
 
             ipv6_addr_t *dest;
@@ -527,7 +527,7 @@ ipv6_net_if_hit_t *ipv6_net_if_addr_match(ipv6_net_if_hit_t *hit,
 
                 if (memcmp(addr_entry->addr_data, addr, byte_al) == 0 &&
                     (addr_entry->addr_len % 8 == 0 ||
-                     ((addr_entry->addr_data[byte_al] - addr[byte_al]) & mask[addr_entry->addr_len - (byte_al * 8)]))) {
+                     ((addr_entry->addr_data->uint8[byte_al] - addr->uint8[byte_al]) & mask[addr_entry->addr_len - (byte_al * 8)]))) {
                     hit->if_id = if_id;
                     hit->addr = addr_entry;
                     return hit;
