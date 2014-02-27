@@ -1,5 +1,4 @@
 
-#include <stdio.h>
 #include "bitarithm.h"
 #include "lpc2387.h"
 #include "periph/pwm.h"
@@ -9,6 +8,7 @@
 #define PCPWM1      BIT6
 
 
+#ifdef PWM_NUMOF
 /**
  * @note The PWM is always initialized with left-aligned mode.
  */
@@ -58,21 +58,25 @@ int pwm_init(pwm_t dev, pwm_mode_t mode, unsigned int frequency, unsigned int re
 
 int pwm_set(pwm_t dev, int channel, unsigned int value)
 {
+    int res = 0;
     switch (channel) {
         case 0:
             PWM1MR3 = value;
-            PWM1LER = BIT3;
+            PWM1LER |= (BIT3 + BIT4 + BIT5);
             break;
         case 1:
             PWM1MR4 = value;
-            PWM1LER = BIT4;
+            PWM1LER |= (BIT3 + BIT4 + BIT5);
             break;
         case 2:
             PWM1MR5 = value;
-            PWM1LER = BIT5;
+            PWM1LER |= (BIT3 + BIT4 + BIT5);
+            break;
+        default:
+            res = 1;
             break;
     }
-    return 0;
+    return res;
 }
 
 void pwm_start(pwm_t dev)
@@ -84,3 +88,5 @@ void pwm_stop(pwm_t dev)
 {
     PCONP &= ~PCPWM1;        // disable PWM1 device
 }
+
+#endif /* PWM_NUMOF */
