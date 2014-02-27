@@ -965,7 +965,7 @@ void rpl_send(ipv6_addr_t *destination, uint8_t *payload, uint16_t p_len, uint8_
             }
         }
 
-        ipv6_send_packet(ipv6_buf);
+        ipv6_send_packet(ipv6_send_buf);
     }
 
 }
