@@ -45,7 +45,7 @@ typedef enum {
     PWM_CENTER          ///< use center aligned PWM
 } pwm_mode_t;
 
-
+#ifdef PWM_NUMOF
 /**
  * @brief Initialize a PWM device
  * 
@@ -94,6 +94,8 @@ void pwm_start(pwm_t dev);
  * @param dev           device to stop
  */
 void pwm_stop(pwm_t dev);
+
+#endif /* PWM_NUMOF */
 
 
 #endif /* __PWM_H */
