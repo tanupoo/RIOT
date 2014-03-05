@@ -54,8 +54,6 @@
 #endif
 #define UART0_BUFSIZE                   (128)
 
-#define CPU_ID_LEN                      (4)
-
 /* for nativenet */
 #define NATIVE_ETH_PROTO 0x1234
 
