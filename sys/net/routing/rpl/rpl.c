@@ -31,6 +31,12 @@
 #include "sixlowpan.h"
 #include "net_help.h"
 
+#define VIZ_EN      1
+
+#ifdef VIZ_EN
+#include "viz.h"
+#endif
+
 #define ENABLE_DEBUG (0)
 #if ENABLE_DEBUG
 #undef TRICKLE_TIMER_STACKSIZE
@@ -531,6 +537,11 @@ void recv_rpl_dio(void)
 {
     DEBUG("%s, %d: Received DIO with ", __FILE__, __LINE__);
     ipv6_buf = get_rpl_ipv6_buf();
+
+
+#ifdef VIZ_EN
+      viz_dio(ipv6_buf->srcaddr.uint8[15]);
+#endif
 
     rpl_dio_buf = get_rpl_dio_buf();
     DEBUG("instance %04X ", rpl_dio_buf->rpl_instanceid);
