@@ -75,6 +75,7 @@ void abtorigin(const char *vector, u_long *lnk_ptr1)
     register unsigned long *sp;
     register unsigned int   cpsr, spsr;
 
+    thread_print_all();
     __asm__ __volatile__("mrs %0, cpsr" : "=r"(cpsr));          // copy current mode
     __asm__ __volatile__("mrs %0, spsr" : "=r"(spsr));          // copy dabt generating mode
     __asm__ __volatile__("msr cpsr_c, %0" :: "r"(spsr));        // switch to dabt generating mode
