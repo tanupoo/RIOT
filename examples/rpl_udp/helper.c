@@ -29,7 +29,7 @@
 
 #include "demo.h"
 
-#define ENABLE_DEBUG    (1)
+#define ENABLE_DEBUG    (0)
 #include "debug.h"
 
 #define LL_HDR_LEN  (0x4)
