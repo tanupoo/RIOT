@@ -28,7 +28,7 @@
 #include <net/ethernet.h>
 
 #define RX_BUF_SIZE (10)
-#define TRANSCEIVER_BUFFER_SIZE (3)
+#define TRANSCEIVER_BUFFER_SIZE (10)
 
 #ifndef NATIVE_MAX_DATA_LENGTH
 #include "tap.h"
