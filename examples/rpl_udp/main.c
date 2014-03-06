@@ -33,7 +33,7 @@
 const shell_command_t shell_commands[] = {
     {"init", "Initialize network", rpl_udp_init},
     {"set", "Set ID", rpl_udp_set_id},
-    {"table", "Shows the routing table", rpl_udp_table},
+    {"route", "Shows the routing table", rpl_udp_table},
     {"dodag", "Shows the dodag", rpl_udp_dodag},
     {"loop", "", rpl_udp_loop},
     {"server", "Starts a UDP server", udp_server},

@@ -172,23 +172,25 @@ void rpl_udp_table(int argc, char **argv)
 
     rpl_routing_entry_t *rtable;
     rtable = rpl_get_routing_table();
-    printf("---------------------------\n");
-    printf("OUTPUT\n");
-    printf("---------------------------\n");
+    uint8_t c = 0;
+    puts("--------------------------------------------------------------------");
+    puts("Routing table");
+    puts(" #    target\t\t\tnext hop\t\tlifetime");
+    puts("--------------------------------------------------------------------");
 
     for (int i = 0; i < RPL_MAX_ROUTING_ENTRIES; i++) {
         if (rtable[i].used) {
-            printf("%s\n", ipv6_addr_to_str(addr_str, IPV6_MAX_ADDR_STR_LEN,
+            c++;
+            printf(" %03d: %-18s\t", i, ipv6_addr_to_str(addr_str, IPV6_MAX_ADDR_STR_LEN,
                                             (&rtable[i].address)));
-            printf("entry %d lifetime %d\n", i, rtable[i].lifetime);
+            printf("%-18s\t", ipv6_addr_to_str(addr_str, IPV6_MAX_ADDR_STR_LEN,
+                                            (&rtable[i].next_hop)));
+            printf("%d\n", rtable[i].lifetime);
 
-            if (!rpl_equal_id(&rtable[i].address, &rtable[i].next_hop)) {
-                puts("multi-hop");
-            }
-
-            printf("--------------\n");
+            puts("--------------------------------------------------------------------");
         }
     }
+    printf(" %d routing table entries\n", c);
 
     printf("$\n");
 }
