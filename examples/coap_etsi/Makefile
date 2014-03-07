@@ -14,6 +14,8 @@ USEPKG=libcoap
 
 USEMODULE += auto_init
 USEMODULE += shell
+USEMODULE += shell_commands
+USEMODULE += ps
 USEMODULE += vtimer
 
 USEMODULE += posix
@@ -22,6 +24,8 @@ USEMODULE += pthread
 
 ifeq ($(strip $(BOARD)),native)
 	USEMODULE += nativenet
+else ifeq ($(strip $(BOARD)),iot-lab_M3)
+	USEMODULE += at86rf231 
 else ifeq ($(strip $(BOARD)),msba2)
 	USEMODULE += cc110x_ng
 endif
