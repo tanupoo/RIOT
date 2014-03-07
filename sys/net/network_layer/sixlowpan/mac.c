@@ -106,7 +106,7 @@ static void *recv_ieee802154_frame(void *arg)
             DEBUG("Sender:");
 
             for (uint8_t i = 0; i < 8; i++) {
-                printf("%02x ", frame.src_addr[i]);
+                DEBUG("%02x ", frame.src_addr[i]);
             }
 
             DEBUG("\n");
@@ -114,7 +114,7 @@ static void *recv_ieee802154_frame(void *arg)
             DEBUG("Receiver:");
 
             for (size_t i = 0; i < 8; i++) {
-                printf("%02x ", frame.dest_addr[i]);
+                DEBUG("%02x ", frame.dest_addr[i]);
             }
 
             DEBUG("\n");
@@ -122,7 +122,7 @@ static void *recv_ieee802154_frame(void *arg)
             DEBUG("Payload:\n");
 
             for (uint8_t i = 0; i < frame.payload_len; i++) {
-                printf("%02x ", frame.payload[i]);
+                DEBUG("%02x ", frame.payload[i]);
 
                 if (!((i + 1) % 16) || i == frame.payload_len - 1) {
                     printf("\n");
@@ -256,7 +256,7 @@ int sixlowpan_mac_prepare_ieee802144_frame(
     ieee802154_frame_init(frame, (uint8_t *)&lowpan_mac_buf);
     memcpy(&lowpan_mac_buf[hdrlen], frame->payload, frame->payload_len);
     /* set FCS */
-    fcs = (uint16_t *)&lowpan_mac_buf[frame->payload_len + hdrlen];
+    fcs = (uint16_t *)&lowpan_mac_buf[frame->payload_len + hdrlen+1];
     *fcs = ieee802154_frame_get_fcs(lowpan_mac_buf, frame->payload_len + hdrlen);
     DEBUG("IEEE802.15.4 frame - FCF: %02X %02X DPID: %02X SPID: %02X DSN: %02X\n",
           lowpan_mac_buf[0], lowpan_mac_buf[1], frame->dest_pan_id,
