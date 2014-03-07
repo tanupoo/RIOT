@@ -60,7 +60,7 @@ extern char ip_process_buf[IP_PROCESS_STACKSIZE];
 
 extern int sixlowip_reg[SIXLOWIP_MAX_REGISTERED];
 
-typedef struct __attribute__((packed)) {
+typedef struct {
     struct net_if_addr_t *addr_next;
     struct net_if_addr_t *addr_prev;
     net_if_l3p_t addr_protocol;
@@ -72,12 +72,12 @@ typedef struct __attribute__((packed)) {
     uint8_t is_anycast;
 } ipv6_net_if_addr_t;
 
-typedef struct __attribute__((packed)) {
+typedef struct {
     ipv6_net_if_addr_t *addr;
     int if_id;
 } ipv6_net_if_hit_t;
 
-typedef struct __attribute__((packed)) {
+typedef struct {
     uint8_t prefix;             ///< prefix length of the sub-net
     uint8_t adv_cur_hop_limit;
     uint32_t adv_reachable_time;

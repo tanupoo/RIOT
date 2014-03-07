@@ -109,7 +109,7 @@ typedef union __attribute__((packed)) {
  * @details The interpretation of the address data is left to the upper layer
  *          implementations.
  */
-typedef struct __attribute__((packed)) net_if_addr_t {
+typedef struct net_if_addr_t {
     /**
      * @brief The next address on the interface. Initialise with NULL
      */

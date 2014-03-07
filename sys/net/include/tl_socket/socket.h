@@ -174,7 +174,7 @@ typedef uint32_t  socklen_t;    ///< POSIX compatible type for address length.
 /**
  * Socket address type for IPv6 communication.
  */
-typedef struct __attribute__((packed)) {
+typedef struct {
     uint8_t     sin6_family;    ///< set to AF_INET6
     uint16_t    sin6_port;      ///< transport layer port number
     uint32_t    sin6_flowinfo;  ///< IPv6 flow information

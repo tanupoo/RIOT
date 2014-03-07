@@ -70,7 +70,7 @@ typedef enum __attribute__((packed)) {
  *
  * @see net_if_addr_t
  */
-typedef struct __attribute__((packed)) ndp_prefix_info_t {
+typedef struct ndp_prefix_info_t {
     /**
      * @brief The next on the interface. Intialise with NULL
      */
@@ -102,7 +102,7 @@ typedef struct __attribute__((packed)) ndp_prefix_info_t {
  * @brief   Default router list to store information spread by
  *          router advertisement.
  */
-typedef struct __attribute__((packed)) {
+typedef struct {
     ipv6_addr_t addr;       ///< Address of router.
     timex_t inval_time;     ///< remaining time until this entry is
     ///< invalid.
@@ -114,7 +114,7 @@ typedef struct __attribute__((packed)) {
  *              RFC 4861, section 5.1
  *          </a>.
  */
-typedef struct __attribute__((packed)) {
+typedef struct {
     int if_id;                  ///< Interface the IPv6 address is reachable
     ///< over
     ndp_nce_type_t type;        ///< Type of neighbor cache entry.
@@ -134,7 +134,7 @@ typedef struct __attribute__((packed)) {
  *              RFC 6775
  *          </a>.
  */
-typedef struct __attribute__((packed)) {
+typedef struct {
     uint16_t version;                       ///< version of entry.
     ipv6_addr_t abr_addr;                   ///< Addres of ABR.
     uint8_t cids[NDP_6LOWPAN_CONTEXT_MAX];  ///< context IDs.
