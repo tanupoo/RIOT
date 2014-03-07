@@ -274,11 +274,10 @@ typedef struct rpl_of_t {
 } rpl_of_t;
 
 typedef struct {
-    uint8_t used;
     ipv6_addr_t address;
     ipv6_addr_t next_hop;
     uint16_t lifetime;
-
+    uint8_t used;
 } rpl_routing_entry_t;
 
 #endif
