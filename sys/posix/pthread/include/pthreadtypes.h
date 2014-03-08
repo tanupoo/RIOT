@@ -1,6 +1,7 @@
 #ifndef PTHREADTYPES_H_
 #define PTHREADTYPES_H_
 
+typedef uint32_t size_t;
 typedef unsigned long int pthread_t;
 
 typedef struct pthread_attr
