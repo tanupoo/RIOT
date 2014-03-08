@@ -1,6 +1,6 @@
 MODULE = pthread
 
-CFLAGS += -isystem $(RIOTBASE)/sys/posix/pthread/include
+INCLUDES += -isystem $(RIOTBASE)/sys/posix/pthread/include
 
 export INCLUDES += -I$(RIOTBASE)/sys/posix/pthread/include
 

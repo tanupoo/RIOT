@@ -28,8 +28,7 @@ endif
 
 #export INCLUDES += -I$(RIOTBASE)/pkg/libcoap/libcoap
 
-
-CFLAGS += -isystem $(RIOTBASE)/sys/net/include \
+export INCLUDES += -isystem $(RIOTBASE)/sys/net/include \
 		  -isystem $(RIOTBASE)/sys/posix/pnet/include \
 		  -isystem $(RIOTBASE)/sys/posix/pthread/include
 
