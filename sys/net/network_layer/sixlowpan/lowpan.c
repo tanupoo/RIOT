@@ -180,7 +180,7 @@ int sixlowpan_lowpan_sendto(int if_id, const void *dest, int dest_len,
         print_long_local_addr((net_if_eui64_t *)dest);
     }
     else {
-        printf("0x%04"PRIx16"\n", NTOHS(*((uint16_t *)dest)));
+        printf("0x%04X\n", NTOHS(*((uint16_t *)dest)));
     }
 
     DEBUG("data: \n");
@@ -262,7 +262,7 @@ int sixlowpan_lowpan_sendto(int if_id, const void *dest, int dest_len,
 
             sixlowpan_mac_send_ieee802154_frame(if_id, dest, dest_len,
                                                 &fragbuf,
-                                                max_frame + 5, mcast);
+                                                max_frag + 5, mcast);
             data += max_frag;
             position += max_frag;
         }
@@ -837,10 +837,10 @@ void lowpan_read(uint8_t *data, uint8_t length, net_if_eui64_t *s_addr,
         frag_size = length - hdr_length;
         byte_offset = datagram_offset * 8;
 
+        DEBUG("Frag size is %u, offset is %u, datagram_size is %u\n", frag_size, byte_offset, datagram_size);
         if ((frag_size % 8) != 0) {
             if ((byte_offset + frag_size) != datagram_size) {
                 printf("ERROR: received invalid fragment\n");
-                return;
             }
         }
 
