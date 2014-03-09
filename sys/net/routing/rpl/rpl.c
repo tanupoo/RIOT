@@ -535,7 +535,6 @@ void rpl_process(void)
 
 void recv_rpl_dio(void)
 {
-    DEBUG("%s, %d: Received DIO with ", __FILE__, __LINE__);
     ipv6_buf = get_rpl_ipv6_buf();
 
 
@@ -543,6 +542,7 @@ void recv_rpl_dio(void)
       viz_dio(ipv6_buf->srcaddr.uint8[15]);
 #endif
 
+    DEBUG("%s, %d: Received DIO with ", __FILE__, __LINE__);
     rpl_dio_buf = get_rpl_dio_buf();
     DEBUG("instance %04X ", rpl_dio_buf->rpl_instanceid);
     DEBUG("rank %04X\n", rpl_dio_buf->rank);
