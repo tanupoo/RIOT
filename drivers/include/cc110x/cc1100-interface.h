@@ -56,7 +56,7 @@ and Telematics group (http://cst.mi.fu-berlin.de).
 #ifdef MODULE_RPL
 #warning RPL currently works with CC1100_MODE_WOR
 #endif
-#define CC1100_RADIO_MODE CC1100_MODE_CONSTANT_RX
+#define CC1100_RADIO_MODE CC1100_MODE_WOR
 #endif
 
 /// CC1100 radio interface
