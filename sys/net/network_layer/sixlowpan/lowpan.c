@@ -46,7 +46,7 @@
 #include "destiny/in.h"
 #include "net_help.h"
 
-#define ENABLE_DEBUG    (0)
+#define ENABLE_DEBUG    (1)
 #if ENABLE_DEBUG
 #define DEBUG_ENABLED
 char addr_str[IPV6_MAX_ADDR_STR_LEN];

@@ -34,7 +34,7 @@
 
 #include "net_help.h"
 
-#define ENABLE_DEBUG    (0)
+#define ENABLE_DEBUG    (1)
 #if ENABLE_DEBUG
 #define DEBUG_ENABLED
 char addr_str[IPV6_MAX_ADDR_STR_LEN];
@@ -350,6 +350,19 @@ void *ipv6_process(void *arg)
 
         ipv6_buf = (ipv6_hdr_t *)m_recv_lowpan.content.ptr;
 
+        int if_id = -1;
+        net_if_addr_t *addr_ptr = NULL;
+        unsigned int j = 0;
+        while ((if_id = net_if_iter_interfaces(if_id)) >= 0) {
+            while (net_if_iter_addresses(if_id, &addr_ptr)) {
+                j++;
+            }
+        }
+        if (!j) {
+            DEBUGF("No addressed configured yet, discarding packet");
+            continue;
+        }
+
         /* identifiy packet */
         nextheader = &ipv6_buf->nextheader;
 
@@ -654,6 +667,8 @@ void ipv6_net_if_get_best_src_addr(ipv6_addr_t *src, const ipv6_addr_t *dest)
     ipv6_net_if_addr_t *tmp_addr = NULL;
 
     if (!(ipv6_addr_is_link_local(dest)) && !(ipv6_addr_is_multicast(dest))) {
+        DEBUGF("Looking for best source for non-link local, non-multicast address:  %s\n",
+                ipv6_addr_to_str(addr_str, IPV6_NET_IF_ADDR_BUFFER_LEN, dest));
         while ((addr = (ipv6_net_if_addr_t *)net_if_iter_addresses(if_id,
                        (net_if_addr_t **)&addr))) {
             if (addr->ndp_state == NDP_ADDR_STATE_PREFERRED) {
@@ -665,18 +680,24 @@ void ipv6_net_if_get_best_src_addr(ipv6_addr_t *src, const ipv6_addr_t *dest)
                     if (tmp >= bmatch) {
                         bmatch = tmp;
                         tmp_addr = addr;
+                        DEBUGF("Best match so far: %s\n",
+                                ipv6_addr_to_str(addr_str, IPV6_NET_IF_ADDR_BUFFER_LEN, tmp_addr->addr_data));
                     }
                 }
             }
         }
     }
     else {
+        DEBUGF("Looking for best source for other cases:  %s\n",
+            ipv6_addr_to_str(addr_str, IPV6_NET_IF_ADDR_BUFFER_LEN, dest));
         while ((addr = (ipv6_net_if_addr_t *)net_if_iter_addresses(if_id,
                        (net_if_addr_t **)&addr))) {
             if (addr->ndp_state == NDP_ADDR_STATE_PREFERRED &&
                 ipv6_addr_is_link_local(addr->addr_data) &&
                 !ipv6_addr_is_multicast(addr->addr_data)) {
                 tmp_addr = addr;
+                DEBUGF("Best match so far: %s\n",
+                        ipv6_addr_to_str(addr_str, IPV6_NET_IF_ADDR_BUFFER_LEN, tmp_addr->addr_data));
             }
         }
     }
@@ -687,6 +708,7 @@ void ipv6_net_if_get_best_src_addr(ipv6_addr_t *src, const ipv6_addr_t *dest)
     else {
         memcpy(src, tmp_addr->addr_data, 16);
     }
+    DEBUGF("Best source address is %s (%p)\n", ipv6_addr_to_str(addr_str, IPV6_NET_IF_ADDR_BUFFER_LEN, src), (void*)src);
 }
 
 void ipv6_addr_init(ipv6_addr_t *out, uint16_t addr0, uint16_t addr1,

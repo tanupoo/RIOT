@@ -172,6 +172,10 @@ int msg_send_int(msg_t *m, kernel_pid_t target_pid)
 int msg_send_receive(msg_t *m, msg_t *reply, kernel_pid_t target_pid)
 {
     dINT();
+    if (thread_getstatus(target_pid) != STATUS_RECEIVE_BLOCKED) {
+        eINT();
+        return 0;
+    }
     tcb_t *me = (tcb_t*) sched_threads[sched_active_pid];
     sched_set_status(me, STATUS_REPLY_BLOCKED);
     me->wait_data = (void*) reply;

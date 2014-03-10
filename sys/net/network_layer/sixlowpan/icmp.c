@@ -1398,8 +1398,8 @@ void icmpv6_ndp_set_sllao(icmpv6_ndp_opt_stllao_t *sllao, int if_id,
 
             if (addr != 0) {
                 addr = HTONS(addr);
-                memcpy(&llao[2], &addr, 2);
-                memset(&llao[4], 0, 4);
+                memcpy(&llao[6], &addr, 2);
+                memset(&llao[2], 0, 4);
                 break;
             }
             else {
