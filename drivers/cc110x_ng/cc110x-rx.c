@@ -46,6 +46,10 @@ void cc110x_rx_handler(void)
 {
     uint8_t res = 0;
 
+#ifdef CEBIT_RX_TOGGLE
+    LED_GREEN_TOGGLE;
+#endif
+
     /* Possible packet received, RX -> IDLE (0.1 us) */
     rflags.CAA      = 0;
     rflags.MAN_WOR  = 0;
