@@ -863,6 +863,7 @@ void lowpan_read(uint8_t *data, uint8_t length, net_if_eui64_t *s_addr,
             DEBUG("ERROR: no memory left in packet buffer!\n");
         }
 
+        /* TODO: what is done if the thread is not sleeping? */
         if (thread_getstatus(transfer_pid) == STATUS_SLEEPING) {
             thread_wakeup(transfer_pid);
         }
