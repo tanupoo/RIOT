@@ -633,7 +633,7 @@ void _net_if_ifconfig_list(int if_id)
 
             if (inet_ntop(AF_INET6, addr_ptr->addr_data, addr_str,
                           IPV6_MAX_ADDR_STR_LEN)) {
-                printf("%s/%d", addr_str, addr_ptr->addr_len);
+                printf("%40s/%3d", addr_str, addr_ptr->addr_len);
                 printf("  scope: ");
 
                 if (addr_ptr->addr_len > 2 && _is_link_local((uint8_t *)addr_ptr->addr_data)) {
