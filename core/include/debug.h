@@ -46,7 +46,7 @@
 #define DEBUGF(...) \
     do { \
         DEBUG_PRINT("DEBUG(%s): %s:%d in %s: ", \
-                active_thread ? active_thread->name : "NO THREAD", \
+                (active_thread || inISR()) ? active_thread->name : "NO THREAD", \
                 __FILE__, __LINE__, __func__); \
         DEBUG_PRINT(__VA_ARGS__); \
     } while (0)
