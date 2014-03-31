@@ -63,6 +63,9 @@ void bl_init_ports(void)
     LED_RED_OFF;
     LED_GREEN_OFF;
 
+    /* Debug pin P0.0 */
+    FIO0DIR |= DEBUG_PIN;
+
     /* short blinking of both of the LEDs on startup */
     bl_blink();
 }

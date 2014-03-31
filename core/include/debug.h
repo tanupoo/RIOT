@@ -24,6 +24,7 @@
 
 #include <stdio.h>
 #include "sched.h"
+#include "board.h"
 
 #if DEVELHELP
 #include "cpu-conf.h"
@@ -50,10 +51,21 @@
                 __FILE__, __LINE__, __func__); \
         DEBUG_PRINT(__VA_ARGS__); \
     } while (0)
+
+#ifdef BOARD_DEBUG_PIN_ON
+#define DEBUG_PIN_OFF       BOARD_DEBUG_PIN_OFF
+#define DEBUG_PIN_ON        BOARD_DEBUG_PIN_ON
+#define DEBUG_PIN_TOGGLE    BOARD_DEBUG_PIN_TOGGLE
+#endif
+
 #undef ENABLE_DEBUG
 #else
 #define DEBUG(...)
 #define DEBUGF(...)
+
+#define DEBUG_PIN_OFF
+#define DEBUG_PIN_ON
+#define DEBUG_PIN_TOGGLE
 #endif
 
 /** @} */

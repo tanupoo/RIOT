@@ -35,6 +35,14 @@
 #define LED_RED_ON (FIO3CLR = LED_RED_PIN)
 #define LED_RED_TOGGLE (FIO3PIN ^= LED_RED_PIN)
 
+/* Use P0.0 as debug PIN, since we don't use neither CAN, USART3, nor I2C on
+ * this board*/
+#define DEBUG_PIN   (BIT0)
+
+#define BOARD_DEBUG_PIN_OFF       (FIO0CLR = DEBUG_PIN)
+#define BOARD_DEBUG_PIN_ON        (FIO0SET = DEBUG_PIN)
+#define BOARD_DEBUG_PIN_TOGGLE    (FIO0PIN ^= DEBUG_PIN)
+
 void init_clks1(void);
 
 typedef uint8_t radio_packet_length_t;
