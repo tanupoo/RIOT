@@ -24,6 +24,9 @@
 #include "hwtimer_arch.h"
 #include "irq.h"
 
+#define ENABLE_DEBUG    (0)
+#include "debug.h"
+
 #define VULP(x) ((volatile unsigned long*) (x))
 
 /* High level interrupt handler */
@@ -148,6 +151,7 @@ void hwtimer_arch_disable_interrupt(void)
 
 void hwtimer_arch_set(unsigned long offset, short timer)
 {
+    DEBUG_PIN_TOGGLE;
     /* Calculate base address of timer register */
     /* Timer 0-3 are matched to TIMER0 */
     /* Timer 4-7 are matched to TIMER1 */
@@ -164,6 +168,7 @@ void hwtimer_arch_set(unsigned long offset, short timer)
     *VULP(base + TXMCR) &= ~(7 << (3 * timer));     /* Clear all bits */
     *VULP(base + TXMCR) |= (MR0I << (3 * timer));   /* enable interrupt for match register */
     restoreIRQ(cpsr);
+    DEBUG_PIN_TOGGLE;
 }
 
 void hwtimer_arch_set_absolute(unsigned long value, short timer)

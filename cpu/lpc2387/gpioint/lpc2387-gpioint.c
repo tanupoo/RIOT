@@ -33,6 +33,9 @@ See the file LICENSE in the top level directory for more details.
 #include "cpu.h"
 #include "irq.h"
 
+#define ENABLE_DEBUG    (0)
+#include "debug.h"
+
 struct irq_callback_t {
     fp_irqcb    callback;
 };
