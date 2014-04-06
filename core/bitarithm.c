@@ -21,9 +21,13 @@
 
 #include <stdio.h>
 
+#define ENABLE_DEBUG    (0)
+#include "debug.h"
+
 unsigned
 number_of_highest_bit(unsigned v)
 {
+    DEBUG_PIN_TOGGLE;
     register unsigned r; // result of log2(v) will go here
 
 #if ARCH_32_BIT
@@ -42,12 +46,14 @@ number_of_highest_bit(unsigned v)
 
 #endif
 
+    DEBUG_PIN_TOGGLE;
     return r;
 }
 /*---------------------------------------------------------------------------*/
 unsigned
 number_of_lowest_bit(register unsigned v)
 {
+    DEBUG_PIN_TOGGLE;
     register unsigned r = 0;
 
     while ((v & 0x01) == 0) {
@@ -55,17 +61,20 @@ number_of_lowest_bit(register unsigned v)
         r++;
     };
 
+    DEBUG_PIN_TOGGLE;
     return r;
 }
 /*---------------------------------------------------------------------------*/
 unsigned
 number_of_bits_set(unsigned v)
 {
+    DEBUG_PIN_TOGGLE;
     unsigned c; // c accumulates the total bits set in v
 
     for (c = 0; v; c++) {
         v &= v - 1; // clear the least significant bit set
     }
 
+    DEBUG_PIN_TOGGLE;
     return c;
 }
