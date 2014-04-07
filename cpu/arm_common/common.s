@@ -121,6 +121,12 @@ task_return:
 *
 *----------------------------------------------------------------------------*/
 arm_irq_handler:
+/*
+    ldr     r0,=0x3FFFC018
+    ldr     r1,=0x00000001
+    str     r1, [r0,#0x00]
+*/
+
     sub 	lr, lr, #4
 
     /* save interrupted tasks PC onto stack */
@@ -136,6 +142,11 @@ arm_irq_handler:
     MRS R1, CPSR
     MSR SPSR, R1
 
+/*
+    ldr     r0,=0x3FFFC01C
+    ldr     r1,=0x00000001
+    str     r1, [r0,#0x00]
+ */
 .if CPU != mc1322x
     /* jump into vic interrupt */
     mov    r0, #0xffffff00    /* lpc23xx */
