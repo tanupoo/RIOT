@@ -146,6 +146,7 @@ void GPIO_IRQHandler(void) __attribute__((interrupt("IRQ")));
  */
 void __attribute__((__no_instrument_function__)) GPIO_IRQHandler(void)
 {
+    DEBUG_PIN_ON;
     if (IO_INT_STAT & BIT0) {                                       /* interrupt(s) on PORT0 pending */
         unsigned long int_stat_f = IO0_INT_STAT_F;                  /* save content */
         unsigned long int_stat_r = IO0_INT_STAT_R;                  /* save content */

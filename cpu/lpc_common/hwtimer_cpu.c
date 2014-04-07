@@ -42,6 +42,7 @@ inline static unsigned long get_base_address(short timer)
 
 static void timer_irq(void)
 {
+    DEBUG_PIN_ON;
     short timer = 0;
 
     if (T0IR) {
