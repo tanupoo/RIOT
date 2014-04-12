@@ -62,6 +62,19 @@ and the mailinglist (subscription via web site)
 #define LED_RED_OFF     LEDS_PxOUT |= LEDS_CONF_RED
 #define LED_RED_TOGGLE     LEDS_PxOUT ^= LEDS_CONF_RED
 
+#define LED_GREEN_ON      LEDS_PxOUT &=~LEDS_CONF_GREEN
+#define LED_GREEN_OFF     LEDS_PxOUT |= LEDS_CONF_GREEN
+#define LED_GREEN_TOGGLE     LEDS_PxOUT ^= LEDS_CONF_GREEN
+
+/* Use P4.1 as debug PIN, since we don't use neither CAN, USART3, nor I2C on
+ * this board*/
+#define DEBUG_PIN                 (BIT1)
+
+#define BOARD_DEBUG_PIN_OFF       (P4OUT |= DEBUG_PIN)
+#define BOARD_DEBUG_PIN_ON        (P4OUT &= ~DEBUG_PIN)
+#define BOARD_DEBUG_PIN_TOGGLE    (P4OUT ^= DEBUG_PIN)
+
+
 #include "board-conf.h"
 
 typedef uint8_t radio_packet_length_t;
