@@ -70,8 +70,8 @@ and the mailinglist (subscription via web site)
  * this board*/
 #define DEBUG_PIN                 (BIT1)
 
-#define BOARD_DEBUG_PIN_OFF       (P4OUT |= DEBUG_PIN)
-#define BOARD_DEBUG_PIN_ON        (P4OUT &= ~DEBUG_PIN)
+#define BOARD_DEBUG_PIN_ON       (P4OUT |= DEBUG_PIN)
+#define BOARD_DEBUG_PIN_OFF        (P4OUT &= ~DEBUG_PIN)
 #define BOARD_DEBUG_PIN_TOGGLE    (P4OUT ^= DEBUG_PIN)
 
 
