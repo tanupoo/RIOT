@@ -56,6 +56,10 @@
 #define DEBUG_PIN_OFF       BOARD_DEBUG_PIN_OFF
 #define DEBUG_PIN_ON        BOARD_DEBUG_PIN_ON
 #define DEBUG_PIN_TOGGLE    BOARD_DEBUG_PIN_TOGGLE
+#else
+#define DEBUG_PIN_OFF
+#define DEBUG_PIN_ON
+#define DEBUG_PIN_TOGGLE
 #endif
 
 #undef ENABLE_DEBUG
