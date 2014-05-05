@@ -35,7 +35,7 @@ def readlogs():
             if b != 0:
                 rate.append(a/float(b))
             else:
-                rate.append(0.0)
+                rate.append(None)
 
         entries[host] = {
             "nodeid": nodeid,
@@ -44,8 +44,33 @@ def readlogs():
             "real": real,
             "rate": rate
         }
+        
+def lookup(tuples, idx):
+    for rate, name, nodeid in tuples:
+        if nodeid == idx:
+            return name
+    return None
 
 if __name__ == '__main__':
 
     readlogs()
-    print(json.dumps(entries, ensure_ascii=False))
+
+    tuples = []
+    for name in entries.keys():
+        tuples.append((
+            entries[name]["rate"],
+            name,
+            entries[name]["nodeid"]
+        ))
+
+    graph = []
+    labels = []
+    for rate, name, nodeid in tuples:
+        for idx, val in enumerate(rate):
+            if val is not None:
+                graph.append((name, lookup(tuples, idx)))
+                labels.append("%.2f" % val)
+    
+    print(graph)
+    print(labels)
+
