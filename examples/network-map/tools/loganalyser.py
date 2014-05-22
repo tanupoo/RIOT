@@ -16,17 +16,27 @@ import graph as g
 entries = {}
 
 #subset = ["t9-169", "t9-165", "t9-166", "t9-105", "t9-164", "t9-124", "t9-108", "t9-117", "t9-113"]
-blacklist = ["t9-105", "t9-106", "t9-136", "t9-146", "t9-162", "t9-108", "t9-147", "t9-137", "t9-158", "t9-169", "t9-124", "t9-117", "t9-157t"]
+#blacklist = ["t9-105", "t9-106", "t9-136", "t9-146", "t9-162", "t9-108", "t9-147", "t9-137", "t9-158", "t9-169", "t9-124", "t9-117", "t9-157t"]
+blacklist = [None]
 
 def readlogs():
     for fname in glob.glob(".pyterm/*/*.log"):
         host = fname.split('/')[1]
+        print(host)
 
         lines = [line.strip().split("#")[1] for line in open(fname)]
+        #print(lines)
 
-        res = [line for line in lines if ("400" in line) and (len(line) > 100)][0][: -1]
+        res = [line for line in lines if ("400" in line) and ("$" in line)]
+        if res == []:
+            print("!!!!! " + host)
+            continue
+            
+        res = res[0][: -1]
+        
+        #print(res)
 
-        csv = [int(val.strip()) for val in res.split(",")]
+        csv = [int(val.strip()) for val in res.split("$")[1].split(",")]
         nodeid = csv.pop(0)
         send = csv.pop(0)
 
@@ -52,6 +62,8 @@ def lookup(tuples, idx):
     for rate, name, nodeid in tuples:
         if nodeid == idx:
             return name
+    
+    #print(tuples)
     return None
 
 if __name__ == '__main__':
@@ -70,7 +82,7 @@ if __name__ == '__main__':
     labels = []
     for rate, name, nodeid in tuples:
         for idx, val in enumerate(rate):
-            if val is not None and (name not in blacklist) and (lookup(tuples, idx) not in blacklist):
+            if (val is not None) and (val > 0.5) and (name not in blacklist) and (lookup(tuples, idx) not in blacklist):
                 graph.append((name, lookup(tuples, idx)))
                 labels.append("%.2f" % val)
     
