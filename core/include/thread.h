@@ -147,7 +147,7 @@ int thread_getlastpid(void);
  *
  * @return          the amount of unused space of the thread's stack
  */
-int thread_measure_stack_free(char *stack);
+uintptr_t thread_measure_stack_free(char *stack);
 
 /* @} */
 #endif /* __THREAD_H */
