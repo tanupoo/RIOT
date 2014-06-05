@@ -64,7 +64,7 @@ class SerCmd(cmd.Cmd):
 
         # create logger
         self.logger = logging.getLogger('')
-        self.logger.setLevel(logging.DEBUG)
+        self.logger.setLevel(logging.INFO)
 
         # add formatter to ch
         ch.setFormatter(formatter)
