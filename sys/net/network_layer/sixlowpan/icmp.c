@@ -89,7 +89,7 @@
 /* authoritive border router cache size */
 #define ABR_CACHE_SIZE                 	(2)
 /* neighbor cache size */
-#define NBR_CACHE_SIZE                 	(8)
+#define NBR_CACHE_SIZE                 	(32)
 #define NBR_CACHE_LTIME_TEN            	(20)
 /* default router list size */
 #define DEF_RTR_LST_SIZE                   	(3) /* geeigneten wert finden */
