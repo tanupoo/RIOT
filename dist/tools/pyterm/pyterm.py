@@ -170,7 +170,7 @@ class SerCmd(cmd.Cmd):
                 print("%s = %s" % (alias, self.aliases[alias]))
             return
         if not line.count("="):
-            sys.stderr.write("Usage: alias <ALIAS> = <CMD>\n")
+            sys.stderr.write("Usage: /alias <ALIAS> = <CMD>\n")
             return
         self.aliases[line.split('=')[0].strip()] = line.split('=')[1].strip()
 
