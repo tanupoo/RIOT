@@ -25,11 +25,11 @@ class SerCmd(cmd.Cmd):
         self.configfile = conffile
         self.host = host
         self.run_name = run_name
-        
+
         if not self.host:
             self.host = defaulthostname
 
-	if not self.run_name:
+        if not self.run_name:
             self.run_name = defaultrunname
 
         if not os.path.exists(self.configdir):
@@ -54,7 +54,7 @@ class SerCmd(cmd.Cmd):
         # create formatter
         fmt_str = '%(asctime)s - %(levelname)s # %(message)s'
         formatter = logging.Formatter(fmt_str)
-        
+
         directory = self.configdir + os.path.sep + self.host
         if not os.path.exists(directory):
             os.makedirs(directory)
