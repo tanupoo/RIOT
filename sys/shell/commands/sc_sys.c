@@ -16,6 +16,15 @@
  */
 
 #include "kernel.h"
+#include "crash.h"
+
+void _halt_handler(int argc, char **argv)
+{
+    (void) argc;
+    (void) argv;
+
+    core_panic(0, "System halted");
+}
 
 void _reboot_handler(int argc, char **argv)
 {

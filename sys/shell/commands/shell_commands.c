@@ -24,6 +24,7 @@
 #include "shell_commands.h"
 
 extern void _reboot_handler(int argc, char **argv);
+extern void _halt_handler(int argc, char **argv);
 
 #ifdef MODULE_CONFIG
 extern void _id_handler(int argc, char **argv);
@@ -125,6 +126,7 @@ extern void _mersenne_get(int argc, char **argv);
 #endif
 
 const shell_command_t _shell_command_list[] = {
+    {"halt", "Halts the node", _halt_handler},
     {"reboot", "Reboot the node", _reboot_handler},
 #ifdef MODULE_CONFIG
     {"id", "Gets or sets the node's id.", _id_handler},
