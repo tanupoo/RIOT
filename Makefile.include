@@ -149,6 +149,9 @@ term:
 doc:
 	make -BC $(RIOTBASE) doc
 
+debug-server:
+	$(DEBUGSERVER) $(DEBUGSERVER_FLAGS)
+
 debug:
 	$(DEBUGGER) $(DEBUGGER_FLAGS)
 
