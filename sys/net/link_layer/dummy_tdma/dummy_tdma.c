@@ -60,6 +60,7 @@ void dummy_tdma_receive_802154_packet_callback_t(void *buf, unsigned int len,
 void dummy_tdma_init(const ieee802154_radio_driver_t *radio)
 {
     memcpy(&_radio, radio, sizeof(ieee802154_radio_driver_t));
+    _radio.init();
     _radio.set_receive_callback(dummy_tdma_receive_802154_packet_callback_t);
 }
 
