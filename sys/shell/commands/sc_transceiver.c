@@ -27,7 +27,12 @@
 #include "transceiver.h"
 #include "msg.h"
 
-#if   defined( MODULE_CC110X )
+#if   defined ( MODULE_DUMMY_TDMA )
+#include "dummy_tdma.h"
+#define TEXT_SIZE           DUMMY_TDMA_MAX_DATA_LENGTH
+#define _TC_TYPE            TRANSCEIVER_DUMMY_TDMA
+
+#elif defined( MODULE_CC110X )
 #include "cc110x.h"
 #define TEXT_SIZE           CC1100_MAX_DATA_LENGTH
 #define _TC_TYPE            TRANSCEIVER_CC1100
