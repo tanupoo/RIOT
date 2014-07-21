@@ -39,13 +39,15 @@
 extern uint32_t _end;                       /* address of last used memory cell */
 caddr_t heap_top = (caddr_t)&_end + 4;
 
+extern void uart_rx_cb(char c);
+extern void uart_tx_cb(void);
 
 /**
  * @brief Initialize NewLib, called by __libc_init_array() from the startup script
  */
 void _init(void)
 {
-    uart_init_blocking(UART_0, 115200);
+    uart_init(UART_0, 115200, uart_rx_cb, uart_tx_cb);
 }
 
 /**

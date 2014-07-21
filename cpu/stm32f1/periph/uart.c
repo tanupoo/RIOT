@@ -28,6 +28,7 @@
 
 #include "sched.h"
 #include "thread.h"
+#include "board_uart0.h"
 
 
 /**
@@ -313,4 +314,18 @@ static inline void irq_handler(uint8_t uartnum, USART_TypeDef *dev)
     if (sched_context_switch_request) {
         thread_yield();
     }
+}
+
+void uart_rx_cb(char c)
+{
+#ifdef MODULE_UART0
+    if (uart0_handler_pid) {
+        uart0_handle_incoming(c);
+        uart0_notify_thread();
+    }
+#endif
+}
+
+void uart_tx_cb(void)
+{
 }
