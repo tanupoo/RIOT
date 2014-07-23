@@ -32,6 +32,9 @@
 
 #include "udp.h"
 
+#define ENABLE_DEBUG    (1)
+#include "debug.h"
+
 msg_t udp_msg_queue[UDP_PKT_RECV_BUF_SIZE];
 
 uint16_t udp_csum(ipv6_hdr_t *ipv6_header, udp_hdr_t *udp_header)
@@ -65,6 +68,11 @@ void *udp_packet_handler(void *arg)
         chksum = ipv6_csum(ipv6_header, (uint8_t*) udp_header, NTOHS(udp_header->length), IPPROTO_UDP);
 
         if (chksum == 0xffff) {
+            char addr_str[IPV6_MAX_ADDR_STR_LEN];
+            DEBUGF("Received an valid UDP packet for %s:%u of length %u.\n",
+                    ipv6_addr_to_str(addr_str, IPV6_MAX_ADDR_STR_LEN, &ipv6_header->destaddr),
+                    NTOHS(udp_header->dst_port),
+                    NTOHS(udp_header->length));
             udp_socket = get_udp_socket(udp_header);
 
             if (udp_socket != NULL) {

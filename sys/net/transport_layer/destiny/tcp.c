@@ -43,6 +43,8 @@ uint8_t             global_context_counter;
 mutex_t             global_sequence_counter_mutex;
 uint32_t            global_sequence_counter;
 
+#ifdef MODULE_TCP
+
 void printTCPHeader(tcp_hdr_t *tcp_header)
 {
     printf("\nBEGIN: TCP HEADER\n");
@@ -410,3 +412,4 @@ void *tcp_packet_handler(void *arg)
         msg_reply(&m_recv_ip, &m_send_ip);
     }
 }
+#endif

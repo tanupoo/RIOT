@@ -8,7 +8,7 @@
 #include "tcp.h"
 #include "udp.h"
 
-#define MAX_SOCKETS			5
+#define MAX_SOCKETS			2
 // #define MAX_QUEUED_SOCKETS	2
 
 #define INC_PACKET			0
