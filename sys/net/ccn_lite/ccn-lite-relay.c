@@ -227,7 +227,7 @@ void ccnl_populate_cache(struct ccnl_relay_s *ccnl, unsigned char *buf, int data
             goto Done;
         }
 
-        printf("populating: %s\n", ccnl_prefix_to_path(prefix));
+        DEBUGMSG(1, "populating: %s\n", ccnl_prefix_to_path(prefix));
 
         c = ccnl_content_new(ccnl, &pkt, &prefix, &ppkd, content,
                              contlen);
@@ -319,6 +319,15 @@ int ccnl_io_loop(struct ccnl_relay_s *ccnl)
                 DEBUGMSG(1, "\tSrc:\t%u\n", p->src);
                 DEBUGMSG(1, "\tDst:\t%u\n", p->dst);
 
+                DEBUGMSG(1, "\tFirst Byte:\t%u\n", p->data[0]);
+
+#ifdef MODULE_SIXLOWPAN
+                if (p->data[0] > 2) {
+                    DEBUGMSG(1, "NO CCNL packet, discarding\n");
+                    p->processing--;
+                    break;
+                }
+#endif
                 // p->src must be > 0
                 if (!p->src) {
                     p->src = RIOT_BROADCAST;
