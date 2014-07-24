@@ -29,7 +29,7 @@
 #endif
 #include "debug.h"
 
-net_if_t interfaces[NET_IF_MAX];
+static net_if_t interfaces[NET_IF_MAX];
 
 #ifdef DEBUG_ENABLED
 void print_addr_hex(net_if_addr_t *addr)
@@ -188,13 +188,16 @@ net_if_addr_t *net_if_iter_addresses(int if_id, net_if_addr_t **addr)
         return NULL;
     }
 
+    /* first call, return first value */
     if (*addr == NULL) {
         *addr = interfaces[if_id].addresses;
         return *addr;
     }
 
+    /* advance pointer */
     clist_advance((clist_node_t **)addr);
 
+    /* end of list */
     if (*addr == interfaces[if_id].addresses) {
         *addr = NULL;
     }
@@ -547,6 +550,35 @@ int32_t net_if_set_pan_id(int if_id, uint16_t pan_id)
     return pan_id;
 }
 
+int net_if_set_src_address_mode(int if_id,
+        net_if_trans_addr_m_t mode)
+{
+    if (!interfaces[if_id].initialized) {
+        return 0;
+    }
+
+    interfaces[if_id].trans_src_addr_m = mode;
+    return 1;
+}
+
+net_if_trans_addr_m_t net_if_get_src_address_mode(int if_id)
+{
+    if (!interfaces[if_id].initialized) {
+        return 0;
+    }
+
+    return interfaces[if_id].trans_src_addr_m;
+}
+
+net_if_t *net_if_get_interface(int if_id)
+{
+    if (if_id < NET_IF_MAX && interfaces[if_id].initialized) {
+        return &interfaces[if_id];
+    }
+    else {
+        return NULL;
+    }
+}
 /**
  * @}
  */

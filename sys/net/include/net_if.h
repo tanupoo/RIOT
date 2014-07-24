@@ -25,6 +25,7 @@
 #include <stdint.h>
 #include <stdlib.h>
 
+#include "clist.h"
 #include "mutex.h"
 #include "transceiver.h"
 
@@ -109,17 +110,18 @@ typedef union __attribute__((packed)) {
  * @details The interpretation of the address data is left to the upper layer
  *          implementations.
  */
-typedef struct __attribute__((packed)) net_if_addr_t {
+typedef struct __attribute__ (( aligned (8) )) net_if_addr_t {
     /**
      * @brief The next address on the interface. Initialise with NULL
      */
-    struct net_if_addr_t *addr_next;
+    clist_node_t *addr_next;
 
     /**
      * @brief The next address on the interface. Initialise with NULL
      */
-    struct net_if_addr_t *addr_prev;
+    clist_node_t *addr_prev;
 
+    unsigned int data;
     /**
      * @brief Flags to define upper layer protocols this address applies to
      */
@@ -141,7 +143,7 @@ typedef struct {
     mutex_t address_buffer_mutex;       ///< Mutex for address buffer operations
     net_if_addr_t *addresses;           ///< Adresses
     uint8_t l3p_data[9];                ///< generic L3 data
-} net_if_t;
+} net_if_t __attribute__ (( aligned (8) )) ;
 
 #define NET_IF_TRANS_ADDR_M_SHORT  2    ///< Transceiver address mode for short addresses
 #define NET_IF_TRANS_ADDR_M_LONG   3    ///< Transceiver address mode for long addresses
@@ -149,7 +151,6 @@ typedef struct {
 /**
  * All registered interfaces.
  */
-extern net_if_t interfaces[NET_IF_MAX];
 
 /**
  * @brief   Initializes the module.
@@ -176,15 +177,7 @@ int net_if_init_interface(net_if_l3p_t protocols,
  *
  * @return  The interface identified by *if_id* or NULL on failure.
  */
-static inline net_if_t *net_if_get_interface(int if_id)
-{
-    if (if_id < NET_IF_MAX && interfaces[if_id].initialized) {
-        return &interfaces[if_id];
-    }
-    else {
-        return NULL;
-    }
-}
+net_if_t *net_if_get_interface(int if_id);
 
 
 /**
@@ -205,16 +198,8 @@ int net_if_iter_interfaces(int start);
  *
  * @return  1 on success, 0 on error
  */
-static inline int net_if_set_src_address_mode(int if_id,
-        net_if_trans_addr_m_t mode)
-{
-    if (!interfaces[if_id].initialized) {
-        return 0;
-    }
-
-    interfaces[if_id].trans_src_addr_m = mode;
-    return 1;
-}
+int net_if_set_src_address_mode(int if_id,
+        net_if_trans_addr_m_t mode);
 
 /**
  * @brief   Gets the source address mode for the interface
@@ -223,14 +208,7 @@ static inline int net_if_set_src_address_mode(int if_id,
  *
  * @return  The interfaces address mode, 0 on error
  */
-static inline net_if_trans_addr_m_t net_if_get_src_address_mode(int if_id)
-{
-    if (!interfaces[if_id].initialized) {
-        return 0;
-    }
-
-    return interfaces[if_id].trans_src_addr_m;
-}
+net_if_trans_addr_m_t net_if_get_src_address_mode(int if_id);
 
 /**
  * @brief   Adds new address to interface
