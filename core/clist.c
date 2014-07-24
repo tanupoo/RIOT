@@ -65,7 +65,6 @@ void clist_print(clist_node_t *clist)
     clist_node_t *start = clist;
 
     while (clist != NULL) {
-        printf("list entry: %u prev=%u next=%u\n", clist->data, clist->prev->data, clist->next->data);
         clist = clist->next;
 
         if (clist == start) {
