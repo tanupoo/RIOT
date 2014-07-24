@@ -32,7 +32,7 @@
 #include "ccnx.h"
 
 /** The size of the message queue between router daemon and transceiver AND clients */
-#define APPSERVER_MSG_BUFFER_SIZE (64)
+#define APPSERVER_MSG_BUFFER_SIZE (16)
 
 /** message buffer */
 msg_t msg_buffer_appserver[APPSERVER_MSG_BUFFER_SIZE];
@@ -53,7 +53,7 @@ static int appserver_sent_content(uint8_t *buf, int len, uint16_t from)
     static riot_ccnl_msg_t rmsg;
     rmsg.payload = buf;
     rmsg.size = len;
-    DEBUGMSG(1, "datalen=%d\n", rmsg.size);
+    DEBUGMSG(1, "=======> CONTENT: %s, datalen=%d\n", rmsg.payload, rmsg.size);
 
     msg_t m;
     m.type = CCNL_RIOT_MSG;
@@ -111,7 +111,7 @@ static int appserver_handle_interest(char *data, uint16_t datalen, uint16_t from
 #ifdef MODULE_SIXLOWPAN
     int len;
     if (received_payload) {
-        DEBUGF("I have some content received over UDP - will deliver\n");
+        DEBUGF("I have some content received over UDP - will deliver: %s\n", udp_buf);
         memcpy(udp_buf, data, datalen);
         len = mkContent(prefix, udp_buf, CCNL_RIOT_CHUNK_SIZE - 1, content_pkg);
         received_payload = false;
@@ -125,10 +125,13 @@ static int appserver_handle_interest(char *data, uint16_t datalen, uint16_t from
         sock = destiny_socket(PF_INET6, SOCK_DGRAM, IPPROTO_UDP);
         memset(&sa, 0, sizeof(sa));
 
+        char addr_str[IPV6_MAX_ADDR_STR_LEN];
         ipv6_addr_set_all_nodes_addr(&ipaddr);
+        DEBUGF("Got a packet to send to %s\n", ipv6_addr_to_str(addr_str, IPV6_MAX_ADDR_STR_LEN, &ipaddr));
 
         sa.sin6_family = AF_INET;
         memcpy(&sa.sin6_addr, &ipaddr, 16);
+        DEBUGF("Got a packet to send to %s\n", ipv6_addr_to_str(addr_str, IPV6_MAX_ADDR_STR_LEN, &sa.sin6_addr));
         sa.sin6_port = HTONS(SERVER_PORT);
 
         destiny_socket_sendto(sock, tmp_buf, sizeof(tmp_buf), 0, &sa, sizeof(sa));
