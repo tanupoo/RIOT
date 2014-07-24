@@ -134,9 +134,9 @@ mutex_t lowpan_context_mutex;
 int sixlowpan_reg[SIXLOWPAN_MAX_REGISTERED];
 static sixlowpan_lowpan_frame_t current_frame;
 
-char ip_process_buf[IP_PROCESS_STACKSIZE];
-char con_buf[CON_STACKSIZE];
-char lowpan_transfer_buf[LOWPAN_TRANSFER_BUF_STACKSIZE];
+long long ip_process_buf[IP_PROCESS_STACKSIZE];
+long long con_buf[CON_STACKSIZE];
+long long lowpan_transfer_buf[LOWPAN_TRANSFER_BUF_STACKSIZE];
 lowpan_context_t contexts[NDP_6LOWPAN_CONTEXT_MAX];
 uint8_t context_len = 0;
 uint16_t local_address = 0;
@@ -1795,7 +1795,7 @@ int sixlowpan_lowpan_init(void)
     mutex_init(&fifo_mutex);
 
     if (!ip_process_pid) {
-        ip_process_pid = thread_create(ip_process_buf, IP_PROCESS_STACKSIZE,
+        ip_process_pid = thread_create(ip_process_buf, sizeof(ip_process_buf),
                                        PRIORITY_MAIN - 1, CREATE_STACKTEST,
                                        ipv6_process, NULL, "ip_process");
     }
@@ -1806,7 +1806,7 @@ int sixlowpan_lowpan_init(void)
 
     nbr_cache_auto_rem();
 
-    contexts_rem_pid = thread_create(con_buf, CON_STACKSIZE,
+    contexts_rem_pid = thread_create(con_buf, sizeof(con_buf),
                                      PRIORITY_MAIN + 1, CREATE_STACKTEST,
                                      lowpan_context_auto_remove, NULL, "lowpan_context_rem");
 
@@ -1814,7 +1814,7 @@ int sixlowpan_lowpan_init(void)
         return 0;
     }
 
-    transfer_pid = thread_create(lowpan_transfer_buf, LOWPAN_TRANSFER_BUF_STACKSIZE,
+    transfer_pid = thread_create(lowpan_transfer_buf, sizeof(lowpan_transfer_buf),
                                  PRIORITY_MAIN - 1, CREATE_STACKTEST,
                                  lowpan_transfer, NULL, "lowpan_transfer");
 

@@ -23,7 +23,7 @@
 /**
  * @brief Structure representing a node in the clist.
  */
-typedef struct clist_node_t {
+typedef struct __attribute__((aligned (8))) clist_node_t {
     struct clist_node_t *next;  /**< pointer to next node         */
     struct clist_node_t *prev;  /**< pointer to the previous node */
     unsigned int data;          /**< holding data for this node   */

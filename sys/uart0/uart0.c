@@ -43,7 +43,7 @@ int uart0_handler_pid;
 
 static char buffer[UART0_BUFSIZE];
 
-static char uart0_thread_stack[UART0_STACKSIZE];
+long long uart0_thread_stack[UART0_STACKSIZE];
 
 void board_uart0_init(void)
 {

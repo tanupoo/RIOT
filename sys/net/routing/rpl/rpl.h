@@ -39,7 +39,7 @@
 #define CC1100_RADIO_MODE CC1100_MODE_WOR
 
 #define RPL_PKT_RECV_BUF_SIZE 16
-#define RPL_PROCESS_STACKSIZE KERNEL_CONF_STACKSIZE_DEFAULT
+#define RPL_PROCESS_STACKSIZE KERNEL_CONF_STACKSIZE_MAIN
 
 /* global variables */
 extern rpl_of_t *rpl_objective_functions[NUMBER_IMPLEMENTED_OFS];
@@ -53,7 +53,7 @@ extern mutex_t rpl_recv_mutex;
 extern mutex_t rpl_send_mutex;
 
 extern msg_t rpl_msg_queue[RPL_PKT_RECV_BUF_SIZE];
-extern char rpl_process_buf[RPL_PROCESS_STACKSIZE];
+extern long long rpl_process_buf[RPL_PROCESS_STACKSIZE];
 extern uint8_t rpl_buffer[BUFFER_SIZE - LL_HDR_LEN];
 
 /**

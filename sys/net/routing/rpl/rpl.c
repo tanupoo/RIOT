@@ -53,7 +53,7 @@ unsigned int rpl_process_pid;
 mutex_t rpl_recv_mutex;
 mutex_t rpl_send_mutex;
 msg_t rpl_msg_queue[RPL_PKT_RECV_BUF_SIZE];
-char rpl_process_buf[RPL_PROCESS_STACKSIZE];
+long long rpl_process_buf[RPL_PROCESS_STACKSIZE];
 uint8_t rpl_buffer[BUFFER_SIZE - LL_HDR_LEN];
 
 /* IPv6 message buffer */
@@ -80,7 +80,7 @@ uint8_t rpl_init(int if_id)
     /* initialize routing table */
     rpl_clear_routing_table();
     init_trickle();
-    rpl_process_pid = thread_create(rpl_process_buf, RPL_PROCESS_STACKSIZE,
+    rpl_process_pid = thread_create(rpl_process_buf, sizeof(rpl_process_buf),
                                     PRIORITY_MAIN - 1, CREATE_STACKTEST,
                                     rpl_process, NULL, "rpl_process");
 

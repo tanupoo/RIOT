@@ -32,7 +32,7 @@
 #ifdef MODULE_TCP
 char tcp_stack_buffer[TCP_STACK_SIZE];
 #endif
-char udp_stack_buffer[UDP_STACK_SIZE];
+long long udp_stack_buffer[UDP_STACK_SIZE];
 
 #ifdef MODULE_TCP
 char tcp_timer_stack[TCP_TIMER_STACKSIZE];
@@ -46,7 +46,7 @@ int destiny_init_transport_layer(void)
     memset(sockets, 0, MAX_SOCKETS * sizeof(socket_internal_t));
 
     /* UDP */
-    int udp_thread_pid = thread_create(udp_stack_buffer, UDP_STACK_SIZE,
+    int udp_thread_pid = thread_create(udp_stack_buffer, sizeof(udp_stack_buffer),
                                        PRIORITY_MAIN, CREATE_STACKTEST,
                                        udp_packet_handler, NULL, "udp_packet_handler");
 

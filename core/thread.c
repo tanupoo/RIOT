@@ -111,9 +111,9 @@ int thread_create(char *stack, int stacksize, char priority, int flags, void *(*
     while (0) {
         /* We assume that the thread control block can be placed on the same
          * alignment as a pointer. Fail at compile time if this assumption is wrong. */
-        typedef int TCB_ALIGNMENT_CHECK[ALIGN_OF(void *) == ALIGN_OF(tcb_t) ? +1 : -1];
-        TCB_ALIGNMENT_CHECK tcb_alignment_check;
-        (void) tcb_alignment_check;
+        //typedef int TCB_ALIGNMENT_CHECK[ALIGN_OF(void *) == ALIGN_OF(tcb_t) ? +1 : -1];
+        //TCB_ALIGNMENT_CHECK tcb_alignment_check;
+        //(void) tcb_alignment_check;
     }
 
     if (priority >= SCHED_PRIO_LEVELS) {

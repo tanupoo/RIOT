@@ -53,14 +53,14 @@ See the file LICENSE in the top level directory for more details.
  * @name Kernel configuration
  * @{
  */
-#define KERNEL_CONF_STACKSIZE_PRINTF_FLOAT  (4096)
-#define KERNEL_CONF_STACKSIZE_PRINTF        (2048)
+#define KERNEL_CONF_STACKSIZE_PRINTF_FLOAT  (4096/8)
+#define KERNEL_CONF_STACKSIZE_PRINTF        (2048/8)
 
 #ifndef KERNEL_CONF_STACKSIZE_DEFAULT
-#define KERNEL_CONF_STACKSIZE_DEFAULT	(512)
+#define KERNEL_CONF_STACKSIZE_DEFAULT	(512/8)
 #endif
 
-#define KERNEL_CONF_STACKSIZE_IDLE		(160)
+#define KERNEL_CONF_STACKSIZE_IDLE		(320/8)
 /** @} */
 
 /**

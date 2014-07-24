@@ -38,7 +38,7 @@ radio_packet_t p;
 transceiver_command_t tcmd;
 msg_t mesg, rep;
 
-char relay_helper_stack[KERNEL_CONF_STACKSIZE_MAIN];
+long long relay_helper_stack[KERNEL_CONF_STACKSIZE_MAIN];
 
 int riot_send_transceiver(uint8_t *buf, uint16_t size, uint16_t to)
 {

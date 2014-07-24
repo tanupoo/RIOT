@@ -43,12 +43,12 @@
 #include "debug.h"
 
 #define RADIO_STACK_SIZE            (KERNEL_CONF_STACKSIZE_MAIN)
-#define RADIO_RCV_BUF_SIZE          (64)
+#define RADIO_RCV_BUF_SIZE          (16)
 #define RADIO_SENDING_DELAY         (1000)
 
 #define DEFAULT_IEEE_802154_PAN_ID  (0x1234)
 
-char radio_stack_buffer[RADIO_STACK_SIZE];
+long long radio_stack_buffer[RADIO_STACK_SIZE];
 msg_t msg_q[RADIO_RCV_BUF_SIZE];
 
 uint8_t lowpan_mac_buf[PAYLOAD_SIZE];
@@ -321,7 +321,7 @@ int sixlowpan_mac_send_ieee802154_frame(int if_id,
 
 int sixlowpan_mac_init(void)
 {
-    int recv_pid = thread_create(radio_stack_buffer, RADIO_STACK_SIZE,
+    int recv_pid = thread_create(radio_stack_buffer, sizeof(radio_stack_buffer),
                                  PRIORITY_MAIN - 2, CREATE_STACKTEST, recv_ieee802154_frame, NULL, "radio");
     int if_id = -1;
 

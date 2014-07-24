@@ -28,10 +28,10 @@
 #include "debug.h"
 
 /* thread stacks */
-static char timer_over_buf[TRICKLE_TIMER_STACKSIZE];
-static char interval_over_buf[TRICKLE_INTERVAL_STACKSIZE];
-static char dao_delay_over_buf[DAO_DELAY_STACKSIZE];
-static char routing_table_buf[RT_STACKSIZE];
+long long timer_over_buf[TRICKLE_TIMER_STACKSIZE];
+long long interval_over_buf[TRICKLE_INTERVAL_STACKSIZE];
+long long dao_delay_over_buf[DAO_DELAY_STACKSIZE];
+long long routing_table_buf[RT_STACKSIZE];
 
 int timer_over_pid;
 int interval_over_pid;
@@ -83,17 +83,17 @@ void init_trickle(void)
     /* Create threads */
     ack_received = true;
     dao_counter = 0;
-    timer_over_pid = thread_create(timer_over_buf, TRICKLE_TIMER_STACKSIZE,
+    timer_over_pid = thread_create(timer_over_buf, sizeof(timer_over_buf),
                                    PRIORITY_MAIN - 1, CREATE_STACKTEST,
                                    trickle_timer_over, NULL, "trickle_timer_over");
 
-    interval_over_pid = thread_create(interval_over_buf, TRICKLE_INTERVAL_STACKSIZE,
+    interval_over_pid = thread_create(interval_over_buf, sizeof(interval_over_buf),
                                       PRIORITY_MAIN - 1, CREATE_STACKTEST,
                                       trickle_interval_over, NULL, "trickle_interval_over");
-    dao_delay_over_pid = thread_create(dao_delay_over_buf, DAO_DELAY_STACKSIZE,
+    dao_delay_over_pid = thread_create(dao_delay_over_buf, sizeof(dao_delay_over_buf),
                                        PRIORITY_MAIN - 1, CREATE_STACKTEST,
                                        dao_delay_over, NULL, "dao_delay_over");
-    rt_timer_over_pid = thread_create(routing_table_buf, RT_STACKSIZE,
+    rt_timer_over_pid = thread_create(routing_table_buf, sizeof(routing_table_buf),
                                       PRIORITY_MAIN - 1, CREATE_STACKTEST,
                                       rt_timer_over, NULL, "rt_timer_over");
 }
