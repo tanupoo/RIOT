@@ -28,7 +28,7 @@ CFLAGS += -DDEVELHELP
 QUIET ?= 1
 
 # Blacklist boards
-BOARD_BLACKLIST := arduino-due avsextrem chronos mbed_lpc1768 msb-430h msba2 redbee-econotag \
+BOARD_BLACKLIST := agilefox arduino-due avsextrem chronos mbed_lpc1768 msb-430h msba2 redbee-econotag \
                    telosb wsn430-v1_3b wsn430-v1_4 msb-430 pttu udoo qemu-i386 z1 stm32f0discovery \
                    stm32f3discovery stm32f4discovery pca10000 pca10005 iot-lab_M3 arduino-mega2560 \
                    msbiot yunjia-nrf51822 samr21-xpro cc2538dk openmote spark-core airfy-beacon \
@@ -45,6 +45,7 @@ BOARD_BLACKLIST := arduino-due avsextrem chronos mbed_lpc1768 msb-430h msba2 red
 # pca10005:         g++ does not support some used flags (e.g. -mthumb...)
 # yunjia-nrf51822:  g++ does not support some used flags (e.g. -mthumb...)
 # iot-lab_M3:       g++ does not support some used flags (e.g. -mthumb...)
+# agilegox:         g++ does not support some used flags (e.g. -mthumb...)
 # arduino-mega2560: cstdio header missing from avr-libc
 # msbiot            g++ does not support some used flags (e.g. -mthumb...)
 # samr21-xpro       g++ does not support some used flags (e.g. -mthumb...)
