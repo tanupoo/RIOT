@@ -26,7 +26,7 @@
 #include "rfc5444/rfc5444_reader.h"
 
 #include "utils.h"
-#include "routing.h"
+#include "routingtable.h"
 #include "constants.h"
 #include "seqnum.h"
 #include "aodv.h"

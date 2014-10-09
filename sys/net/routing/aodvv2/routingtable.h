@@ -17,7 +17,6 @@
  * @author      Lotte Steenbrink <lotte.steenbrink@fu-berlin.de>
  */
 
-
 #ifndef AODVV2_ROUTINGTABLE_H_
 #define AODVV2_ROUTINGTABLE_H_
 

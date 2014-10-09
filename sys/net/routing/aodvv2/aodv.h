@@ -30,7 +30,7 @@
 #include "aodvv2/types.h"
 #include "constants.h"
 #include "seqnum.h"
-#include "routing.h"
+#include "routingtable.h"
 #include "utils.h"
 #include "reader.h"
 #include "writer.h"
