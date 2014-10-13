@@ -25,6 +25,9 @@
 #ifndef AODVV2_H_
 #define AODVV2_H_
 
+/**
+ * @brief   Initialize the AODVv2 routing protocol.
+ */
 void aodv_init(void);
 
 /**
