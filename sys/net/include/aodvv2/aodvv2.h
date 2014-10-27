@@ -29,6 +29,10 @@
 extern "C" {
 #endif
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 /**
  * @brief   Initialize the AODVv2 routing protocol.
  */
@@ -41,5 +45,9 @@ void aodv_init(void);
  * @param[in] metric_type       type of new metric
  */
 void aodv_set_metric_type(aodvv2_metric_t metric_type);
+
+#ifdef  __cplusplus
+}
+#endif
 
 #endif /* AODVV2_H_ */

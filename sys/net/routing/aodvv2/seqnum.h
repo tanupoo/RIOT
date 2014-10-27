@@ -24,6 +24,10 @@
 
 #include "aodvv2/types.h"
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 /**
  * @brief Initialize sequence number.
  */
@@ -48,5 +52,9 @@ void seqnum_inc(void);
  * @return        -1 when s1 is smaller, 0 if equal, 1 if s1 is bigger.
  */
 int seqnum_cmp(aodvv2_seqnum_t s1, aodvv2_seqnum_t s2);
+
+#ifdef  __cplusplus
+}
+#endif
 
 #endif /* AODVV2_SEQNUM_H_ */
