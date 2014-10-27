@@ -17,13 +17,17 @@
  * @author      Lotte Steenbrink <lotte.steenbrink@fu-berlin.de>
  */
 
+#ifndef AODVV2_H_
+#define AODVV2_H_
+
 #include "common/netaddr.h"
 #include "rfc5444/rfc5444_print.h"
 
 #include "aodvv2/types.h"
 
-#ifndef AODVV2_H_
-#define AODVV2_H_
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 /**
  * @brief   Initialize the AODVv2 routing protocol.

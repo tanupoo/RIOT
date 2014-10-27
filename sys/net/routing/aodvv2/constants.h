@@ -17,12 +17,16 @@
  * @author      Lotte Steenbrink <lotte.steenbrink@fu-berlin.de>
  */
 
+#ifndef AODVV2_CONSTANTS_H_
+#define AODVV2_CONSTANTS_H_
+
 #include "aodvv2/types.h"
 
 #include "common/netaddr.h"
 
-#ifndef AODVV2_CONSTANTS_H_
-#define AODVV2_CONSTANTS_H_
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 /* RFC5498 */
 #define MANET_PORT  269
