@@ -17,8 +17,9 @@
  * @author      Lotte Steenbrink <lotte.steenbrink@fu-berlin.de>
  */
 
-#ifndef ROUTING_H_
-#define ROUTING_H_
+
+#ifndef AODVV2_ROUTINGTABLE_H_
+#define AODVV2_ROUTINGTABLE_H_
 
 #include <string.h>
 
@@ -142,4 +143,4 @@ void routingtable_fill_routing_entry_t_rrep(struct aodvv2_packet_data *packet_da
 void print_routingtable(void);
 void print_routingtable_entry(struct aodvv2_routing_entry_t *rt_entry);
 
-#endif /* ROUTING_H_ */
+#endif /* AODVV2_ROUTINGTABLE_H_*/
