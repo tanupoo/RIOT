@@ -28,10 +28,6 @@
 extern "C" {
 #endif
 
-#ifdef __cplusplus
-extern "C" {
-#endif
-
 /* RFC5498 */
 #define MANET_PORT  269
 

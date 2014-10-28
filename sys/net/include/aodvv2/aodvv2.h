@@ -29,10 +29,6 @@
 extern "C" {
 #endif
 
-#ifdef __cplusplus
-extern "C" {
-#endif
-
 /**
  * @brief   Initialize the AODVv2 routing protocol.
  */
