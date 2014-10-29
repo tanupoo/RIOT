@@ -119,7 +119,7 @@ void aodv_send_rreq(struct aodvv2_packet_data *packet_data)
     msg_t msg;
     msg.content.ptr = (char *) mc;
 
-    msg_send(&msg, sender_thread, false);
+    msg_try_send(&msg, sender_thread);
 }
 
 void aodv_send_rrep(struct aodvv2_packet_data *packet_data, struct netaddr *next_hop)
@@ -149,7 +149,7 @@ void aodv_send_rrep(struct aodvv2_packet_data *packet_data, struct netaddr *next
     msg_t msg;
     msg.content.ptr = (char *) mc;
 
-    msg_send(&msg, sender_thread, false);
+    msg_try_send(&msg, sender_thread);
 }
 
 void aodv_send_rerr(struct unreachable_node unreachable_nodes[], int len, int hoplimit, struct netaddr *next_hop)
@@ -175,7 +175,7 @@ void aodv_send_rerr(struct unreachable_node unreachable_nodes[], int len, int ho
     msg_t msg2;
     msg2.content.ptr = (char *) mc2;
 
-    msg_send(&msg2, sender_thread, false);
+    msg_try_send(&msg2, sender_thread);
 }
 
 /*
