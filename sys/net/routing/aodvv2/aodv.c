@@ -152,7 +152,7 @@ void aodv_send_rrep(struct aodvv2_packet_data *packet_data, struct netaddr *next
     msg_try_send(&msg, sender_thread);
 }
 
-void aodv_send_rerr(struct unreachable_node unreachable_nodes[], int len, int hoplimit, struct netaddr *next_hop)
+void aodv_send_rerr(struct unreachable_node unreachable_nodes[], int len, struct netaddr *next_hop)
 {
     DEBUG("[aodvv2] %s()\n", __func__);
 
@@ -339,7 +339,7 @@ static ipv6_addr_t *aodv_get_next_hop(ipv6_addr_t *dest)
              * and add all *Active* routes to the list of unreachable nodes */
             routingtable_break_and_get_all_hopping_over(&_tmp_dest, unreachable_nodes, &len);
 
-            aodv_send_rerr(unreachable_nodes, len, AODVV2_MAX_HOPCOUNT, &na_mcast);
+            aodv_send_rerr(unreachable_nodes, len, &na_mcast);
             return NULL;
         }
 
@@ -355,7 +355,7 @@ static ipv6_addr_t *aodv_get_next_hop(ipv6_addr_t *dest)
             DEBUG("\tRouting table entry found, but invalid (state %i). Sending RERR.\n", rt_entry->state);
             unreachable_nodes[0].addr = _tmp_dest;
             unreachable_nodes[0].seqnum = rt_entry->seqnum;
-            aodv_send_rerr(unreachable_nodes, 1, AODVV2_MAX_HOPCOUNT, &na_mcast);
+            aodv_send_rerr(unreachable_nodes, 1, &na_mcast);
             return NULL;
         }
 
