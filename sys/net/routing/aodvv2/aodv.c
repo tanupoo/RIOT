@@ -396,7 +396,9 @@ static ipv6_addr_t *aodv_get_next_hop(ipv6_addr_t *dest)
         .targNode = (struct node_data)
         {
             .addr = _tmp_dest,
-        }
+        },
+
+        .timestamp = now
     };
 
     DEBUG("\tNo route found towards %s, starting route discovery... \n", ipv6_addr_to_str(addr_str, IPV6_MAX_ADDR_STR_LEN, dest));
