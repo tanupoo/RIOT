@@ -302,7 +302,7 @@ static void *_aodv_receiver_thread(void *arg)
     return NULL;
 }
 
-static ipv6_addr_t *aodv_get_next_hop(ipv6_addr_t *dest)
+ipv6_addr_t *aodv_get_next_hop(ipv6_addr_t *dest)
 {
     DEBUG("[aodvv2] aodv_get_next_hop() %s: getting next hop for %s\n", ipv6_addr_to_str(addr_str, IPV6_MAX_ADDR_STR_LEN, &_v6_addr_local), ipv6_addr_to_str(addr_str2, IPV6_MAX_ADDR_STR_LEN, dest));
 
