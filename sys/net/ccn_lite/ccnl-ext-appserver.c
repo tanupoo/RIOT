@@ -41,7 +41,7 @@ kernel_pid_t relay_pid = KERNEL_PID_UNDEF;
 char prefix[] = "/riot/appserver/";
 
 #ifdef MODULE_SIXLOWPAN
-#include "destiny.h"
+#include "socket_base.h"
 #define SERVER_PORT     (0xFF01)
 static bool received_payload = false;
 char udp_buf[CCNL_RIOT_CHUNK_SIZE - 1];
@@ -122,7 +122,7 @@ static int appserver_handle_interest(char *data, uint16_t datalen, uint16_t from
         sockaddr6_t sa;
         ipv6_addr_t ipaddr;
 
-        sock = destiny_socket(PF_INET6, SOCK_DGRAM, IPPROTO_UDP);
+        sock = socket_base_socket(PF_INET6, SOCK_DGRAM, IPPROTO_UDP);
         memset(&sa, 0, sizeof(sa));
 
         ipv6_addr_set_all_nodes_addr(&ipaddr);
@@ -131,9 +131,9 @@ static int appserver_handle_interest(char *data, uint16_t datalen, uint16_t from
         memcpy(&sa.sin6_addr, &ipaddr, 16);
         sa.sin6_port = HTONS(SERVER_PORT);
 
-        destiny_socket_sendto(sock, tmp_buf, sizeof(tmp_buf), 0, &sa, sizeof(sa));
+        socket_base_sendto(sock, tmp_buf, sizeof(tmp_buf), 0, &sa, sizeof(sa));
 
-        destiny_socket_close(sock);
+        socket_base_close(sock);
         return 0;
     }
 #else
