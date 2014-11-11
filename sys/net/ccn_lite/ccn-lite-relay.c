@@ -301,7 +301,11 @@ int ccnl_io_loop(struct ccnl_relay_s *ccnl)
     }
 
     msg_t in;
+#if MODULE_AT86RF231 || MODULE_CC2420 || MODULE_MC1322X
+    ieee802154_packet_t *p;
+#else
     radio_packet_t *p;
+#endif
     riot_ccnl_msg_t *m;
 
     while (!ccnl->halt_flag) {
@@ -312,26 +316,51 @@ int ccnl_io_loop(struct ccnl_relay_s *ccnl)
         switch (in.type) {
             case PKT_PENDING:
                 /* msg from transceiver */
+#if MODULE_AT86RF231 || MODULE_CC2420 || MODULE_MC1322X
+                p = (ieee802154_packet_t*) in.content.ptr;
+                DEBUGMSG(1, "\tLength:\t%u\n", p->length);
+                DEBUGMSG(1, "\tSrc:\t%u\n", (p->frame.src_addr[0])|(p->frame.src_addr[1]<<8));
+                DEBUGMSG(1, "\tDst:\t%u\n", (p->frame.dest_addr[0])|(p->frame.dest_addr[1]<<8));
+
+                DEBUGMSG(1, "\tFirst Byte:\t%u\n", p->frame.payload[0]);
+                DEBUGMSG(1, "\tSecond Byte:\t%u\n", p->frame.payload[1]);
+#else
+
                 p = (radio_packet_t *) in.content.ptr;
                 DEBUGMSG(1, "\tLength:\t%u\n", p->length);
                 DEBUGMSG(1, "\tSrc:\t%u\n", p->src);
                 DEBUGMSG(1, "\tDst:\t%u\n", p->dst);
 
                 DEBUGMSG(1, "\tFirst Byte:\t%u\n", p->data[0]);
+#endif
 
 #ifdef MODULE_SIXLOWPAN
+#if MODULE_AT86RF231 || MODULE_CC2420 || MODULE_MC1322X
+                if (p->frame.payload[0] != 1) {
+#else
                 if (p->data[0] > 2) {
+#endif
                     DEBUGMSG(1, "NO CCNL packet, discarding\n");
                     p->processing--;
                     break;
                 }
 #endif
                 // p->src must be > 0
+#if MODULE_AT86RF231 || MODULE_CC2420 || MODULE_MC1322X
+                if (!(p->frame.src_addr[0])|(p->frame.src_addr[1]<<8)) {
+                    p->frame.src_addr[0] = RIOT_BROADCAST;
+                }
+#else
                 if (!p->src) {
                     p->src = RIOT_BROADCAST;
                 }
+#endif
 
+#if MODULE_AT86RF231 || MODULE_CC2420 || MODULE_MC1322X
+                ccnl_core_RX(ccnl, RIOT_TRANS_IDX, (unsigned char *) p->frame.payload, (int) p->length, (uint16_t) p->frame.src_addr[0]);
+#else
                 ccnl_core_RX(ccnl, RIOT_TRANS_IDX, (unsigned char *) p->data, (int) p->length, p->src);
+#endif
                 p->processing--;
                 break;
 
