@@ -40,6 +40,14 @@ msg_t msg_buffer_appserver[APPSERVER_MSG_BUFFER_SIZE];
 kernel_pid_t relay_pid = KERNEL_PID_UNDEF;
 char prefix[] = "/riot/appserver/";
 
+#ifdef MODULE_SIXLOWPAN
+#include "destiny.h"
+#define SERVER_PORT     (0xFF01)
+static bool received_payload = false;
+char udp_buf[CCNL_RIOT_CHUNK_SIZE - 1];
+char tmp_buf[4];
+#endif
+
 static int appserver_sent_content(uint8_t *buf, int len, kernel_pid_t from)
 {
     static riot_ccnl_msg_t rmsg;
@@ -100,7 +108,38 @@ static int appserver_handle_interest(char *data, uint16_t datalen, uint16_t from
         puts("appserver_handle_interest: malloc failed");
         return 0;
     }
+#ifdef MODULE_SIXLOWPAN
+    int len;
+    if (received_payload) {
+        DEBUGF("I have some content received over UDP - will deliver\n");
+        memcpy(udp_buf, data, datalen);
+        len = mkContent(prefix, udp_buf, CCNL_RIOT_CHUNK_SIZE - 1, content_pkg);
+        received_payload = false;
+    }
+    else {
+        DEBUGF("I have no content yet, gonna send an UDP request\n");
+        int sock;
+        sockaddr6_t sa;
+        ipv6_addr_t ipaddr;
+
+        sock = destiny_socket(PF_INET6, SOCK_DGRAM, IPPROTO_UDP);
+        memset(&sa, 0, sizeof(sa));
+
+        ipv6_addr_set_all_nodes_addr(&ipaddr);
+
+        sa.sin6_family = AF_INET;
+        memcpy(&sa.sin6_addr, &ipaddr, 16);
+        sa.sin6_port = HTONS(SERVER_PORT);
+
+        destiny_socket_sendto(sock, tmp_buf, sizeof(tmp_buf), 0, &sa, sizeof(sa));
+
+        destiny_socket_close(sock);
+        return 0;
+    }
+#else
+    DEBUG("create content on the fly\n");
     int len = appserver_create_content(prefix, content_pkg);
+#endif
     /*
      struct ccnl_prefix *myprefix = ccnl_path_to_prefix(name);
 
@@ -139,6 +178,17 @@ static void riot_ccnl_appserver_ioloop(void)
                 ccnl_free(m);
                 break;
 
+#ifdef MODULE_SIXLOWPAN
+            case (CCNL_RIOT_UDP):
+                m = (riot_ccnl_msg_t *) in.content.ptr;
+                DEBUGMSG(1, "Got content from UDP, size: %" PRIu16 ", sender_pid=%" PRIu16 "\n",
+                         m->size, in.sender_pid);
+                received_payload = true;
+
+                appserver_handle_interest(m->payload, m->size, relay_pid);
+
+                break;
+#endif
             default:
                 DEBUGMSG(1,
                          "received unknown msg type: '%" PRIu16 "' dropping it\n",
