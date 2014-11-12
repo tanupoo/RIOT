@@ -43,7 +43,7 @@ char prefix[] = "/riot/appserver/";
 #ifdef MODULE_SIXLOWPAN
 #include "socket_base.h"
 #define SERVER_PORT     (0xFF01)
-static bool received_payload = false;
+static volatile bool received_payload = false;
 char udp_buf[CCNL_RIOT_CHUNK_SIZE - 1];
 char tmp_buf[4];
 #endif
@@ -113,7 +113,7 @@ static int appserver_handle_interest(char *data, uint16_t datalen, uint16_t from
     if (received_payload) {
         DEBUGF("I have some content received over UDP - will deliver\n");
         memcpy(udp_buf, data, datalen);
-        len = mkContent(prefix, udp_buf, CCNL_RIOT_CHUNK_SIZE - 1, content_pkg);
+        len = mkContent(prefix, udp_buf, datalen, content_pkg);
         received_payload = false;
     }
     else {
@@ -129,7 +129,7 @@ static int appserver_handle_interest(char *data, uint16_t datalen, uint16_t from
 
         sa.sin6_family = AF_INET;
         memcpy(&sa.sin6_addr, &ipaddr, 16);
-        sa.sin6_port = HTONS(SERVER_PORT);
+        sa.sin6_port = SERVER_PORT;
 
         socket_base_sendto(sock, tmp_buf, sizeof(tmp_buf), 0, &sa, sizeof(sa));
 
@@ -219,7 +219,7 @@ static void riot_ccnl_appserver_register(void)
 
 void *ccnl_riot_appserver_start(void *arg)
 {
-    kernel_pid_t _relay_pid = *((kernel_pid_t*) arg);
+    kernel_pid_t _relay_pid = (kernel_pid_t) ((int) arg);
     relay_pid = _relay_pid;
     riot_ccnl_appserver_register();
     riot_ccnl_appserver_ioloop();
