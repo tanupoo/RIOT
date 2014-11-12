@@ -38,7 +38,7 @@ extern "C" {
 
 #define CCNL_MAX_CONTENT_SERVED_STAT    10
 
-#define CCNL_MAX_INTEREST_RETRANSMIT    5
+#define CCNL_MAX_INTEREST_RETRANSMIT    1
 #define CCNL_MAX_INTEREST_OPTIMISTIC    2
 
 #define CCNL_FACE_TIMEOUT_SEC           10
@@ -141,7 +141,7 @@ extern "C" {
 #include "debug.h"
 
 // function alias for RIOTs debug infrastructure
-#define DEBUGMSG(LVL, ...) DEBUG(__VA_ARGS__)
+#define DEBUGMSG(LVL, ...) DEBUGF(__VA_ARGS__)
 
 #ifdef __cplusplus
 }
