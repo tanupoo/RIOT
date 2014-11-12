@@ -91,8 +91,8 @@ void *rpl_udp_monitor(void *arg)
         }
         else if (m.type == IPV6_PACKET_RECEIVED) {
             ipv6_buf = (ipv6_hdr_t *) m.content.ptr;
-            printf("IPv6 datagram received (next header: %02X)", ipv6_buf->nextheader);
-            printf(" from %s ", ipv6_addr_to_str(addr_str, IPV6_MAX_ADDR_STR_LEN,
+            DEBUG("IPv6 datagram received (next header: %02X)", ipv6_buf->nextheader);
+            DEBUG(" from %s ", ipv6_addr_to_str(addr_str, IPV6_MAX_ADDR_STR_LEN,
                                                  &ipv6_buf->srcaddr));
 
             if (ipv6_buf->nextheader == IPV6_PROTO_NUM_ICMPV6) {
