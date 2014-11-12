@@ -112,13 +112,7 @@ void rpl_udp_init(int argc, char **argv)
         return;
     }
 
-    /* add global address */
-    ipv6_addr_t tmp;
-    /* initialize prefix */
-    ipv6_addr_init(&tmp, 0xabcd, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, id);
-    /* set host suffix */
-    ipv6_addr_set_by_eui64(&tmp, 0, &tmp);
-    ipv6_net_if_add_addr(0, &tmp, NDP_ADDR_STATE_PREFERRED, 0, 0, 0);
+    sixlowpan_lowpan_init_interface(IF_ID);
 
     if (command != 'h') {
         ipv6_init_as_router();
