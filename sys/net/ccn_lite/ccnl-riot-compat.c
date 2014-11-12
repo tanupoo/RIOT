@@ -58,8 +58,8 @@ int riot_send_transceiver(uint8_t *buf, uint16_t size, uint16_t to)
     p.frame.fcf.frame_type = IEEE_802154_DATA_FRAME;
     p.frame.fcf.dest_addr_m = IEEE_802154_SHORT_ADDR_M;
     p.frame.fcf.src_addr_m = IEEE_802154_SHORT_ADDR_M;
-    memset(p.frame.dest_addr, 0, sizeof(p.frame.dest_addr));
-    memcpy(&(p.frame.dest_addr[0]), &to, sizeof(uint16_t));
+    p.frame.dest_addr[1] = (to & 0xff);
+    p.frame.dest_addr[0] = (to >> 8);
     p.frame.payload = buf;
     p.frame.dest_pan_id = 1;
 #else
@@ -73,7 +73,15 @@ int riot_send_transceiver(uint8_t *buf, uint16_t size, uint16_t to)
 
     mesg.type = SND_PKT;
     mesg.content.ptr = (char *) &tcmd;
-    msg_send_receive(&mesg, &rep, transceiver_pid);
+    if (to == RIOT_BROADCAST) {
+        msg_send_receive(&mesg, &rep, transceiver_pid);
+    }
+    else {
+        for (unsigned i = 0; i < 5; i++) {
+            msg_send_receive(&mesg, &rep, transceiver_pid);
+            vtimer_usleep(200 * 1000);
+        }
+    }
 
     return size;
 }
