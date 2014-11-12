@@ -701,6 +701,7 @@ void icmpv6_send_router_adv(ipv6_addr_t *addr, uint8_t sllao, uint8_t mtu, uint8
 #endif
     ipv6_send_packet(ipv6_buf);
 }
+    ipv6_addr_t newaddr;
 
 void recv_rtr_adv(void)
 {
@@ -715,7 +716,6 @@ void recv_rtr_adv(void)
     packet_length = IPV6_HDR_LEN + NTOHS(ipv6_buf->length);
     icmpv6_opt_hdr_len = RTR_ADV_LEN;
     rtr_adv_buf = get_rtr_adv_buf(ipv6_ext_hdr_len);
-    ipv6_addr_t newaddr;
     recvd_cids_len = 0;
 
     /* update interface reachable time and retrans timer */
