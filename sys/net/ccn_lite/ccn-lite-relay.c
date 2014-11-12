@@ -347,7 +347,7 @@ int ccnl_io_loop(struct ccnl_relay_s *ccnl)
 #endif
                 // p->src must be > 0
 #if MODULE_AT86RF231 || MODULE_CC2420 || MODULE_MC1322X
-                if (!(p->frame.src_addr[0])|(p->frame.src_addr[1]<<8)) {
+                if (!(p->frame.src_addr[0]) && !(p->frame.src_addr[1])) {
                     p->frame.src_addr[0] = RIOT_BROADCAST;
                 }
 #else
