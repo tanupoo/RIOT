@@ -543,13 +543,16 @@ ccnl_face_remove(struct ccnl_relay_s *ccnl, struct ccnl_face_s *f)
 void ccnl_face_print_stat(struct ccnl_face_s *f)
 {
     DEBUGMSG(1, "ccnl_face_print_stat: faceid=%d ifndx=%d\n", f->faceid, f->ifndx);
-    DEBUGMSG(1, "  STAT interest send=%d:%d:%d:%d:%d\n", f->stat.send_interest[0],
-             f->stat.send_interest[1], f->stat.send_interest[2],
-             f->stat.send_interest[3], f->stat.send_interest[4]);
-
-    DEBUGMSG(1, "  STAT content  send=%d:%d:%d:%d:%d\n", f->stat.send_content[0],
-             f->stat.send_content[1], f->stat.send_content[2],
-             f->stat.send_content[3], f->stat.send_content[4]);
+    DEBUGMSG(1, "  STAT interest send=%d", f->stat.send_interest[0]);
+    for (unsigned i = 1; i < CCNL_MAX_INTEREST_RETRANSMIT; i++) {
+        DEBUGMSG(1, :%d, f->stat.send_interest[i]);
+    }
+    DEBUGMSG(1, "\n");
+    DEBUGMSG(1, "  STAT content  send=%d", f->stat.send_content[0]);
+    for (unsigned i = 1; i < CCNL_MAX_INTEREST_RETRANSMIT; i++) {
+        DEBUGMSG(1, :%d, f->stat.send_content[i]);
+    }
+    DEBUGMSG(1, "\n");
 
     DEBUGMSG(1, "  STAT interest received=%d\n", f->stat.received_interest);
 
