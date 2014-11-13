@@ -41,6 +41,7 @@ FEATURES_REQUIRED += cpp
 # pca10005:         g++ does not support some used flags (e.g. -mthumb...)
 # yunjia-nrf51822:  g++ does not support some used flags (e.g. -mthumb...)
 # iot-lab_M3:       g++ does not support some used flags (e.g. -mthumb...)
+# agilegox:         g++ does not support some used flags (e.g. -mthumb...)
 # arduino-mega2560: cstdio header missing from avr-libc
 # msbiot            g++ does not support some used flags (e.g. -mthumb...)
 # samr21-xpro       g++ does not support some used flags (e.g. -mthumb...)
