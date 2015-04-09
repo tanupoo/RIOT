@@ -143,6 +143,9 @@ endif
 ifneq (,$(filter hwtimer_compat,$(USEMODULE)))
     DIRS += compat/hwtimer
 endif
+ifneq (,$(filter ng_netdev_eth,$(USEMODULE)))
+    DIRS += net/link_layer/ng_netdev_eth
+endif
 ifneq (,$(filter log_%,$(USEMODULE)))
     DIRS += log
 endif
