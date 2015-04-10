@@ -48,7 +48,7 @@ index cad06c4..aef9f9d 100644
 +++ b/src/bn/relic_bn_util.c
 @@ -203,10 +203,10 @@ void bn_print(const bn_t a) {
 	int i;
- 
+
 	if (a->sign == BN_NEG) {
 -		util_print("-");
 +		util_print("-", NULL);
@@ -67,7 +67,7 @@ index cad06c4..aef9f9d 100644
 +		util_print("\n", NULL);
 	}
  }
- 
+
 diff --git a/src/dv/relic_dv_util.c b/src/dv/relic_dv_util.c
 index f3b5eff..469c3c3 100644
 --- a/src/dv/relic_dv_util.c
@@ -78,7 +78,7 @@ index f3b5eff..469c3c3 100644
 	}
 -	util_print("\n");
 +	util_print("\n", NULL);
- 
+
 	return;
  }
 diff --git a/src/ed/relic_ed_util.c b/src/ed/relic_ed_util.c
@@ -109,14 +109,14 @@ index 0370af4..5cc622f 100644
 -	util_print("\n");
 +	util_print("\n", NULL);
  }
- 
+
  int fb_size_str(const fb_t a, int radix) {
 diff --git a/src/fp/relic_fp_param.c b/src/fp/relic_fp_param.c
 index b6f1278..273b572 100644
 --- a/src/fp/relic_fp_param.c
 +++ b/src/fp/relic_fp_param.c
 @@ -737,7 +737,7 @@ int fp_param_set_any_tower() {
- 
+
  void fp_param_print(void) {
 	util_banner("Prime modulus:", 0);
 -	util_print("   ");
@@ -138,7 +138,7 @@ index d32c253..5ece340 100644
 		util_print_dig(t->dp[0], 1);
 -		util_print("\n");
 +		util_print("\n", NULL);
- 
+
 	} CATCH_ANY {
 		THROW(ERR_CAUGHT);
 diff --git a/src/relic_bench.c b/src/relic_bench.c
@@ -156,13 +156,13 @@ index 7b56cc5..0f2f65f 100644
 +		util_print("\n", NULL);
 	}
  }
- 
+
 diff --git a/src/relic_conf.c b/src/relic_conf.c
 index a1370c1..0baee89 100644
 --- a/src/relic_conf.c
 +++ b/src/relic_conf.c
 @@ -48,85 +48,85 @@
- 
+
  void conf_print(void) {
  #ifndef QUIET
 -	util_print("-- RELIC " VERSION " configuration:\n\n");
@@ -180,7 +180,7 @@ index a1370c1..0baee89 100644
 -	util_print("** Allocation mode: AUTO\n\n");
 +	util_print("** Allocation mode: AUTO\n\n", NULL);
  #endif
- 
+
  #if ARITH == EASY
 -	util_print("** Arithmetic backend: easy\n\n");
 +	util_print("** Arithmetic backend: easy\n\n", NULL);
@@ -191,12 +191,12 @@ index a1370c1..0baee89 100644
 -	util_print("** Arithmetic backend: " QUOTE(ARITH) "\n\n");
 +	util_print("** Arithmetic backend: " QUOTE(ARITH) "\n\n", NULL);
  #endif
- 
+
  #ifdef LABEL
 -	util_print("** Configured label: " QUOTE(LABEL) "\n\n");
 +	util_print("** Configured label: " QUOTE(LABEL) "\n\n", NULL);
  #endif
- 
+
  #if BENCH > 1
 -	util_print("** Benchmarking options:\n");
 +	util_print("** Benchmarking options:\n", NULL);
@@ -209,7 +209,7 @@ index a1370c1..0baee89 100644
 -	util_print("\n");
 +	util_print("\n", NULL);
  #endif
- 
+
  #ifdef WITH_BN
 -	util_print("** Multiple precision module options:\n");
 +	util_print("** Multiple precision module options:\n", NULL);
@@ -217,7 +217,7 @@ index a1370c1..0baee89 100644
 -	util_print("   Arithmetic method: " BN_METHD "\n\n");
 +	util_print("   Arithmetic method: " BN_METHD "\n\n", NULL);
  #endif
- 
+
  #ifdef WITH_FP
 -	util_print("** Prime field module options:\n");
 +	util_print("** Prime field module options:\n", NULL);
@@ -225,28 +225,28 @@ index a1370c1..0baee89 100644
 -	util_print("   Arithmetic method: " FP_METHD "\n\n");
 +	util_print("   Arithmetic method: " FP_METHD "\n\n", NULL);
  #endif
- 
+
  #ifdef WITH_FPX
 -	util_print("** Prime field extension module options:\n");
 -	util_print("   Arithmetic method: " FPX_METHD "\n\n");
 +	util_print("** Prime field extension module options:\n", NULL);
 +	util_print("   Arithmetic method: " FPX_METHD "\n\n", NULL);
  #endif
- 
+
  #ifdef WITH_EP
 -	util_print("** Prime elliptic curve module options:\n");
 -	util_print("   Arithmetic method: " EP_METHD "\n\n");
 +	util_print("** Prime elliptic curve module options:\n", NULL);
 +	util_print("   Arithmetic method: " EP_METHD "\n\n", NULL);
  #endif
- 
+
  #ifdef WITH_PP
 -	util_print("** Bilinear pairing module options:\n");
 -	util_print("   Arithmetic method: " PP_METHD "\n\n");
 +	util_print("** Bilinear pairing module options:\n", NULL);
 +	util_print("   Arithmetic method: " PP_METHD "\n\n", NULL);
  #endif
- 
+
  #ifdef WITH_FB
 -	util_print("** Binary field module options:\n");
 +	util_print("** Binary field module options:\n", NULL);
@@ -254,28 +254,28 @@ index a1370c1..0baee89 100644
 -	util_print("   Arithmetic method: " FB_METHD "\n\n");
 +	util_print("   Arithmetic method: " FB_METHD "\n\n", NULL);
  #endif
- 
+
  #ifdef WITH_EB
 -	util_print("** Binary elliptic curve module options:\n");
 -	util_print("   Arithmetic method: " EB_METHD "\n\n");
 +	util_print("** Binary elliptic curve module options:\n", NULL);
 +	util_print("   Arithmetic method: " EB_METHD "\n\n", NULL);
  #endif
- 
+
  #ifdef WITH_EC
 -	util_print("** Elliptic Curve Cryptography module options:\n");
 -	util_print("   Arithmetic method: " EC_METHD "\n\n");
 +	util_print("** Elliptic Curve Cryptography module options:\n", NULL);
 +	util_print("   Arithmetic method: " EC_METHD "\n\n", NULL);
  #endif
- 
+
  #ifdef WITH_MD
 -	util_print("** Hash function module options:\n");
 -	util_print("   Chosen method: " MD_METHD "\n\n");
 +	util_print("** Hash function module options:\n", NULL);
 +	util_print("   Chosen method: " MD_METHD "\n\n", NULL);
  #endif
- 
+
  #endif
 diff --git a/src/relic_test.c b/src/relic_test.c
 index 3539fdc..2535dae 100644
@@ -293,7 +293,7 @@ index 3539fdc..2535dae 100644
 +	util_print("[FAIL]\n", NULL);
  #endif
  }
- 
+
  void test_pass(void) {
  #ifdef COLOR
 	util_print("[%c[%d;%dm", CMD_SET, CMD_ATTR, PASS_COLOR);
@@ -345,7 +345,7 @@ index bafcf7a..44fbedc 100644
 				break;
 		}
 @@ -667,7 +667,7 @@ static int multiplication(void) {
- 
+
 	}
 	CATCH_ANY {
 -		util_print("FATAL ERROR!\n");
@@ -514,7 +514,7 @@ index ae11955..6a57ad3 100644
 				break;
 		}
 @@ -155,7 +155,7 @@ int util(void) {
-		TEST_END;		
+		TEST_END;
 	}
 	CATCH_ANY {
 -		util_print("FATAL ERROR!\n");
@@ -1146,7 +1146,7 @@ index 041d1b2..bcab7f7 100755
 				break;
 		}
 @@ -143,7 +143,7 @@ int util1(void) {
-		TEST_END;		
+		TEST_END;
 	}
 	CATCH_ANY {
 -		util_print("FATAL ERROR!\n");
@@ -1191,7 +1191,7 @@ index 041d1b2..bcab7f7 100755
 				break;
 		}
 @@ -625,7 +625,7 @@ int util2(void) {
-		TEST_END;		
+		TEST_END;
 	}
 	CATCH_ANY {
 -		util_print("FATAL ERROR!\n");
@@ -1329,6 +1329,6 @@ index eea9995..205898c 100644
 		ERROR(end);
 	}
 	code = STS_OK;
--- 
+--
 2.3.0
 
