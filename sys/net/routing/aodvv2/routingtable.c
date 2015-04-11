@@ -194,21 +194,31 @@ static void _reset_entry_if_stale(uint8_t i)
 bool routingtable_offers_improvement(struct aodvv2_routing_entry_t *rt_entry,
                                      struct node_data *node_data)
 {
-    if (seqnum_cmp(node_data->seqnum, rt_entry->seqnum) == 1) {
-        /* New info is more recent */
+    int stale = seqnum_cmp(node_data->seqnum, rt_entry->seqnum);
+
+    if (stale == 1) {
+        /* New info is more recent and MUST be used */
         return true;
     }
-    if ((node_data->metric <= rt_entry->metric)
-        && (rt_entry->state != ROUTE_STATE_INVALID)) {
-        /* New info is not stale and is less costly */
-        return true;
+    else if (stale == -1 ) {
+        /* New info is stale and MUST NOT be used */
+        return false;
     }
-    if ((seqnum_cmp(node_data->seqnum, rt_entry->seqnum) == 1) &&
-        (node_data->metric <= rt_entry->metric)) {
-        /* New info is not stale and can safely restore an invalid route */
-        /* TODO: With the second check like this,
-         * loopfreeness is ONLY guaranteed for AODVV2_DEFAULT_METRIC_TYPE!*/
-        return true;
+    else if (stale == 0) {
+        if (node_data->metric < rt_entry->metric) {
+            /* New info offers a better route and SHOULD be used */
+            return true;
+        }
+        if (rt_entry->state != ROUTE_STATE_INVALID) {
+            /* New info does not offer a better route and does not repair an
+             * Invalid route. It does not offer any improvement and SHOULD NOT be used. */
+            return false;
+        }
+        if (node_data->metric <= rt_entry->metric) {
+            /* Route contains no loops (TODO only guaranteed for AODVV2_DEFAULT_METRIC_TYPE!)
+             * and repairs an invalid route. */
+            return true;
+        }
     }
     return false;
 }
