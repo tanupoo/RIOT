@@ -103,6 +103,11 @@
 #include "net/ng_udp.h"
 #endif
 
+#ifdef MODULE_DEV_ETH_AUTOINIT
+#include "net/dev_eth.h"
+#include "dev_eth_autoinit.h"
+#endif
+
 #define ENABLE_DEBUG (0)
 #include "debug.h"
 
@@ -306,8 +311,10 @@ void auto_init(void)
     DEBUG("Auto init UDP module.\n");
     ng_udp_init();
 #endif
-
-
+#ifdef MODULE_DEV_ETH_AUTOINIT
+    DEBUG("Auto init dev_eth ethernet devices.\n");
+    dev_eth_autoinit();
+#endif
 /* initialize network devices */
 #ifdef MODULE_AUTO_INIT_NG_NETIF
 

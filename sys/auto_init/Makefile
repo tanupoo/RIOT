@@ -8,6 +8,9 @@ endif
 
 DIRS += $(AUTO_INIT_MODULES)
 
+ifneq (,$(filter dev_eth_autoinit,$(USEMODULE)))
+DIRS += $(RIOTBASE)/sys/auto_init/dev_eth
+endif
 ifneq (,$(filter auto_init_ng_netif,$(USEMODULE)))
 DIRS += netif
 endif
