@@ -204,7 +204,7 @@ bool routingtable_offers_improvement(struct aodvv2_routing_entry_t *rt_entry,
         /* New info is stale and MUST NOT be used */
         return false;
     }
-    else if (stale == 0) {
+    else {
         if (node_data->metric < rt_entry->metric) {
             /* New info offers a better route and SHOULD be used */
             return true;
