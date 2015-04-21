@@ -1,4 +1,4 @@
-From 9c4cef8a31b8a9d6c7a2831cac159304f965eec2 Mon Sep 17 00:00:00 2001
+From f2583fc616984edaa734cdff3a813c2f3d52c6dd Mon Sep 17 00:00:00 2001
 From: Oleg Hahm <oleg@hobbykeller.org>
 Date: Sat, 21 Feb 2015 00:15:06 +0100
 Subject: [PATCH 3/3] make counter variable unsigned
@@ -22,5 +22,5 @@ index 4523e86..0171595 100644
  	size = bn_size_bin(prv->n);
 
 --
-2.3.0
+2.3.5
 
