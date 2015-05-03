@@ -174,7 +174,7 @@ static int _send(dev_eth_t *ethdev, char* buf, int n) {
 
 void dev_eth_tap_setup(dev_eth_tap_t *dev, const char *name) {
     dev->ethdev.driver = &eth_driver_tap;
-    strncpy(dev->tap_name, name, sizeof(IFNAMSIZ));
+    strncpy(dev->tap_name, name, IFNAMSIZ);
 }
 
 static void _tap_isr(void) {
