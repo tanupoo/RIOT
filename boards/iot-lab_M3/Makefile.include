@@ -33,7 +33,7 @@ export RESET = $(RIOTBASE)/dist/tools/openocd/openocd.sh
 # define build specific options
 export CPU_USAGE = -mcpu=cortex-m3
 export FPU_USAGE =
-export CFLAGS += -ggdb -g3 -std=gnu99 -Os -Wall -Wstrict-prototypes $(CPU_USAGE) $(FPU_USAGE) -mlittle-endian -mthumb -mno-thumb-interwork -nostartfiles
+export CFLAGS += -ggdb -g3 -std=gnu99 -O0 -Wall -Wstrict-prototypes $(CPU_USAGE) $(FPU_USAGE) -mlittle-endian -mthumb -mno-thumb-interwork -nostartfiles
 export CFLAGS += -ffunction-sections -fdata-sections -fno-builtin
 
 # unwanted (CXXUWFLAGS) and extra (CXXEXFLAGS) flags for c++
