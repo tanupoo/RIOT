@@ -91,6 +91,10 @@
 #include "net/ng_ipv6.h"
 #endif
 
+#ifdef MODULE_NG_IPV6_NETIF
+#include "net/ng_ipv6/netif.h"
+#endif
+
 #ifdef MODULE_L2_PING
 #include "l2_ping.h"
 #endif
@@ -317,5 +321,9 @@ void auto_init(void)
 #ifdef MODULE_XBEE
     extern void auto_init_xbee(void);
     auto_init_xbee();
+#endif
+
+#ifdef MODULE_NG_IPV6_NETIF
+    ng_ipv6_netif_init_by_dev();
 #endif
 }
