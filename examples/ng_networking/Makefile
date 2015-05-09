@@ -28,3 +28,4 @@ CFLAGS += -DDEVELHELP
 QUIET ?= 1
 
 include $(RIOTBASE)/Makefile.include
+include $(RIOTBASE)/dist/testbed-support/Makefile.iot-lab
