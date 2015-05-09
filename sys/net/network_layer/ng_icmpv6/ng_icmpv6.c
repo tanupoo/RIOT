@@ -30,7 +30,7 @@
 #include "net/ng_icmpv6.h"
 #include "net/ng_icmpv6/echo.h"
 
-#define ENABLE_DEBUG    (0)
+#define ENABLE_DEBUG    (1)
 #include "debug.h"
 
 static inline uint16_t _calc_csum(ng_pktsnip_t *hdr,

@@ -21,7 +21,7 @@
 #include "net/ng_sixlowpan/frag.h"
 #include "net/ng_sixlowpan/netif.h"
 
-#define ENABLE_DEBUG    (0)
+#define ENABLE_DEBUG    (1)
 #include "debug.h"
 
 static kernel_pid_t _pid = KERNEL_PID_UNDEF;
