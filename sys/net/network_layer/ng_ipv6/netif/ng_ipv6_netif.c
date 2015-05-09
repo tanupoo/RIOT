@@ -103,7 +103,7 @@ void ng_ipv6_netif_add(kernel_pid_t pid)
             ipv6_ifs[i].mtu = NG_IPV6_NETIF_DEFAULT_MTU;
             DEBUG("mtu = %d  ", ipv6_ifs[i].mtu);
             ipv6_ifs[i].cur_hl = NG_IPV6_NETIF_DEFAULT_HL;
-            DEBUG("cur_hl = %d  ", ipv6_ifs[i].cur_hl);
+            DEBUG("cur_hl = %d\n", ipv6_ifs[i].cur_hl);
 
             _add_addr_to_entry(&ipv6_ifs[i], &addr, NG_IPV6_ADDR_BIT_LEN, 0);
             ipv6_ifs[i].flags = 0;
