@@ -67,3 +67,4 @@ ifneq (,$(filter fox,$(BOARD)))
 endif
 
 include $(RIOTBASE)/Makefile.include
+include $(RIOTBASE)/dist/testbed-support/Makefile.iot-lab
