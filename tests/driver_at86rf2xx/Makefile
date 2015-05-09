@@ -73,3 +73,4 @@ USEMODULE += ps
 CFLAGS += -DDEVELHELP
 
 include $(RIOTBASE)/Makefile.include
+include $(RIOTBASE)/dist/testbed-support/Makefile.iot-lab
