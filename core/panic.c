@@ -27,6 +27,10 @@
 #include "lpm.h"
 #include "panic.h"
 
+#if DEVELHELP && defined MODULE_PS
+#include "ps.h"
+#endif
+
 #define PANIC_STR_SIZE 80
 
 /* "public" variables holding the crash data */
@@ -50,6 +54,11 @@ NORETURN void core_panic(int crash_code, const char *message)
         puts("******** SYSTEM FAILURE ********\n");
         puts(message);
 #if DEVELHELP
+#ifdef MODULE_PS
+        ps();
+        puts("");
+#endif
+
         puts("******** RIOT HALTS HERE ********\n");
 #else
         puts("******** RIOT WILL REBOOT ********\n");
