@@ -21,6 +21,7 @@
 #include "kernel_types.h"
 #include "mutex.h"
 #include "net/ng_ipv6/addr.h"
+#include "net/ng_netapi.h"
 #include "net/ng_netif.h"
 
 #include "net/ng_ipv6/netif.h"
@@ -105,6 +106,7 @@ void ng_ipv6_netif_add(kernel_pid_t pid)
             DEBUG("cur_hl = %d  ", ipv6_ifs[i].cur_hl);
 
             _add_addr_to_entry(&ipv6_ifs[i], &addr, NG_IPV6_ADDR_BIT_LEN, 0);
+            ipv6_ifs[i].flags = 0;
 
             mutex_unlock(&ipv6_ifs[i].mutex);
 
@@ -389,6 +391,117 @@ ng_ipv6_addr_t *ng_ipv6_netif_match_prefix(kernel_pid_t pid,
 ng_ipv6_addr_t *ng_ipv6_netif_find_best_src_addr(kernel_pid_t pid, const ng_ipv6_addr_t *dest)
 {
     return _match_prefix(pid, dest, true);
+}
+
+/* TODO: put this somewhere more central and L2 protocol dependent */
+#define IID_LEN (8)
+
+static bool _hwaddr_to_iid(uint8_t *iid, const uint8_t *hwaddr, size_t hwaddr_len)
+{
+    uint8_t i = 0;
+
+    memset(iid, 0, IID_LEN);
+
+    switch (hwaddr_len) {
+        case 4:
+            iid[0] = hwaddr[i++];
+            iid[0] ^= 0x02;
+            iid[1] = hwaddr[i++];
+
+        case 2:
+            iid[6] = hwaddr[i++];
+
+        case 1:
+            iid[3] = 0xff;
+            iid[4] = 0xfe;
+            iid[7] = hwaddr[i++];
+            break;
+
+        case 6:
+            iid[0] = hwaddr[i++];
+            iid[0] ^= 0x02;
+            iid[1] = hwaddr[i++];
+            iid[2] = hwaddr[i++];
+            iid[3] = 0xff;
+            iid[4] = 0xfe;
+            iid[5] = hwaddr[i++];
+            iid[6] = hwaddr[i++];
+            iid[7] = hwaddr[i++];
+            break;
+
+        case 8:
+            iid[0] = hwaddr[i++];
+            iid[0] ^= 0x02;
+            iid[1] = hwaddr[i++];
+            iid[2] = hwaddr[i++];
+            iid[3] = hwaddr[i++];
+            iid[4] = hwaddr[i++];
+            iid[5] = hwaddr[i++];
+            iid[6] = hwaddr[i++];
+            iid[7] = hwaddr[i++];
+            break;
+
+        default:
+            DEBUG("Unknown hardware address length\n");
+            return false;
+    }
+
+    return true;
+}
+
+void ng_ipv6_netif_init_by_dev(void)
+{
+    kernel_pid_t *ifs;
+    size_t ifnum;
+
+    ifs = ng_netif_get(&ifnum);
+
+    for (int i = 0; i < ifnum; i++) {
+        ng_ipv6_addr_t addr;
+        uint16_t hwaddr_len = 0;
+        uint8_t hwaddr[8];
+        bool try_long = false;
+        ng_ipv6_netif_t *ipv6_if = ng_ipv6_netif_get(ifs[i]);
+
+        if (ipv6_if == NULL) {
+            continue;
+        }
+
+        mutex_lock(&ipv6_if->mutex);
+
+#ifdef MODULE_NG_SIXLOWPAN
+        ng_nettype_t if_type = NG_NETTYPE_UNDEF;
+
+        if ((ng_netapi_get(ifs[i], NETCONF_OPT_PROTO, 0, &if_type,
+                           sizeof(if_type)) != -ENOTSUP) &&
+            (if_type == NG_NETTYPE_SIXLOWPAN)) {
+            DEBUG("Set 6LoWPAN flag\n");
+            ipv6_ifs->flags |= NG_IPV6_NETIF_FLAGS_SIXLOWPAN;
+        }
+
+#endif
+
+        if ((ng_netapi_get(ifs[i], NETCONF_OPT_SRC_LEN, 0, &hwaddr_len,
+                           sizeof(hwaddr_len)) != -ENOTSUP) &&
+            (hwaddr_len == 8)) {
+            try_long = true;
+        }
+
+        if ((try_long && (ng_netapi_get(ifs[i], NETCONF_OPT_ADDRESS_LONG, 0,
+                                        &hwaddr, sizeof(hwaddr)) != -ENOTSUP)) ||
+            (ng_netapi_get(ifs[i], NETCONF_OPT_ADDRESS, 0, &hwaddr,
+                           sizeof(hwaddr)) != -ENOTSUP)) {
+            uint8_t iid[IID_LEN];
+
+            if (_hwaddr_to_iid(iid, hwaddr, hwaddr_len)) {
+                ng_ipv6_addr_set_aiid(&addr, iid);
+                ng_ipv6_addr_set_link_local_prefix(&addr);
+                _add_addr_to_entry(ipv6_if, &addr, 64, 0);
+            }
+        }
+
+        mutex_unlock(&ipv6_if->mutex);
+    }
 }
 
 /**
