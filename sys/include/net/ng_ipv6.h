@@ -45,7 +45,7 @@ extern "C" {
  * @brief   Default stack size to use for the IPv6 thread
  */
 #ifndef NG_IPV6_STACK_SIZE
-#define NG_IPV6_STACK_SIZE (KERNEL_CONF_STACKSIZE_DEFAULT)
+#define NG_IPV6_STACK_SIZE (KERNEL_CONF_STACKSIZE_DEFAULT + KERNEL_CONF_STACKSIZE_PRINTF)
 #endif
 
 /**
