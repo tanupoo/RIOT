@@ -12,6 +12,7 @@ USEMODULE += ng_netif
 USEMODULE += ng_sixlowpan_frag
 USEMODULE += ng_ipv6
 USEMODULE += ng_udp
+USEMODULE += ng_icmpv6_echo
 USEMODULE += ng_pktdump
 USEMODULE += uart0
 USEMODULE += shell
