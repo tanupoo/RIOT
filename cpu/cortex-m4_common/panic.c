@@ -18,6 +18,7 @@
  * @author      Joakim Gebart <joakim.gebart@eistec.se>
  */
 
+#include "cpu.h"
 #include "lpm.h"
 
 void panic_arch(void)

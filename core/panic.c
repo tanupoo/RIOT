@@ -26,6 +26,7 @@
 #include "irq.h"
 #include "lpm.h"
 #include "panic.h"
+#include "arch/panic_arch.h"
 
 #if DEVELHELP && defined MODULE_PS
 #include "ps.h"
