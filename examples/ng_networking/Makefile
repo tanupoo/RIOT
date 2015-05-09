@@ -18,6 +18,7 @@ USEMODULE += uart0
 USEMODULE += shell
 USEMODULE += shell_commands
 USEMODULE += ps
+USEMODULE += od
 USEMODULE += auto_init_ng_netif
 
 # Comment this out to disable code in RIOT that does safety checking

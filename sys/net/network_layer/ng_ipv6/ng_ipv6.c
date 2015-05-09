@@ -29,6 +29,8 @@
 
 #include "net/ng_ipv6.h"
 
+#include "od.h"
+
 #define ENABLE_DEBUG    (1)
 #include "debug.h"
 
@@ -513,6 +515,7 @@ static void _receive(ng_pktsnip_t *pkt)
 
         if (!ng_ipv6_hdr_is(ipv6->data)) {
             DEBUG("ipv6: Received packet was not IPv6, dropping packet\n");
+            od_hex_dump(ipv6->data, ipv6->size, OD_WIDTH_DEFAULT);
             ng_pktbuf_release(pkt);
             return;
         }
@@ -520,6 +523,7 @@ static void _receive(ng_pktsnip_t *pkt)
     else {
         if (!ng_ipv6_hdr_is(pkt->data)) {
             DEBUG("ipv6: Received packet was not IPv6, dropping packet\n");
+            od_hex_dump(pkt->data, pkt->size, OD_WIDTH_DEFAULT);
             ng_pktbuf_release(pkt);
             return;
         }
