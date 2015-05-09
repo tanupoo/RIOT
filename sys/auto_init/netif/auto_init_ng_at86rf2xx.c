@@ -17,6 +17,8 @@
  * @author  Kaspar Schleiser <kaspar@schleiser.de>
  */
 
+#ifdef MODULE_NG_AT86RF2XX
+
 #include "board.h"
 #include "net/ng_nomac.h"
 #include "net/ng_netbase.h"
@@ -26,8 +28,6 @@
 
 #define ENABLE_DEBUG (0)
 #include "debug.h"
-
-#ifdef MODULE_NG_AT86RF2XX
 
 /**
  * @brief   Define stack parameters for the MAC layer thread
