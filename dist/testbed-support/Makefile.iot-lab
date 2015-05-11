@@ -13,7 +13,7 @@ $(IOTLAB_AUTH):
 
 iotlab-exp: $(IOTLAB_AUTH)
 	experiment-cli submit -d $(IOTLAB_DURATION) -l $(IOTLAB_NODES),archi=$(IOTLAB_TYPE)+site=$(IOTLAB_SITE),$(ELFFILE) -n riot_makefile_experiment
-	experiment-cli wait
+	experiment-cli wait -i $(IOTLAB_EXP_ID)
 
 iotlab-flash: $(IOTLAB_AUTH) all
 	node-cli --update $(ELFFILE) -i $(IOTLAB_EXP_ID)
