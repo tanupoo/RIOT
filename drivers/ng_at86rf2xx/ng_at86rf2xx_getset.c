@@ -235,6 +235,13 @@ void ng_at86rf2xx_set_txpower(ng_at86rf2xx_t *dev, int16_t txpower)
 #endif
 }
 
+void ng_at86rf2xx_set_max_retries(ng_at86rf2xx_t *dev, uint8_t max)
+{
+    uint8_t tmp = ng_at86rf2xx_reg_read(dev, NG_AT86RF2XX_REG__XAH_CTRL_0);
+    tmp = ~NG_AT86RF2XX_XAH_CTRL_0__MAX_FRAME_RETRIES;
+    ng_at86rf2xx_reg_write(dev, NG_AT86RF2XX_REG__XAH_CTRL_0, tmp);
+}
+
 void ng_at86rf2xx_set_option(ng_at86rf2xx_t *dev, uint16_t option, bool state)
 {
     uint8_t tmp;
@@ -264,7 +271,7 @@ void ng_at86rf2xx_set_option(ng_at86rf2xx_t *dev, uint16_t option, bool state)
             case NG_AT86RF2XX_OPT_AUTOACK:
                 DEBUG("[ng_at86rf2xx] opt: enabling auto ACKs\n");
                 tmp = ng_at86rf2xx_reg_read(dev, NG_AT86RF2XX_REG__CSMA_SEED_1);
-                tmp &= ~(NG_AT86RF2XX_CSMA_SEED_1__AACK_DIS_ACK);
+                tmp &= ~(NG_AT85RF2XX_CSMA_SEED_1__AACK_DIS_ACK);
                 ng_at86rf2xx_reg_write(dev, NG_AT86RF2XX_REG__CSMA_SEED_1, tmp);
                 break;
             case NG_AT86RF2XX_OPT_TELL_RX_START:
