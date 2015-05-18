@@ -103,29 +103,27 @@ void ng_at86rf2xx_reset(ng_at86rf2xx_t *dev)
 #if CPUID_ID_LEN
     cpuid_get(cpuid);
 
-#if CPUID_ID_LEN < 8
-    /* in case CPUID_ID_LEN < 8, fill missing bytes with zeros */
-    for (int i = CPUID_ID_LEN; i < 8; i++) {
-        cpuid[i] = 0;
-    }
-#else
-    for (int i = 8; i < CPUID_ID_LEN; i++) {
-        cpuid[i & 0x07] ^= cpuid[i];
-    }
-#endif
     /* make sure we mark the address as non-multicast and not globally unique */
-    cpuid[0] &= ~(0x01);
-    cpuid[0] |= 0x02;
     /* copy and set long address */
-#if (CPUID_ID_LEN > 8)
-    for (size_t i = 0; i < 8; i++) {
-        cpuid[i] ^= cpuid[i + (CPUID_ID_LEN - 8)];
-    }
-#else
-#endif
-    memcpy(&addr_long, cpuid, 8);
-    ng_at86rf2xx_set_addr_long(dev, byteorder_swapll(addr_long.uint64.u64));
-    ng_at86rf2xx_set_addr_short(dev, byteorder_swaps(addr_long.uint16[0].u16));
+    const uint8_t const *luid = (const uint8_t *const) &cpuid[4];
+    //first byte of IoT-Lab 2-bytes uid
+    uint8_t iotlab=(luid[4] | (luid[6] << 7));
+
+    //Pseudo-OUI
+    addr_long.uint8[0] = cpuid[3];
+    addr_long.uint8[1] = luid[7];
+    addr_long.uint8[2] = cpuid[0];
+    addr_long.uint8[3] = cpuid[1];
+    //some variable bytes in the register
+    addr_long.uint8[4] = luid[6];
+    addr_long.uint8[5] = cpuid[2];
+    //IoT-Lab cpuid
+    addr_long.uint8[6] = iotlab;//luid[4];
+    addr_long.uint8[7] = luid[5];
+
+//    memcpy(&addr_long, cpuid, 8);
+    ng_at86rf2xx_set_addr_long(dev, addr_long.uint64.u64);
+    ng_at86rf2xx_set_addr_short(dev, addr_long.uint16[0].u16);
 #else
     ng_at86rf2xx_set_addr_long(dev, NG_AT86RF2XX_DEFAULT_ADDR_LONG);
     ng_at86rf2xx_set_addr_short(dev, NG_AT86RF2XX_DEFAULT_ADDR_SHORT);
