@@ -1,33 +1,57 @@
 #ifndef BITFIELD_H
 #define BITFIELD_H
 
-#include <limits.h>
+#include <stdint.h>
 #include <stdbool.h>
 
 /* SIZE should be a constant expression
  * this avoids VLAs and problems resulting from being evaluated twice
  */
- #define BITFIELD(SIZE, NAME) \
-     unsigned char NAME[(SIZE) / CHAR_BIT + ((SIZE) % CHAR_BIT != 0)]
+#define BITFIELD(NAME, SIZE) \
+     uint8_t NAME[(SIZE) / 8 + ((SIZE) % 8 != 0)]
 
-static inline void bf_set(unsigned char field[], size_t idx)
+/**
+ * @brief   Set the bit to 1
+ *
+ * @param[in,out] field The bitfield
+ * @param[in]     idx   The number of the bit to set
+ */
+static inline void bf_set(uint8_t field[], size_t idx)
 {
-    field[idx / CHAR_BIT] |= 1u << (idx % CHAR_BIT);
+    field[idx / 8] |= 1u << (idx % 8);
 }
 
-static inline void bf_unset(unsigned char field[], size_t idx)
+/**
+ * @brief   Clear the bit
+ *
+ * @param[in,out] field The bitfield
+ * @param[in]     idx   The number of the bit to clear
+ */
+static inline void bf_unset(uint8_t field[], size_t idx)
 {
-    field[idx / CHAR_BIT] &= ~(1u << (idx % CHAR_BIT));
+    field[idx / 8] &= ~(1u << (idx % 8));
 }
 
-static inline void bf_toggle(unsigned char field[], size_t idx)
+/**
+ * @brief   Toggle the bit
+ *
+ * @param[in,out] field The bitfield
+ * @param[in]     idx   The number of the bit to toggle
+ */
+static inline void bf_toggle(uint8_t field[], size_t idx)
 {
-    field[idx / CHAR_BIT] ^= 1u << (idx % CHAR_BIT);
+    field[idx / 8] ^= 1u << (idx % 8);
 }
 
-static inline bool bf_isset(unsigned char field[], size_t idx)
+/**
+ * @brief  Check if the bet is set
+ *
+ * @param[in,out] field The bitfield
+ * @param[in]     idx   The number of the bit to check
+ */
+static inline bool bf_isset(uint8_t field[], size_t idx)
 {
-    return field[idx / CHAR_BIT] & (1u << (idx % CHAR_BIT));
+    return field[idx / 8] & (1u << (idx % 8));
 }
 
 #endif /* BITFIELD_H */
