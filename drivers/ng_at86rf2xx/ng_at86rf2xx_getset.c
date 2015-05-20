@@ -190,7 +190,7 @@ int16_t ng_at86rf2xx_get_txpower(ng_at86rf2xx_t *dev)
 {
 #ifdef MODULE_NG_AT86RF212B
     uint8_t txpower = ng_at86rf2xx_reg_read(dev, NG_AT86RF2XX_REG__PHY_TX_PWR);
-    printf("txpower value: %x\n", txpower);
+    DEBUG("txpower value: %x\n", txpower);
     return tx_pow_to_dbm(dev->freq, txpower);
 #else
     uint8_t txpower = ng_at86rf2xx_reg_read(dev, NG_AT86RF2XX_REG__PHY_TX_PWR)
@@ -235,10 +235,17 @@ void ng_at86rf2xx_set_txpower(ng_at86rf2xx_t *dev, int16_t txpower)
 #endif
 }
 
+uint8_t ng_at86rf2xx_get_max_retries(ng_at86rf2xx_t *dev)
+{
+    return (ng_at86rf2xx_reg_read(dev, NG_AT86RF2XX_REG__XAH_CTRL_0) >> 4);
+}
+
 void ng_at86rf2xx_set_max_retries(ng_at86rf2xx_t *dev, uint8_t max)
 {
+    max = (max > 7) ? 7 : max;
     uint8_t tmp = ng_at86rf2xx_reg_read(dev, NG_AT86RF2XX_REG__XAH_CTRL_0);
-    tmp = ~NG_AT86RF2XX_XAH_CTRL_0__MAX_FRAME_RETRIES;
+    tmp = (tmp & (NG_AT86RF2XX_XAH_CTRL_0__MAX_CSMA_RETRIES |
+                  NG_AT86RF2XX_XAH_CTRL_0__SLOTTED_OPERATION)) | (max << 4);
     ng_at86rf2xx_reg_write(dev, NG_AT86RF2XX_REG__XAH_CTRL_0, tmp);
 }
 
