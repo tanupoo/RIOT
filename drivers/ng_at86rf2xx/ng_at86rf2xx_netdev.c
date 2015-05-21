@@ -26,7 +26,7 @@
 #include "ng_at86rf2xx_internal.h"
 #include "ng_at86rf2xx_registers.h"
 
-#define ENABLE_DEBUG (1)
+#define ENABLE_DEBUG (0)
 #include "debug.h"
 
 /* TODO: generalize and move to ng_ieee802154 */
