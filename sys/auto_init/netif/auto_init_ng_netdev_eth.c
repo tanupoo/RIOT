@@ -28,7 +28,7 @@
 #include "net/dev_eth.h"
 #include "dev_eth_tap.h"
 
-#define ENABLE_DEBUG (1)
+#define ENABLE_DEBUG (0)
 #include "debug.h"
 
 /**
