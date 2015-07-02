@@ -1,0 +1,2 @@
+USEMODULE += ng_sixlowpan_netif
+USEMODULE += ng_netif
