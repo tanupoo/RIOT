@@ -27,7 +27,7 @@ extern "C" {
 /**
  * @brief   The entry point of this test suite.
  */
-void tests_sixlowpan(void);
+Test *tests_sixlowpan_run(void);
 
 #ifdef __cplusplus
 }

@@ -19,7 +19,7 @@
 #include "tests-sixlowpan.h"
 #include "embUnit.h"
 
-#include "unittests-constants.h"
+#include "../unittests/common/unittests-constants.h"
 
 #include "net/ng_sixlowpan.h"
 
@@ -55,6 +55,11 @@ static void *_dummy_thread(void *args)
     while (1) { };
 
     return NULL;
+}
+
+static void _tear_down(void)
+{
+    reboot(0);
 }
 
 /* Test with 6LoWPAN dispatch byte indicating a none-LoWPAN frame (NALP = Not a
@@ -219,7 +224,7 @@ static void test_sixlowpan_print_2(void)
     ng_sixlowpan_print(rand_data, 0);
 }
 
-Test *test_sixlowpan_tests(void)
+Test *tests_sixlowpan_run(void)
 {
     EMB_UNIT_TESTFIXTURES(fixtures) {
         new_TestFixture(test_sixlowpan_nalp_is_no_6lowpan_frame_0),
@@ -253,13 +258,9 @@ Test *test_sixlowpan_tests(void)
         new_TestFixture(test_sixlowpan_print_2),
     };
 
-    EMB_UNIT_TESTCALLER(test_sixlowpan_tests_caller, NULL, NULL, fixtures);
+    EMB_UNIT_TESTCALLER(test_sixlowpan_tests_caller, NULL, _tear_down, fixtures);
 
     return (Test *)&test_sixlowpan_tests_caller;
 }
 
-void tests_sixlowpan(void)
-{
-    TESTS_RUN(test_sixlowpan_tests());
-}
 /** @} */
