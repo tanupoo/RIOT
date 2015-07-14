@@ -1,6 +1,6 @@
 PKG_NAME=openwsn
 PKG_URL=https://github.com/openwsn-berkeley/openwsn-fw.git
-PKG_VERSION=ff25e5d0ae5d344ed793a724d60532fb917bf1f8
+PKG_VERSION=8b1e96f48f29f0d9083be08c94797c890ca5ce08
 PKG_DIR=$(CURDIR)/$(PKG_NAME)
 
 ifneq ($(RIOTBOARD),)
