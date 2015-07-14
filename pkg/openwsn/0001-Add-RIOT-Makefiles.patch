@@ -1,29 +1,35 @@
-From 740dc78ea84dceea25670c94faf6a81ef845fc39 Mon Sep 17 00:00:00 2001
-From: Thomas Eichinger <thomas.eichinger1@gmail.com>
-Date: Tue, 25 Nov 2014 15:45:36 +0100
-Subject: [PATCH 1/5] Add RIOT Makefiles
+From 9385bc2cc8d9d48242014a6489f2611b2e0582c9 Mon Sep 17 00:00:00 2001
+From: Oleg Hahm <oleg@hobbykeller.org>
+Date: Tue, 14 Jul 2015 17:43:08 +0200
+Subject: [PATCH 01/12] Add RIOT Makefiles
 
 ---
- Makefile                               | 16 ++++++++++++++++
- kernel/openos/Makefile                 |  6 ++++++
- openapps/Makefile                      | 22 ++++++++++++++++++++++
- openapps/c6t/Makefile                  |  3 +++
- openapps/cinfo/Makefile                |  2 ++
- openapps/cleds/Makefile                |  2 ++
- openapps/cstorm/Makefile               |  2 ++
- openapps/cwellknown/Makefile           |  2 ++
- openapps/techo/Makefile                |  3 +++
- openapps/uecho/Makefile                |  3 +++
- openstack/02a-MAClow/Makefile          |  3 +++
- openstack/02b-MAChigh/Makefile         |  3 +++
- openstack/03a-IPHC/Makefile            |  3 +++
- openstack/03b-IPv6/Makefile            |  3 +++
+ Makefile                               | 18 ++++++++++++++++++
+ bsp/boards/riot-adaption/Makefile      |  1 +
+ drivers/common/Makefile                |  8 ++++++++
+ kernel/openos/Makefile                 |  4 ++++
+ openapps/Makefile                      | 28 ++++++++++++++++++++++++++++
+ openapps/c6t/Makefile                  |  1 +
+ openapps/cinfo/Makefile                |  1 +
+ openapps/cleds/Makefile                |  1 +
+ openapps/cstorm/Makefile               |  1 +
+ openapps/cwellknown/Makefile           |  1 +
+ openapps/rrt/Makefile                  |  1 +
+ openapps/techo/Makefile                |  1 +
+ openapps/uecho/Makefile                |  1 +
+ openapps/uinject/Makefile              |  1 +
+ openstack/02a-MAClow/Makefile          |  1 +
+ openstack/02b-MAChigh/Makefile         |  1 +
+ openstack/03a-IPHC/Makefile            |  1 +
+ openstack/03b-IPv6/Makefile            |  1 +
  openstack/04-TRAN/Makefile             |  6 ++++++
  openstack/Makefile                     | 18 ++++++++++++++++++
- openstack/cross-layers/Makefile        |  3 +++
+ openstack/cross-layers/Makefile        |  1 +
  projects/common/03oos_openwsn/Makefile |  3 +++
- 18 files changed, 103 insertions(+)
+ 22 files changed, 100 insertions(+)
  create mode 100644 Makefile
+ create mode 100644 bsp/boards/riot-adaption/Makefile
+ create mode 100644 drivers/common/Makefile
  create mode 100644 kernel/openos/Makefile
  create mode 100644 openapps/Makefile
  create mode 100644 openapps/c6t/Makefile
@@ -31,8 +37,10 @@ Subject: [PATCH 1/5] Add RIOT Makefiles
  create mode 100644 openapps/cleds/Makefile
  create mode 100644 openapps/cstorm/Makefile
  create mode 100644 openapps/cwellknown/Makefile
+ create mode 100644 openapps/rrt/Makefile
  create mode 100644 openapps/techo/Makefile
  create mode 100644 openapps/uecho/Makefile
+ create mode 100644 openapps/uinject/Makefile
  create mode 100644 openstack/02a-MAClow/Makefile
  create mode 100644 openstack/02b-MAChigh/Makefile
  create mode 100644 openstack/03a-IPHC/Makefile
@@ -44,17 +52,19 @@ Subject: [PATCH 1/5] Add RIOT Makefiles
 
 diff --git a/Makefile b/Makefile
 new file mode 100644
-index 0000000..66d60f8
+index 0000000..41ca883
 --- /dev/null
 +++ b/Makefile
-@@ -0,0 +1,16 @@
-+MODULE:=$(shell basename $(CURDIR))
+@@ -0,0 +1,18 @@
++export MODULE:=$(shell basename $(CURDIR))
 +export OPENWSN_ROOT=$(CURDIR)
 +
 +DIRS += $(OPENWSN_ROOT)/projects/common/03oos_openwsn \
 +		$(OPENWSN_ROOT)/openstack \
 +		$(OPENWSN_ROOT)/openapps \
-+		$(OPENWSN_ROOT)/kernel/openos
++		$(OPENWSN_ROOT)/kernel/openos \
++		$(OPENWSN_ROOT)/drivers/common \
++		$(OPENWSN_ROOT)/bsp/boards/riot-adaption
 +
 +INCLUDES += -I$(OPENWSN_ROOT)/kernel \
 +			-I$(OPENWSN_ROOT)/inc \
@@ -65,30 +75,54 @@ index 0000000..66d60f8
 +
 +include $(RIOTBASE)/Makefile.base
 \ No newline at end of file
-diff --git a/kernel/openos/Makefile b/kernel/openos/Makefile
+diff --git a/bsp/boards/riot-adaption/Makefile b/bsp/boards/riot-adaption/Makefile
 new file mode 100644
-index 0000000..66fcdd0
+index 0000000..9c9ae98
 --- /dev/null
-+++ b/kernel/openos/Makefile
-@@ -0,0 +1,6 @@
-+MODULE = openwsn
-+
-+INCLUDES += -I$(CURDIR)/..
-+INCLUDES += -I$(OPENWSN_ROOT)/bsp/boards
++++ b/bsp/boards/riot-adaption/Makefile
+@@ -0,0 +1 @@
++include $(RIOTBASE)/Makefile.base
+\ No newline at end of file
+diff --git a/drivers/common/Makefile b/drivers/common/Makefile
+new file mode 100644
+index 0000000..c703506
+--- /dev/null
++++ b/drivers/common/Makefile
+@@ -0,0 +1,8 @@
++INCLUDES += -I$(OPENWSN_ROOT)/openstack/02a-MAClow \
++			-I$(OPENWSN_ROOT)/openstack/02b-MAChigh \
++			-I$(OPENWSN_ROOT)/openstack/03a-IPHC \
++			-I$(OPENWSN_ROOT)/openstack/03b-IPv6 \
++			-I$(OPENWSN_ROOT)/openstack/cross-layers \
++			-I$(CURDIR)
 +
 +include $(RIOTBASE)/Makefile.base
 \ No newline at end of file
+diff --git a/kernel/openos/Makefile b/kernel/openos/Makefile
+new file mode 100644
+index 0000000..114b0a7
+--- /dev/null
++++ b/kernel/openos/Makefile
+@@ -0,0 +1,4 @@
++INCLUDES += -I$(OPENWSN_ROOT)/bsp/boards
++INCLUDES += -I$(OPENWSN_ROOT)/kernel
++
++include $(RIOTBASE)/Makefile.base
 diff --git a/openapps/Makefile b/openapps/Makefile
 new file mode 100644
-index 0000000..56af055
+index 0000000..4c778be
 --- /dev/null
 +++ b/openapps/Makefile
-@@ -0,0 +1,22 @@
-+MODULE = openwsn
-+
+@@ -0,0 +1,28 @@
 +DIRS += $(CURDIR)/c6t \
 +        $(CURDIR)/uecho \
-+        $(CURDIR)/techo
++        $(CURDIR)/techo \
++        $(CURDIR)/cinfo \
++        $(CURDIR)/cleds \
++        $(CURDIR)/cstorm \
++        $(CURDIR)/cwellknown \
++        $(CURDIR)/rrt \
++        $(CURDIR)/uinject
 +
 +INCLUDES += -I$(CURDIR)/c6t \
 +			-I$(CURDIR)/techo \
@@ -97,6 +131,8 @@ index 0000000..56af055
 +			-I$(CURDIR)/cleds \
 +			-I$(CURDIR)/cstorm \
 +			-I$(CURDIR)/cwellknown \
++			-I$(CURDIR)/rrt \
++			-I$(CURDIR)/uinject \
 +			-I$(OPENWSN_ROOT)/openstack/04-TRAN \
 +			-I$(OPENWSN_ROOT)/drivers/common \
 +			-I$(OPENWSN_ROOT)/openstack/02a-MAClow \
@@ -106,126 +142,119 @@ index 0000000..56af055
 +			-I$(OPENWSN_ROOT)/openstack/cross-layers
 +
 +include $(RIOTBASE)/Makefile.base
-\ No newline at end of file
 diff --git a/openapps/c6t/Makefile b/openapps/c6t/Makefile
 new file mode 100644
-index 0000000..694bb09
+index 0000000..48422e9
 --- /dev/null
 +++ b/openapps/c6t/Makefile
-@@ -0,0 +1,3 @@
-+MODULE = openwsn
-+
+@@ -0,0 +1 @@
 +include $(RIOTBASE)/Makefile.base
 diff --git a/openapps/cinfo/Makefile b/openapps/cinfo/Makefile
 new file mode 100644
-index 0000000..fbf6584
+index 0000000..9c9ae98
 --- /dev/null
 +++ b/openapps/cinfo/Makefile
-@@ -0,0 +1,2 @@
-+
+@@ -0,0 +1 @@
 +include $(RIOTBASE)/Makefile.base
 \ No newline at end of file
 diff --git a/openapps/cleds/Makefile b/openapps/cleds/Makefile
 new file mode 100644
-index 0000000..fbf6584
+index 0000000..9c9ae98
 --- /dev/null
 +++ b/openapps/cleds/Makefile
-@@ -0,0 +1,2 @@
-+
+@@ -0,0 +1 @@
 +include $(RIOTBASE)/Makefile.base
 \ No newline at end of file
 diff --git a/openapps/cstorm/Makefile b/openapps/cstorm/Makefile
 new file mode 100644
-index 0000000..fbf6584
+index 0000000..9c9ae98
 --- /dev/null
 +++ b/openapps/cstorm/Makefile
-@@ -0,0 +1,2 @@
-+
+@@ -0,0 +1 @@
 +include $(RIOTBASE)/Makefile.base
 \ No newline at end of file
 diff --git a/openapps/cwellknown/Makefile b/openapps/cwellknown/Makefile
 new file mode 100644
-index 0000000..fbf6584
+index 0000000..9c9ae98
 --- /dev/null
 +++ b/openapps/cwellknown/Makefile
-@@ -0,0 +1,2 @@
-+
+@@ -0,0 +1 @@
 +include $(RIOTBASE)/Makefile.base
 \ No newline at end of file
+diff --git a/openapps/rrt/Makefile b/openapps/rrt/Makefile
+new file mode 100644
+index 0000000..48422e9
+--- /dev/null
++++ b/openapps/rrt/Makefile
+@@ -0,0 +1 @@
++include $(RIOTBASE)/Makefile.base
 diff --git a/openapps/techo/Makefile b/openapps/techo/Makefile
 new file mode 100644
-index 0000000..694bb09
+index 0000000..48422e9
 --- /dev/null
 +++ b/openapps/techo/Makefile
-@@ -0,0 +1,3 @@
-+MODULE = openwsn
-+
+@@ -0,0 +1 @@
 +include $(RIOTBASE)/Makefile.base
 diff --git a/openapps/uecho/Makefile b/openapps/uecho/Makefile
 new file mode 100644
-index 0000000..694bb09
+index 0000000..48422e9
 --- /dev/null
 +++ b/openapps/uecho/Makefile
-@@ -0,0 +1,3 @@
-+MODULE = openwsn
-+
+@@ -0,0 +1 @@
++include $(RIOTBASE)/Makefile.base
+diff --git a/openapps/uinject/Makefile b/openapps/uinject/Makefile
+new file mode 100644
+index 0000000..48422e9
+--- /dev/null
++++ b/openapps/uinject/Makefile
+@@ -0,0 +1 @@
 +include $(RIOTBASE)/Makefile.base
 diff --git a/openstack/02a-MAClow/Makefile b/openstack/02a-MAClow/Makefile
 new file mode 100644
-index 0000000..694bb09
+index 0000000..48422e9
 --- /dev/null
 +++ b/openstack/02a-MAClow/Makefile
-@@ -0,0 +1,3 @@
-+MODULE = openwsn
-+
+@@ -0,0 +1 @@
 +include $(RIOTBASE)/Makefile.base
 diff --git a/openstack/02b-MAChigh/Makefile b/openstack/02b-MAChigh/Makefile
 new file mode 100644
-index 0000000..694bb09
+index 0000000..48422e9
 --- /dev/null
 +++ b/openstack/02b-MAChigh/Makefile
-@@ -0,0 +1,3 @@
-+MODULE = openwsn
-+
+@@ -0,0 +1 @@
 +include $(RIOTBASE)/Makefile.base
 diff --git a/openstack/03a-IPHC/Makefile b/openstack/03a-IPHC/Makefile
 new file mode 100644
-index 0000000..694bb09
+index 0000000..48422e9
 --- /dev/null
 +++ b/openstack/03a-IPHC/Makefile
-@@ -0,0 +1,3 @@
-+MODULE = openwsn
-+
+@@ -0,0 +1 @@
 +include $(RIOTBASE)/Makefile.base
 diff --git a/openstack/03b-IPv6/Makefile b/openstack/03b-IPv6/Makefile
 new file mode 100644
-index 0000000..694bb09
+index 0000000..48422e9
 --- /dev/null
 +++ b/openstack/03b-IPv6/Makefile
-@@ -0,0 +1,3 @@
-+MODULE = openwsn
-+
+@@ -0,0 +1 @@
 +include $(RIOTBASE)/Makefile.base
 diff --git a/openstack/04-TRAN/Makefile b/openstack/04-TRAN/Makefile
 new file mode 100644
-index 0000000..013e4fb
+index 0000000..63c69ce
 --- /dev/null
 +++ b/openstack/04-TRAN/Makefile
 @@ -0,0 +1,6 @@
-+MODULE = openwsn
-+
 +INCLUDES += -I$(OPENWSN_ROOT)/openapps/techo \
-+			-I$(OPENWSN_ROOT)/openapps/uecho
++			-I$(OPENWSN_ROOT)/openapps/uecho \
++			-I$(OPENWSN_ROOT)/openapps/rrt \
++			-I$(OPENWSN_ROOT)/openapps/uinject
 +
 +include $(RIOTBASE)/Makefile.base
 diff --git a/openstack/Makefile b/openstack/Makefile
 new file mode 100644
-index 0000000..a3c3aab
+index 0000000..6f6b675
 --- /dev/null
 +++ b/openstack/Makefile
 @@ -0,0 +1,18 @@
-+MODULE = openwsn
-+
 +DIRS +=02a-MAClow
 +DIRS +=02b-MAChigh
 +DIRS +=03a-IPHC
@@ -241,25 +270,25 @@ index 0000000..a3c3aab
 +			-I$(CURDIR)/04-TRAN \
 +			-I$(CURDIR)/cross-layers
 +
++# CFLAGS += -DDAGROOT
++
 +include $(RIOTBASE)/Makefile.base
 diff --git a/openstack/cross-layers/Makefile b/openstack/cross-layers/Makefile
 new file mode 100644
-index 0000000..694bb09
+index 0000000..48422e9
 --- /dev/null
 +++ b/openstack/cross-layers/Makefile
-@@ -0,0 +1,3 @@
-+MODULE = openwsn
-+
+@@ -0,0 +1 @@
 +include $(RIOTBASE)/Makefile.base
 diff --git a/projects/common/03oos_openwsn/Makefile b/projects/common/03oos_openwsn/Makefile
 new file mode 100644
-index 0000000..694bb09
+index 0000000..1ee852d
 --- /dev/null
 +++ b/projects/common/03oos_openwsn/Makefile
 @@ -0,0 +1,3 @@
-+MODULE = openwsn
++INCLUDES += -I$(OPENWSN_ROOT)/openstack/cross-layers
 +
 +include $(RIOTBASE)/Makefile.base
 -- 
-2.2.0
+2.4.5
 

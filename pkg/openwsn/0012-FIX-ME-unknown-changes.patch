@@ -1,0 +1,161 @@
+From 5c525470e6d649261d9378b8944c68bb85a9663e Mon Sep 17 00:00:00 2001
+From: Oleg Hahm <oleg@hobbykeller.org>
+Date: Tue, 14 Jul 2015 20:53:11 +0200
+Subject: [PATCH 12/12] FIX ME: unknown changes
+
+---
+ openapps/uecho/uecho.c             | 110 +++++++++++++++++--------------------
+ openstack/02a-MAClow/IEEE802154E.h |  13 +++++
+ 2 files changed, 62 insertions(+), 61 deletions(-)
+
+diff --git a/openapps/uecho/uecho.c b/openapps/uecho/uecho.c
+index 4f5151c..ff2c295 100644
+--- a/openapps/uecho/uecho.c
++++ b/openapps/uecho/uecho.c
+@@ -1,63 +1,51 @@
+-#include "opendefs.h"
+-#include "uecho.h"
+-#include "openudp.h"
+-#include "openqueue.h"
+-#include "openserial.h"
+-#include "packetfunctions.h"
+-
+-//=========================== variables =======================================
+-
+-//=========================== prototypes ======================================
+-
+-//=========================== public ==========================================
+-
++#include "opendefs.h"
++#include "uecho.h"
++#include "openudp.h"
++#include "openqueue.h"
++#include "openserial.h"
++#include "packetfunctions.h"
++
++#include "riot.h"
++
++#define ENABLE_DEBUG (0)
++#include "debug.h"
++
++//=========================== variables =======================================
++uint8_t expect_echo;
++//=========================== prototypes ======================================
++
++//=========================== public ==========================================
++
+ void uecho_init(void) {
+-}
+-
+-void uecho_receive(OpenQueueEntry_t* request) {
+-   uint16_t          temp_l4_destination_port;
+-   OpenQueueEntry_t* reply;
+-   
+-   reply = openqueue_getFreePacketBuffer(COMPONENT_UECHO);
+-   if (reply==NULL) {
+-      openserial_printError(
+-         COMPONENT_UECHO,
+-         ERR_NO_FREE_PACKET_BUFFER,
+-         (errorparameter_t)0,
+-         (errorparameter_t)0
+-      );
+-      openqueue_freePacketBuffer(request); //clear the request packet as well
+-      return;
+-   }
+-   
+-   reply->owner                         = COMPONENT_UECHO;
+-   
+-   // reply with the same OpenQueueEntry_t
+-   reply->creator                       = COMPONENT_UECHO;
+-   reply->l4_protocol                   = IANA_UDP;
+-   temp_l4_destination_port           = request->l4_destination_port;
+-   reply->l4_destination_port           = request->l4_sourcePortORicmpv6Type;
+-   reply->l4_sourcePortORicmpv6Type     = temp_l4_destination_port;
+-   reply->l3_destinationAdd.type        = ADDR_128B;
+-   
+-   // copy source to destination to echo.
+-   memcpy(&reply->l3_destinationAdd.addr_128b[0],&request->l3_sourceAdd.addr_128b[0],16);
+-   
+-   packetfunctions_reserveHeaderSize(reply,request->length);
+-   memcpy(&reply->payload[0],&request->payload[0],request->length);
+-   openqueue_freePacketBuffer(request);
+-   
+-   if ((openudp_send(reply))==E_FAIL) {
+-      openqueue_freePacketBuffer(reply);
+-   }
+-}
+-
+-void uecho_sendDone(OpenQueueEntry_t* msg, owerror_t error) {
+-   openqueue_freePacketBuffer(msg);
+-}
+-
++}
++
++void uecho_receive(OpenQueueEntry_t* request) {
++   uint16_t          temp_l4_destination_port;
++   OpenQueueEntry_t* reply;
++
++   reply = openqueue_getFreePacketBuffer(COMPONENT_UECHO);
++   if (reply==NULL) {
++      openserial_printError(
++         COMPONENT_UECHO,
++         ERR_NO_FREE_PACKET_BUFFER,
++         (errorparameter_t)0,
++         (errorparameter_t)0
++      );
++      openqueue_freePacketBuffer(request); //clear the request packet as well
++      return;
++   }
++   else {
++      openqueue_freePacketBuffer(request);
++      expect_echo = FALSE;
++   }
++}
++
++void uecho_sendDone(OpenQueueEntry_t* msg, owerror_t error) {
++   openqueue_freePacketBuffer(msg);
++}
++
+ bool uecho_debugPrint(void) {
+-   return FALSE;
+-}
+-
+-//=========================== private =========================================
++   return FALSE;
++}
++
++//=========================== private =========================================
+diff --git a/openstack/02a-MAClow/IEEE802154E.h b/openstack/02a-MAClow/IEEE802154E.h
+index f0681c5..5342592 100644
+--- a/openstack/02a-MAClow/IEEE802154E.h
++++ b/openstack/02a-MAClow/IEEE802154E.h
+@@ -150,6 +150,14 @@ enum ieee154e_atomicdurations_enum {
+    TsShortGT                 =   16,                  //   500us
+ #endif
+    TsSlotDuration            =  PORT_TsSlotDuration,  // 10000us
++
++//    TsTxOffset                =  4000,                  //  4000us
++//    TsLongGT                  =  1300,                  //  1300us
++//    TsTxAckDelay              =  4606,                  //  4606us
++//    TsShortGT                 =   500,                  //   500us
++//    TsSlotDuration            =  PORT_TsSlotDuration,  // 15000us
++// >>>>>>> fixes to RIOT adaption
++
+    // execution speed related
+    maxTxDataPrepare          =  PORT_maxTxDataPrepare,
+    maxRxAckPrepare           =  PORT_maxRxAckPrepare,
+@@ -168,6 +176,11 @@ enum ieee154e_atomicdurations_enum {
+    wdDataDuration            =  164,                  //  5000us (measured 4280us with max payload)
+    wdAckDuration             =   98,                  //  3000us (measured 1000us)
+ #endif
++
++//    wdRadioTx                 =   1000,                  //  1000us (needs to be >delayTx)
++//    wdDataDuration            =  5000,                  //  5000us (measured 4280us with max payload)
++//    wdAckDuration             =   3000,                  //  3000us (measured 1000us)
++// >>>>>>> fixes to RIOT adaption
+ };
+ 
+ //shift of bytes in the linkOption bitmap: draft-ietf-6tisch-minimal-10.txt: page 6
+-- 
+2.4.5
+

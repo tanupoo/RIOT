@@ -1,0 +1,107 @@
+From 8ec83212e56a9f3b7a93d808070d715f9c1dc976 Mon Sep 17 00:00:00 2001
+From: Oleg Hahm <oleg@hobbykeller.org>
+Date: Tue, 14 Jul 2015 18:36:11 +0200
+Subject: [PATCH 03/12] remove board.h to avoid naming clash
+
+---
+ bsp/boards/board.h    | 40 ----------------------------------------
+ bsp/boards/board_ow.h | 40 ++++++++++++++++++++++++++++++++++++++++
+ 2 files changed, 40 insertions(+), 40 deletions(-)
+ delete mode 100644 bsp/boards/board.h
+ create mode 100644 bsp/boards/board_ow.h
+
+diff --git a/bsp/boards/board.h b/bsp/boards/board.h
+deleted file mode 100644
+index 63f90ac..0000000
+--- a/bsp/boards/board.h
++++ /dev/null
+@@ -1,40 +0,0 @@
+-#ifndef __BOARD_H
+-#define __BOARD_H
+-
+-/**
+-\addtogroup BSP
+-\{
+-\addtogroup board
+-\{
+-
+-\brief Cross-platform declaration "board" bsp module.
+-
+-\author Thomas Watteyne <watteyne@eecs.berkeley.edu>, February 2012.
+-*/
+-
+-#include "board_info.h"
+-#include "toolchain_defs.h"
+-
+-//=========================== define ==========================================
+-
+-typedef enum {
+-   DO_NOT_KICK_SCHEDULER,
+-   KICK_SCHEDULER,
+-} kick_scheduler_t;
+-
+-//=========================== typedef =========================================
+-
+-//=========================== variables =======================================
+-
+-//=========================== prototypes ======================================
+-
+-void board_init(void);
+-void board_sleep(void);
+-void board_reset(void);
+-
+-/**
+-\}
+-\}
+-*/
+-
+-#endif
+diff --git a/bsp/boards/board_ow.h b/bsp/boards/board_ow.h
+new file mode 100644
+index 0000000..bd78e7b
+--- /dev/null
++++ b/bsp/boards/board_ow.h
+@@ -0,0 +1,40 @@
++#ifndef __BOARD_H
++#define __BOARD_H
++
++/**
++\addtogroup BSP
++\{
++\addtogroup board
++\{
++
++\brief Cross-platform declaration "board" bsp module.
++
++\author Thomas Watteyne <watteyne@eecs.berkeley.edu>, February 2012.
++*/
++
++#include "board_info.h"
++#include "toolchain_defs.h"
++
++//=========================== define ==========================================
++
++typedef enum {
++   DO_NOT_KICK_SCHEDULER,
++   KICK_SCHEDULER,
++} kick_scheduler_t;
++
++//=========================== typedef =========================================
++
++//=========================== variables =======================================
++
++//=========================== prototypes ======================================
++
++void board_init_ow(void);
++void board_sleep(void);
++void board_reset(void);
++
++/**
++\}
++\}
++*/
++
++#endif
+-- 
+2.4.5
+

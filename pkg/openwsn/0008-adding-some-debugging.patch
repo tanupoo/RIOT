@@ -1,0 +1,61 @@
+From fa81eddcc5d9969462d71543d6e32e0e94a0de93 Mon Sep 17 00:00:00 2001
+From: Oleg Hahm <oleg@hobbykeller.org>
+Date: Tue, 14 Jul 2015 20:17:21 +0200
+Subject: [PATCH 08/12] adding some debugging
+
+---
+ openstack/02a-MAClow/IEEE802154E.c | 5 +++++
+ openstack/openstack.c              | 4 ++++
+ 2 files changed, 9 insertions(+)
+
+diff --git a/openstack/02a-MAClow/IEEE802154E.c b/openstack/02a-MAClow/IEEE802154E.c
+index 861d29e..00a1cf4 100644
+--- a/openstack/02a-MAClow/IEEE802154E.c
++++ b/openstack/02a-MAClow/IEEE802154E.c
+@@ -17,6 +17,9 @@
+ #include "adaptive_sync.h"
+ #include "processIE.h"
+ 
++#define ENABLE_DEBUG (0)
++#include "debug.h"
++
+ //=========================== variables =======================================
+ 
+ ieee154e_vars_t    ieee154e_vars;
+@@ -1992,9 +1995,11 @@ void changeIsSync(bool newIsSync) {
+    ieee154e_vars.isSync = newIsSync;
+    
+    if (ieee154e_vars.isSync==TRUE) {
++      DEBUG("Synced.\n");
+       leds_sync_on();
+       resetStats();
+    } else {
++      DEBUG("Unsynced.\n");
+       leds_sync_off();
+       schedule_resetBackoff();
+    }
+diff --git a/openstack/openstack.c b/openstack/openstack.c
+index 884df11..8e75b1c 100644
+--- a/openstack/openstack.c
++++ b/openstack/openstack.c
+@@ -37,6 +37,9 @@
+ //===== applications
+ #include "openapps.h"
+ 
++#define ENABLE_DEBUG (0)
++#include "debug.h"
++
+ //=========================== variables =======================================
+ 
+ //=========================== prototypes ======================================
+@@ -46,6 +49,7 @@
+ //=========================== private =========================================
+ 
+ void openstack_init(void) {
++   DEBUG("%s\n",__PRETTY_FUNCTION__);
+    
+    //===== drivers
+    openserial_init();
+-- 
+2.4.5
+

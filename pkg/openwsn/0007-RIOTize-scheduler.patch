@@ -1,0 +1,50 @@
+From 33959f0a02ec568cb7da2ab10a577c318756b0a3 Mon Sep 17 00:00:00 2001
+From: Oleg Hahm <oleg@hobbykeller.org>
+Date: Tue, 14 Jul 2015 20:12:28 +0200
+Subject: [PATCH 07/12] RIOTize scheduler
+
+---
+ kernel/openos/scheduler.c | 10 ++++++++--
+ 1 file changed, 8 insertions(+), 2 deletions(-)
+
+diff --git a/kernel/openos/scheduler.c b/kernel/openos/scheduler.c
+index 05ad8eb..36951b6 100644
+--- a/kernel/openos/scheduler.c
++++ b/kernel/openos/scheduler.c
+@@ -6,10 +6,15 @@
+ 
+ #include "opendefs.h"
+ #include "scheduler.h"
+-#include "board.h"
++#include "board_ow.h"
+ #include "debugpins.h"
+ #include "leds.h"
+ 
++#include "thread.h"
++
++#define ENABLE_DEBUG (0)
++#include "debug.h"
++
+ //=========================== variables =======================================
+ 
+ scheduler_vars_t scheduler_vars;
+@@ -53,7 +58,7 @@ void scheduler_start(void) {
+          scheduler_dbg.numTasksCur--;
+       }
+       debugpins_task_clr();
+-      board_sleep();
++      thread_yield();
+       debugpins_task_set();                      // IAR should halt here if nothing to do
+    }
+ }
+@@ -63,6 +68,7 @@ void scheduler_start(void) {
+    taskList_item_t** taskListWalker;
+    INTERRUPT_DECLARATION();
+    
++   DEBUG("owsn scheduler: push back task %p.\n", cb);
+    DISABLE_INTERRUPTS();
+    
+    // find an empty task container
+-- 
+2.4.5
+
