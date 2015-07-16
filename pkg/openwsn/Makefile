@@ -1,6 +1,6 @@
 PKG_NAME=openwsn
-PKG_URL=https://github.com/openwsn-berkeley/openwsn-fw.git
-PKG_VERSION=8b1e96f48f29f0d9083be08c94797c890ca5ce08
+PKG_URL=https://github.com/OlegHahm/openwsn-fw.git
+PKG_VERSION=etsi-dev
 PKG_DIR=$(CURDIR)/$(PKG_NAME)
 
 ifneq ($(RIOTBOARD),)
@@ -15,7 +15,7 @@ all: patch
 patch: $(PKG_DIR)/Makefile
 
 $(PKG_DIR)/Makefile: $(PKG_DIR)/.git/config
-	cd "$(PKG_DIR)" && git am --ignore-whitespace $(CURDIR)/*.patch
+	cd "$(PKG_DIR)" && git pull
 
 $(PKG_DIR)/.git/config:
 	test -d "$(PKG_DIR)" || git clone "$(PKG_URL)" "$(PKG_DIR)"; \
