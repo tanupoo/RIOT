@@ -26,6 +26,11 @@
 # define ccnl_nfn_interest_remove(r,i)  ccnl_interest_remove(r,i)
 #endif
 
+#include "sys/socket.h"
+
+#include "ccnl-defs.h"
+#include "ccnl-core.h"
+
 // forward reference:
 void ccnl_face_CTS(struct ccnl_relay_s *ccnl, struct ccnl_face_s *f);
 int ccnl_prefix_cmp(struct ccnl_prefix_s *name, unsigned char *md,

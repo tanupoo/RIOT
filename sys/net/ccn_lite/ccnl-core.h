@@ -24,6 +24,8 @@
 #ifndef CCNL_CORE
 #define CCNL_CORE
 
+#define DEBUGMSG_CORE(...) DEBUGMSG(__VA_ARGS__)
+
 #define EXACT_MATCH 1
 #define PREFIX_MATCH 0
 
