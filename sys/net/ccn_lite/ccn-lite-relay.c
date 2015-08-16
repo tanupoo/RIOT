@@ -40,15 +40,12 @@
 
 #include "msg.h"
 #include "thread.h"
-#include "transceiver.h"
 #include "vtimer.h"
 
 #include "ccnl-riot-compat.h"
 #include "ccn_lite/test_data/text.txt.ccnb.h"
 
-#if MODULE_AT86RF231 || MODULE_CC2420 || MODULE_MC1322X
-#include "ieee802154_frame.h"
-#endif
+#include DEBUG_ENABLED  (1)
 
 /** The size of the message queue between router daemon and transceiver AND clients */
 #define RELAY_MSG_BUFFER_SIZE (64)
@@ -108,7 +105,7 @@ void ccnl_ll_TX(struct ccnl_relay_s *ccnl, struct ccnl_if_s *ifc,
 {
     (void) ccnl; /* unused */
 
-    ifc->sendfunc(buf->data, (uint16_t) buf->datalen, (uint16_t) dest->id);
+    ifc->sendfunc(buf->data, (size_t) buf->datalen, dest->id);
 }
 
 /* ---------------------------------------------------------------------- */
@@ -176,7 +173,7 @@ void ccnl_relay_config(struct ccnl_relay_s *relay, int max_cache_entries,
 
     i = &relay->ifs[relay->ifcount];
     i->sock = ccnl_open_riottransdev();
-    i->sendfunc = &riot_send_transceiver;
+    i->sendfunc = &riot_send_netapi;
 #ifdef USE_FRAG
     i->mtu = 120;
 #else
@@ -313,11 +310,6 @@ int ccnl_io_loop(struct ccnl_relay_s *ccnl)
     }
 
     msg_t in;
-#if MODULE_AT86RF231 || MODULE_CC2420 || MODULE_MC1322X
-    ieee802154_packet_t *p;
-#else
-    radio_packet_t *p;
-#endif
     riot_ccnl_msg_t *m;
 
     while (!ccnl->halt_flag) {
@@ -326,46 +318,64 @@ int ccnl_io_loop(struct ccnl_relay_s *ccnl)
 
         mutex_lock(&ccnl->global_lock);
         switch (in.type) {
-            case PKT_PENDING:
-                /* msg from transceiver */
-#if MODULE_AT86RF231 || MODULE_CC2420 || MODULE_MC1322X
-                p = (ieee802154_packet_t*) in.content.ptr;
-                DEBUGMSG(1, "\tLength:\t%u\n", p->length);
-                DEBUGMSG(1, "\tSrc:\t%u\n",
-                         (p->frame.src_addr[0]) | (p->frame.src_addr[1] << 8));
-                DEBUGMSG(1, "\tDst:\t%u\n",
-                         (p->frame.dest_addr[0]) | (p->frame.dest_addr[1] << 8));
-#else
-                p = (radio_packet_t *) in.content.ptr;
-                DEBUGMSG(1, "\tLength:\t%u\n", p->length);
-                DEBUGMSG(1, "\tSrc:\t%u\n", p->src);
-                DEBUGMSG(1, "\tDst:\t%u\n", p->dst);
+            case NG_NETAPI_MSG_TYPE_RCV:
+                DEBUG("ccnl: NG_NETAPI_MSG_TYPE_RCV received\n");
+                ng_pktsnip_t *pkt = (ng_pktsnip_t *)in.content.ptr;
+              
+                kernel_pid_t iface = KERNEL_PID_UNDEF;
+                ng_pktsnip_t *netif;
+                uint8_t *l2_addr;
+                uint16_t l2_addr_len = 0;
+
+                assert(pkt != NULL);
+
+                LL_SEARCH_SCALAR(pkt, netif, type, NG_NETTYPE_NETIF);
+
+                ng_netif_hdr_t *netif_hdr = ((ng_netif_hdr_t *)netif->data);
+
+                if (netif != NULL) {
+                    iface = netif_hdr->if_pid;
+                }
+                else {
+                    puts("unexpected");
+                    continue;
+                }
+                
+                if (!ng_netapi_get(iface, NETOPT_ADDR_LEN, 0, &l2_addr_len, sizeof(uint16_t))) {
+                    continue;
+                }
+
+                l2_addr = ng_netif_hdr_get_src_addr(netif_hdr);
+
+#if DEBUG_ENABLED
+                ng_netif_hdr_print(netif_hdr);
 #endif
 
-                /* p->src must be > 0 */
-#if MODULE_AT86RF231 || MODULE_CC2420 || MODULE_MC1322X
-                if ((!(p->frame.src_addr[0])) | (p->frame.src_addr[1] << 8)) {
-                    p->frame.src_addr[0] = RIOT_BROADCAST >> 8;
-                    p->frame.src_addr[1] = RIOT_BROADCAST && 0xFF;
+
+                if ((pkt->next != NULL) && (pkt->next->type == NG_NETTYPE_CCN)) {
+                    /* does this happen? */
+                    puts("Yes, it does happen");
+                    ng_pktbuf_release(pkt);
+                    continue;
                 }
-#else
-                if (!p->src) {
-                    p->src = RIOT_BROADCAST;
-                }
+                else {
+#ifndef NDEBUG
+                    bool all_zeroes = true;
+                    for (int i = 0; i < l2_addr_len; i++) {
+                        if (l2_addr[i] != 0) {
+                            all_zeroes = false;
+                            break;
+                        }
+                    }
+                    assert(!all_zeroes);
 #endif
 
-#if MODULE_AT86RF231 || MODULE_CC2420 || MODULE_MC1322X
-                uint16_t src_addr = ((p->frame.src_addr[1] << 8) | p->frame.src_addr[0]);
-                ccnl_core_RX(ccnl, RIOT_TRANS_IDX,
-                             (unsigned char *) p->frame.payload,
-                             (int) p->frame.payload_len,
-                             src_addr);
-#else
-                ccnl_core_RX(ccnl, RIOT_TRANS_IDX,
-                             (unsigned char *) p->data,
-                             (int) p->length, p->src);
-#endif
-                p->processing--;
+                    ccnl_core_RX(ccnl, RIOT_TRANS_IDX,
+                                 (unsigned char *) p->data,
+                                 (int) pkt->size, l2_addr);
+                    ng_pktbuf_release(pkt);
+                }
+
                 break;
 
             case (CCNL_RIOT_MSG):

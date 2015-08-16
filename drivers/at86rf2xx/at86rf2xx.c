@@ -145,6 +145,8 @@ void at86rf2xx_reset(at86rf2xx_t *dev)
     /* set default protocol */
 #ifdef MODULE_NG_SIXLOWPAN
     dev->proto = NG_NETTYPE_SIXLOWPAN;
+#elif defined(MODULE_CCN_LITE)
+    dev->proto = NG_NETTYPE_CCN;
 #else
     dev->proto = NG_NETTYPE_UNDEF;
 #endif

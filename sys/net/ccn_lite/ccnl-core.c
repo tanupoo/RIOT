@@ -42,8 +42,8 @@
 static struct ccnl_interest_s *ccnl_interest_remove(struct ccnl_relay_s *ccnl,
         struct ccnl_interest_s *i);
 
-void ccnl_ll_TX(struct ccnl_relay_s *ccnl, struct ccnl_if_s *ifc,
-                sockunion *dest, struct ccnl_buf_s *buf);
+extern void ccnl_ll_TX(struct ccnl_relay_s *ccnl, struct ccnl_if_s *ifc,
+                       sockunion *dest, struct ccnl_buf_s *buf);
 
 void free_2ptr_list(void *a, void *b)
 {
@@ -410,7 +410,7 @@ int ccnl_addr_cmp(sockunion *s1, sockunion *s2)
 }
 
 struct ccnl_face_s *
-ccnl_get_face_or_create(struct ccnl_relay_s *ccnl, int ifndx, uint16_t sender_id)
+ccnl_get_face_or_create(struct ccnl_relay_s *ccnl, int ifndx, uint8_t *sender_id)
 {
     struct ccnl_face_s *f;
 
@@ -1479,7 +1479,7 @@ int ccnl_core_RX_datagram(struct ccnl_relay_s *relay, struct ccnl_face_s *from,
 
 void
 ccnl_core_RX(struct ccnl_relay_s *relay, int ifndx, unsigned char *data,
-             int datalen, uint16_t sender_id)
+          int datalen, struct sockaddr *sa, int addrlen)
 {
     struct ccnl_face_s *from;
     DEBUGMSG(14, "ccnl_core_RX ifndx=%d, %d bytes\n", ifndx, datalen);

@@ -16,11 +16,13 @@
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  */
 
-#include "ccn_lite/ccnl-riot.h"
+#include "net/ccn_lite/ccnl-riot.h"
 
 #ifdef __cplusplus
 extern "C" {
 #endif
+
+#define PAYLOAD_SIZE (50)
 
 #define RIOT_CCN_EVENT_NUMBER_OFFSET (1 << 8)
 
@@ -31,7 +33,7 @@ typedef struct riot_ccnl_msg {
     uint16_t size;
 } riot_ccnl_msg_t;
 
-int riot_send_transceiver(uint8_t *buf, uint16_t size, uint16_t to);
+int riot_send_netapi(uint8_t *buf, size_t size, uint8_t *to);
 int riot_send_msg(uint8_t *buf, uint16_t size, uint16_t to);
 void riot_send_nack(uint16_t to);
 kernel_pid_t riot_start_helper_thread(void);

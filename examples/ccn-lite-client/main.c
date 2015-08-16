@@ -34,8 +34,8 @@
 #define ENABLE_DEBUG (0)
 #include "debug.h"
 
-#include "ccn_lite/ccnl-riot.h"
-#include "ccn_lite/util/ccnl-riot-client.h"
+#include "net/ccn_lite/ccnl-riot.h"
+#include "net/ccn_lite/util/ccnl-riot-client.h"
 
 #define RIOT_CCN_APPSERVER (1)
 #define RIOT_CCN_TESTS (0)
@@ -55,6 +55,7 @@ msg_t msg_buffer_shell[SHELL_MSG_BUFFER_SIZE];
 shell_t shell;
 
 unsigned char big_buf[3 * 1024];
+#define PAYLOAD_SIZE    (50)
 char small_buf[PAYLOAD_SIZE];
 
 #if RIOT_CCN_APPSERVER

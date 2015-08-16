@@ -24,64 +24,56 @@
 #include "msg.h"
 #include "thread.h"
 
-#include "ieee802154_frame.h"
-
 #include "ccnl.h"
 #include "ccnl-core.h"
 #include "ccnl-pdu.h"
 #include "ccnl-riot-compat.h"
 
-#if defined (MODULE_AT86RF231) || defined(MODULE_CC2420) || defined(MODULE_MC1322X)
-ieee802154_packet_t p;
-#else
-radio_packet_t p;
-#endif
-
-transceiver_command_t tcmd;
-msg_t mesg, rep;
-
 char relay_helper_stack[THREAD_STACKSIZE_MAIN];
 
-int riot_send_transceiver(uint8_t *buf, uint16_t size, uint16_t to)
+void riot_send_netapi(uint8_t *buf, size_t size, uint8_t *to)
 {
-    DEBUGMSG(1, "this is a RIOT TRANSCEIVER based connection\n");
-    DEBUGMSG(1, "size=%" PRIu16 " to=%" PRIu16 "\n", size, to);
+    ng_netif_hdr_t *hdr;
+    ng_pktsnip_t *netif;
+    kernel_pid_t ifs[NG_NETIF_NUMOF];
+    size_t ifnum = ng_netif_get(ifs);
+    uint16_t l2_addr_len = 0, payload_size = 0;
 
-    if (size > PAYLOAD_SIZE) {
-        DEBUGMSG(1, "size > PAYLOAD_SIZE: %d > %d\n", size, PAYLOAD_SIZE);
-        return 0;
+    for (int i = 0; i < ifnum; i++) {
+        if (!ng_netapi_get(ifs[i], NETOPT_ADDR_LEN, 0, &l2_addr_len, sizeof(uint16_t))) {
+            continue;
+        }
+        if (!ng_netapi_get(ifs[i], NETOPT_MAX_PACKET_SIZE, 0, &payload_size, sizeof(uint16_t))) {
+            continue;
+        }
+
+        netif = ng_netif_hdr_build(NULL, 0, to, l2_addr_len);
+        DEBUGMSG(1, "this is a RIOT netapi based connection\n");
+        DEBUGMSG(1, "size=%" PRIu16 " to=%" PRIu16 "\n", size, to);
+
+        if (size > payload_size) {
+            DEBUGMSG(1, "size > PAYLOAD_SIZE: %d > %d\n", size, PAYLOAD_SIZE);
+            return;
+        }
+
+        if (netif == NULL) {
+            DEBUG("ccnl: error on interface header allocation, dropping packet\n");
+            ng_pktbuf_release(pkt);
+            return;
+        }
+
+        /* add netif to front of the pkt list */
+        LL_PREPEND(pkt, netif);
+        ((ng_netif_hdr_t *)pkt->data)->if_pid = iface;
+        ng_netapi_send(ifs[i], pkt);
     }
-
-#if MODULE_AT86RF231 || MODULE_CC2420 || MODULE_MC1322X
-    memset(&p, 0, sizeof(ieee802154_packet_t));
-    p.frame.payload_len = size;
-    p.frame.fcf.frame_type = IEEE_802154_DATA_FRAME;
-    p.frame.fcf.dest_addr_m = IEEE_802154_SHORT_ADDR_M;
-    p.frame.fcf.src_addr_m = IEEE_802154_SHORT_ADDR_M;
-    p.frame.dest_addr[1] = (to & 0xff);
-    p.frame.dest_addr[0] = (to >> 8);
-    p.frame.payload = buf;
-    p.frame.dest_pan_id = IEEE_802154_DEFAULT_PAN_ID;
-#else
-    p.length = size;
-    p.dst = (to == RIOT_BROADCAST) ? 0 : to;
-    p.data = buf;
-#endif
-
-    tcmd.transceivers = TRANSCEIVER;
-    tcmd.data = &p;
-
-    mesg.type = SND_PKT;
-    mesg.content.ptr = (char *) &tcmd;
-    msg_send_receive(&mesg, &rep, transceiver_pid);
-
-    return size;
 }
 
-int riot_send_msg(uint8_t *buf, uint16_t size, uint16_t to)
+int riot_send_msg(uint8_t *buf, uint16_t size, uint8_t *to)
 {
     DEBUGMSG(1, "this is a RIOT MSG based connection\n");
-    DEBUGMSG(1, "size=%" PRIu16 " to=%" PRIu16 "\n", size, to);
+    DEBUGMSG(1, "size=%" PRIu16 " to=%" PRIkernel_pid"\n", size,
+             (kernel_pid_t) *to);
 
     uint8_t *buf2 = ccnl_malloc(sizeof(riot_ccnl_msg_t) + size);
     if (!buf2) {
@@ -98,8 +90,8 @@ int riot_send_msg(uint8_t *buf, uint16_t size, uint16_t to)
     msg_t m;
     m.type = CCNL_RIOT_MSG;
     m.content.ptr = (char *) rmsg;
-    DEBUGMSG(1, "sending msg to pid=%" PRIkernel_pid "\n", to);
-    msg_send(&m, to);
+    DEBUGMSG(1, "sending msg to pid=%" PRIkernel_pid "\n", (kernel_pid_t) *to);
+    msg_send(&m, *to);
 
     return size;
 }
@@ -124,8 +116,6 @@ kernel_pid_t riot_start_helper_thread(void)
 char *riot_ccnl_event_to_string(int event)
 {
     switch (event) {
-        case PKT_PENDING:
-            return "PKT_PENDING";
 
         case CCNL_RIOT_MSG:
             return "RIOT_MSG";

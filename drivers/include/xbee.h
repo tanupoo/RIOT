@@ -56,6 +56,8 @@ extern "C" {
  */
 #ifdef MODULE_NG_SIXLOWPAN
 #define XBEE_DEFAULT_PROTOCOL       (NG_NETTYPE_SIXLOWPAN)
+#elif defined(MODULE_CCN_LITE)
+#define XBEE_DEFAULT_PROTOCOL       (NG_NETTYPE_CCN)
 #else
 #define XBEE_DEFAULT_PROTOCOL       (NG_NETTYPE_UNDEF)
 #endif

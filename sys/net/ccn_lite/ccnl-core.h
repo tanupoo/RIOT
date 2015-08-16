@@ -61,7 +61,7 @@ extern "C" {
 // ----------------------------------------------------------------------
 
 typedef union {
-    uint16_t id;
+    uint8_t id[CCNL_MAX_ADDR_LEN];
 } sockunion;
 
 struct ccnl_txrequest_s {
@@ -239,7 +239,7 @@ int consume(int typ, int num, unsigned char **buf, int *len,
 
 void
 ccnl_core_RX(struct ccnl_relay_s *relay, int ifndx, unsigned char *data,
-             int datalen, uint16_t sender_id);
+             int datalen, struct sockaddr *sa, int addrlen);
 
 void ccnl_core_cleanup(struct ccnl_relay_s *ccnl);
 
@@ -258,7 +258,7 @@ void ccnl_content_learn_name_route(struct ccnl_relay_s *ccnl, struct ccnl_prefix
                                    struct ccnl_face_s *f, int threshold_prefix, int flags);
 
 struct ccnl_face_s *
-ccnl_get_face_or_create(struct ccnl_relay_s *ccnl, int ifndx, uint16_t sender_id);
+ccnl_get_face_or_create(struct ccnl_relay_s *ccnl, int ifndx, int sender_id);
 
 int ccnl_face_enqueue(struct ccnl_relay_s *ccnl, struct ccnl_face_s *to,
                       struct ccnl_buf_s *buf);
