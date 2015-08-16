@@ -21,6 +21,8 @@
  * 2013-03-19 updated (ms): modified struct ccnl_relay_s for 'aux' field
  */
 
+#include <string.h>
+
 #ifndef CCNL_CORE
 #define CCNL_CORE
 
@@ -44,6 +46,8 @@
 #define CCNL_FRAG_SEQUENCED2015 3
 #define CCNL_FRAG_BEGINEND2015  4
 
+#define buf_equal(X,Y)  ((X) && (Y) && (X->datalen==Y->datalen) &&\
+                         !memcmp(X->data,Y->data,X->datalen))
 // ----------------------------------------------------------------------
 
 typedef union {

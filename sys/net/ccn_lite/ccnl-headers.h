@@ -33,7 +33,7 @@ int ccnl_interest_append_pending(struct ccnl_interest_s *i, struct ccnl_face_s *
 void ccnl_interest_propagate(struct ccnl_relay_s *ccnl, struct ccnl_interest_s *i);
 struct ccnl_interest_s *ccnl_interest_remove(struct ccnl_relay_s *ccnl, struct ccnl_interest_s *i);
 int ccnl_i_prefixof_c(struct ccnl_prefix_s *prefix, int minsuffix, int maxsuffix, struct ccnl_content_s *c);
-struct ccnl_content_s *ccnl_content_new(struct ccnl_relay_s *ccnl, char suite, struct ccnl_buf_s **pkt, struct ccnl_prefix_s **prefix, struct ccnl_buf_s **ppk, unsigned char *content, int contlen);
+struct ccnl_content_s* ccnl_content_new(struct ccnl_relay_s *ccnl, struct ccnl_pkt_s **pkt)
 struct ccnl_content_s *ccnl_content_remove(struct ccnl_relay_s *ccnl, struct ccnl_content_s *c);
 struct ccnl_content_s *ccnl_content_add2cache(struct ccnl_relay_s *ccnl, struct ccnl_content_s *c);
 int ccnl_content_serve_pending(struct ccnl_relay_s *ccnl, struct ccnl_content_s *c);
@@ -220,7 +220,7 @@ struct ccnl_sched_s *ccnl_sched_packetratelimiter_new(int inter_packet_interval,
 
 //---------------------------------------------------------------------------------------------------------------------------------------
 /* ccnl-core-util.c */
-char* ccnl_suite2str(int suite);
+const char* ccnl_suite2str(int suite);
 int hex2int(char c);
 int unescape_component(char *comp);
 int ccnl_URItoComponents(char **compVector, unsigned int *compLens, char *uri);
@@ -228,7 +228,6 @@ struct ccnl_prefix_s *ccnl_URItoPrefix(char *uri, int suite, char *nfnexpr, unsi
 int ccnl_pkt_mkComponent(int suite, unsigned char *dst, char *src, int srclen);
 struct ccnl_prefix_s *ccnl_prefix_dup(struct ccnl_prefix_s *prefix);
 int ccnl_pkt2suite(unsigned char *data, int len, int *skip);
-char *ccnl_prefix_to_path(struct ccnl_prefix_s *pr);
 char* ccnl_prefix_to_path_detailed(struct ccnl_prefix_s *pr, int ccntlv_skip, int escape_components, int call_slash);
 char *ccnl_lambdaParseVar(char **cpp);
 struct ccnl_lambdaTerm_s *ccnl_lambdaStrToTerm(int lev, char **cp, int (*prt)(char *fmt, ...));
