@@ -33,7 +33,7 @@ int ccnl_interest_append_pending(struct ccnl_interest_s *i, struct ccnl_face_s *
 void ccnl_interest_propagate(struct ccnl_relay_s *ccnl, struct ccnl_interest_s *i);
 struct ccnl_interest_s *ccnl_interest_remove(struct ccnl_relay_s *ccnl, struct ccnl_interest_s *i);
 int ccnl_i_prefixof_c(struct ccnl_prefix_s *prefix, int minsuffix, int maxsuffix, struct ccnl_content_s *c);
-struct ccnl_content_s* ccnl_content_new(struct ccnl_relay_s *ccnl, struct ccnl_pkt_s **pkt)
+struct ccnl_content_s* ccnl_content_new(struct ccnl_relay_s *ccnl, struct ccnl_pkt_s **pkt);
 struct ccnl_content_s *ccnl_content_remove(struct ccnl_relay_s *ccnl, struct ccnl_content_s *c);
 struct ccnl_content_s *ccnl_content_add2cache(struct ccnl_relay_s *ccnl, struct ccnl_content_s *c);
 int ccnl_content_serve_pending(struct ccnl_relay_s *ccnl, struct ccnl_content_s *c);
