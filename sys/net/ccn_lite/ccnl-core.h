@@ -134,7 +134,7 @@ struct ccnl_relay_s {
 
 struct ccnl_buf_s {
     struct ccnl_buf_s *next;
-    unsigned int datalen;
+    int datalen;
     unsigned char data[1];
 };
 

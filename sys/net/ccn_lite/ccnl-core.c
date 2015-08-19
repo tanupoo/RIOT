@@ -574,10 +574,12 @@ ccnl_interest_isSame(struct ccnl_interest_s *i, struct ccnl_pkt_s *pkt)
 struct ccnl_content_s*
 ccnl_content_new(struct ccnl_relay_s *ccnl, struct ccnl_pkt_s **pkt)
 {
+    (void) ccnl;
+
     struct ccnl_content_s *c;
 
     DEBUGMSG_CORE(TRACE, "ccnl_content_new %p <%s [%d]>\n",
-             (void*) *pkt, ccnl_prefix_to_path((*pkt)->pfx), ((*pkt)->pfx->chunknum)? *((*pkt)->pfx->chunknum) : -1);
+             (void*) *pkt, ccnl_prefix_to_path((*pkt)->pfx), (int) ((*pkt)->pfx->chunknum)? (int) *((*pkt)->pfx->chunknum) : -1);
 
     c = (struct ccnl_content_s *) ccnl_calloc(1, sizeof(struct ccnl_content_s));
     if (!c)
@@ -618,7 +620,7 @@ ccnl_content_add2cache(struct ccnl_relay_s *ccnl, struct ccnl_content_s *c)
 
     DEBUGMSG_CORE(DEBUG, "ccnl_content_add2cache (%d/%d) --> %p = %s [%d]\n",
                   ccnl->contentcnt, ccnl->max_cache_entries,
-                  (void*)c, ccnl_prefix_to_path(c->pkt->pfx), (c->pkt->pfx->chunknum)? *(c->pkt->pfx->chunknum) : -1);
+                  (void*)c, ccnl_prefix_to_path(c->pkt->pfx), (c->pkt->pfx->chunknum)? (int) *(c->pkt->pfx->chunknum) : -1);
     for (cit = ccnl->contents; cit; cit = cit->next) {
         if (c == cit) {
             DEBUGMSG_CORE(DEBUG, "--- Already in cache ---\n");
@@ -755,6 +757,8 @@ ccnl_content_serve_pending(struct ccnl_relay_s *ccnl, struct ccnl_content_s *c)
 void
 ccnl_do_ageing(void *ptr, void *dummy)
 {
+    (void) dummy;
+
     struct ccnl_relay_s *relay = (struct ccnl_relay_s*) ptr;
     struct ccnl_content_s *c = relay->contents;
     struct ccnl_interest_s *i = relay->pit;

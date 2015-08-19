@@ -20,15 +20,6 @@
  * 2014-11-05 collected from the various fwd-XXX.c files
  */
 
-#include <unistd.h>
-#include "sys/socket.h"
-
-#include "ccnl-defs.h"
-#include "ccnl-core.h"
-#include "ccnl-ext.h"
-#include "ccnl-headers.h"
-#include "net/ccn_lite/ccnl-riot.h"
-
 // returning 0 if packet was
 int
 ccnl_fwd_handleContent(struct ccnl_relay_s *relay, struct ccnl_face_s *from,

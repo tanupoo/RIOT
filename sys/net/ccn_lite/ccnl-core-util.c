@@ -894,6 +894,8 @@ char*
 ccnl_prefix_to_path_detailed(struct ccnl_prefix_s *pr, int ccntlv_skip,
                              int escape_components, int call_slash)
 {
+    (void) ccntlv_skip;
+    (void) call_slash;
     int len = 0, i, j;
     /*static char *prefix_buf1;
     static char *prefix_buf2;
