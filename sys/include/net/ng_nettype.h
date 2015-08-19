@@ -81,6 +81,9 @@ typedef enum {
      * @}
      */
 
+#ifdef MODULE_CCN_LITE
+    NG_NETTYPE_CCN,
+#endif
 
     /**
      * @{
@@ -110,6 +113,10 @@ static inline ng_nettype_t ng_nettype_from_ethertype(uint16_t type)
 #ifdef MODULE_NG_IPV6
         case ETHERTYPE_IPV6:
             return NG_NETTYPE_IPV6;
+#endif
+#ifdef MODULE_CCN_LITE
+        case ETHERTYPE_CCN:
+            return NG_NETTYPE_CCN;
 #endif
         default:
             return NG_NETTYPE_UNDEF;
