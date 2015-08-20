@@ -466,18 +466,25 @@ static inline kernel_pid_t _next_hop_l2addr(uint8_t *l2addr, uint8_t *l2addr_len
 #endif
 }
 
+/**
+ * @brief   General IPv6 send function
+ *
+ * @param[in] pkt       packet snip containing the prepared IPv6 snip
+ * @param[in] prep_hdr  if IPv6 header has to be filled, set to true
+ */
 static void _send(gnrc_pktsnip_t *pkt, bool prep_hdr)
 {
     kernel_pid_t iface = KERNEL_PID_UNDEF;
     gnrc_pktsnip_t *ipv6, *payload;
     ipv6_addr_t *tmp;
     ipv6_hdr_t *hdr;
+
     /* get IPv6 snip and (if present) generic interface header */
     if (pkt->type == GNRC_NETTYPE_NETIF) {
         /* If there is already a netif header (routing protocols and
          * neighbor discovery might add them to preset sending interface) */
         iface = ((gnrc_netif_hdr_t *)pkt->data)->if_pid;
-        /* seize payload as temporary variable */
+        /* seize ipv6 as temporary variable */
         ipv6 = gnrc_pktbuf_start_write(pkt); /* write protect for later removal
                                               * in _send_unicast() */
         if (ipv6 == NULL) {
@@ -485,6 +492,7 @@ static void _send(gnrc_pktsnip_t *pkt, bool prep_hdr)
             gnrc_pktbuf_release(pkt);
             return;
         }
+
         pkt = ipv6;  /* Reset pkt from temporary variable */
 
         ipv6 = pkt->next;
@@ -492,6 +500,10 @@ static void _send(gnrc_pktsnip_t *pkt, bool prep_hdr)
     else {
         ipv6 = pkt;
     }
+
+    /* now ipv6 points to the IPv6 snip and pkt either to ipv6 or the netif
+     * header snip */
+
     /* seize payload as temporary variable */
     payload = gnrc_pktbuf_start_write(ipv6);
     if (payload == NULL) {
