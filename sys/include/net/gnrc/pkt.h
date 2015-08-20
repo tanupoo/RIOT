@@ -9,8 +9,8 @@
 
 /**
  * @defgroup    net_gnrc_pkt Packet
+ * @ingroup     net_gnrc_pktbuf
  * @brief       Network packet abstraction types
- * @ingroup     net
  * @{
  *
  * @file
