@@ -39,8 +39,10 @@
 #include "debug.h"
 
 /* Internal function prototypes */
+#ifndef CC110X_DONT_RESET
 static void _reset(cc110x_t *dev);
 static void _power_up_reset(cc110x_t *dev);
+#endif
 
 int cc110x_setup(cc110x_t *dev, const cc110x_params_t *params)
 {
@@ -317,6 +319,7 @@ int16_t cc110x_set_channel(cc110x_t *dev, uint8_t channr)
 }
 #endif
 
+#ifndef CC110X_DONT_RESET
 static void _reset(cc110x_t *dev)
 {
     DEBUG("%s:%s:%u\n", RIOT_FILE_RELATIVE, __func__, __LINE__);
@@ -326,7 +329,6 @@ static void _reset(cc110x_t *dev)
     hwtimer_wait(HWTIMER_TICKS(100));
 }
 
-#ifndef CC110X_DONT_RESET
 static void _power_up_reset(cc110x_t *dev)
 {
     DEBUG("%s:%s:%u\n", RIOT_FILE_RELATIVE, __func__, __LINE__);
