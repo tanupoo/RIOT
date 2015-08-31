@@ -43,7 +43,27 @@
 static char addr_str[IPV6_ADDR_MAX_STR_LEN];
 #endif
 
-/* random helper function */
+/* sets an entry to stale if its l2addr differs from the given one or creates it stale if it
+ * does not exist */
+static void _stale_nc(kernel_pid_t iface, ipv6_addr_t *ipaddr, uint8_t *l2addr,
+                      int l2addr_len)
+{
+    if (l2addr_len != -ENOTSUP) {
+        gnrc_ipv6_nc_t *nc_entry = gnrc_ipv6_nc_get(iface, ipaddr);
+        if ((nc_entry != NULL) && (((uint16_t)l2addr_len != nc_entry->l2_addr_len) ||
+                                   (memcmp(l2addr, nc_entry->l2_addr, l2addr_len) != 0))) {
+            /* if entry exists but l2 address differs: set */
+            nc_entry->l2_addr_len = (uint16_t)l2addr_len;
+            memcpy(nc_entry->l2_addr, l2addr, l2addr_len);
+            gnrc_ndp_internal_set_state(nc_entry, GNRC_IPV6_NC_STATE_STALE);
+        }
+        else if (nc_entry == NULL) {
+            gnrc_ipv6_nc_add(iface, ipaddr, l2addr, (uint16_t)l2addr_len,
+                             GNRC_IPV6_NC_STATE_STALE);
+        }
+    }
+}
+
 void gnrc_ndp_nbr_sol_handle(kernel_pid_t iface, gnrc_pktsnip_t *pkt,
                              ipv6_hdr_t *ipv6, ndp_nbr_sol_t *nbr_sol,
                              size_t icmpv6_size)
@@ -53,14 +73,12 @@ void gnrc_ndp_nbr_sol_handle(kernel_pid_t iface, gnrc_pktsnip_t *pkt,
     uint8_t *buf = ((uint8_t *)nbr_sol) + sizeof(ndp_nbr_sol_t);
     ipv6_addr_t *tgt;
     int sicmpv6_size = (int)icmpv6_size, l2src_len = 0;
-
     DEBUG("ndp: received neighbor solicitation (src: %s, ",
           ipv6_addr_to_str(addr_str, &ipv6->src, sizeof(addr_str)));
     DEBUG("dst: %s, ",
           ipv6_addr_to_str(addr_str, &ipv6->dst, sizeof(addr_str)));
     DEBUG("tgt: %s)\n",
           ipv6_addr_to_str(addr_str, &nbr_sol->tgt, sizeof(addr_str)));
-
     /* check validity */
     if ((ipv6->hl != 255) || (nbr_sol->code != 0) ||
         (icmpv6_size < sizeof(ndp_nbr_sol_t)) ||
@@ -71,60 +89,34 @@ void gnrc_ndp_nbr_sol_handle(kernel_pid_t iface, gnrc_pktsnip_t *pkt,
         /* ipv6 releases */
         return;
     }
-
     if ((tgt = gnrc_ipv6_netif_find_addr(iface, &nbr_sol->tgt)) == NULL) {
         DEBUG("ndp: Target address is not to interface %" PRIkernel_pid "\n",
               iface);
         /* ipv6 releases */
         return;
     }
-
     sicmpv6_size -= sizeof(ndp_nbr_sol_t);
-
     while (sicmpv6_size > 0) {
         ndp_opt_t *opt = (ndp_opt_t *)(buf + opt_offset);
-
         switch (opt->type) {
             case NDP_OPT_SL2A:
                 if ((l2src_len = gnrc_ndp_internal_sl2a_opt_handle(pkt, ipv6, nbr_sol->type, opt,
                                                                    l2src)) < 0) {
-                    if (l2src_len != -ENOTSUP) {
-                        /* invalid source link-layer address option */
-                        return;
-                    }
+                    /* -ENOTSUP can not happen */
+                    /* invalid source link-layer address option */
+                    return;
                 }
-
                 break;
-
             default:
                 /* silently discard all other options */
                 break;
         }
-
         opt_offset += (opt->len * 8);
         sicmpv6_size -= (opt->len * 8);
     }
-
-    if (l2src_len != -ENOTSUP) {
-        gnrc_ipv6_nc_t *nc_entry = gnrc_ipv6_nc_get(iface, &ipv6->src);
-        if ((nc_entry != NULL) && ((l2src_len != nc_entry->l2_addr_len) ||
-                                   (memcmp(l2src, nc_entry->l2_addr, l2src_len) != 0))) {
-            /* if entry exists but l2 address differs: set */
-            nc_entry->l2_addr_len = l2src_len;
-            memcpy(nc_entry->l2_addr, l2src, l2src_len);
-
-            gnrc_ndp_internal_set_state(nc_entry, GNRC_IPV6_NC_STATE_STALE);
-        }
-        else if (nc_entry == NULL) {
-            gnrc_ipv6_nc_add(iface, &ipv6->src, l2src, l2src_len,
-                             GNRC_IPV6_NC_STATE_STALE);
-        }
-    }
-
+    _stale_nc(iface, &ipv6->src, l2src, l2src_len);
     gnrc_ndp_internal_send_nbr_adv(iface, tgt, &ipv6->src, ipv6_addr_is_multicast(&ipv6->dst),
                                    NULL);
-
-    return;
 }
 
 static inline bool _pkt_has_l2addr(gnrc_netif_hdr_t *netif_hdr)
@@ -270,10 +262,9 @@ void gnrc_ndp_nbr_adv_handle(kernel_pid_t iface, gnrc_pktsnip_t *pkt,
                     /* TODO: update FIB */
                 }
             }
-            else if (l2tgt_changed) {
-                if (gnrc_ipv6_nc_get_state(nc_entry) == GNRC_IPV6_NC_STATE_REACHABLE) {
-                    gnrc_ndp_internal_set_state(nc_entry, GNRC_IPV6_NC_STATE_STALE);
-                }
+            else if (l2tgt_changed &&
+                     gnrc_ipv6_nc_get_state(nc_entry) == GNRC_IPV6_NC_STATE_REACHABLE) {
+                gnrc_ndp_internal_set_state(nc_entry, GNRC_IPV6_NC_STATE_STALE);
             }
         }
     }
