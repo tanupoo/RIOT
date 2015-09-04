@@ -27,11 +27,12 @@ extern "C" {
  * @name CC110X configuration
  */
 const cc110x_params_t cc110x_params[] = {
-    { .spi=0,
-        .CS=53,
-        .GDO0=27,
-        .GDO1=55,
-        .GDO2=28
+    {
+        .spi  = 0,
+        .CS   = 53,
+        .GDO0 = 27,
+        .GDO1 = 55,
+        .GDO2 = 28
     },
 };
 /** @} */
