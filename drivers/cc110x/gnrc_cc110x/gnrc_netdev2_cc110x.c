@@ -22,8 +22,6 @@
 
 static int _send(gnrc_netdev2_t *gnrc_netdev2, gnrc_pktsnip_t *pkt)
 {
-    DEBUG("%s:%u %s\n", RIOT_FILE_RELATIVE, __LINE__, __func__);
-
     cc110x_pkt_t cc110x_pkt;
     netdev2_t *dev = gnrc_netdev2->dev;
     netdev2_cc110x_t *netdev_cc110x = (netdev2_cc110x_t *) dev;
@@ -106,8 +104,6 @@ static int _send(gnrc_netdev2_t *gnrc_netdev2, gnrc_pktsnip_t *pkt)
 
 static gnrc_pktsnip_t *_recv(gnrc_netdev2_t *gnrc_netdev2)
 {
-    DEBUG("%s:%u %s\n", RIOT_FILE_RELATIVE, __LINE__, __func__);
-
     netdev2_t *dev = gnrc_netdev2->dev;
     cc110x_t *cc110x = &((netdev2_cc110x_t*) dev)->cc110x;
 
@@ -135,7 +131,7 @@ static gnrc_pktsnip_t *_recv(gnrc_netdev2_t *gnrc_netdev2)
             payload_length, nettype);
 
     if(!pkt) {
-        DEBUG("_recv_ethernet_packet: cannot allocate pktsnip.\n");
+        DEBUG("cc110x: _recv: cannot allocate pktsnip.\n");
         return NULL;
     }
 
@@ -157,7 +153,8 @@ static gnrc_pktsnip_t *_recv(gnrc_netdev2_t *gnrc_netdev2)
         uint64_t dst_addr = cc110x_pkt->address;
         gnrc_netif_hdr_set_src_addr(netif_hdr->data, (uint8_t*)&src_addr, addr_len);
         gnrc_netif_hdr_set_dst_addr(netif_hdr->data, (uint8_t*)&dst_addr, addr_len);
-    } else {
+    }
+    else {
         gnrc_netif_hdr_set_src_addr(netif_hdr->data, (uint8_t*)&cc110x_pkt->phy_src, addr_len);
         gnrc_netif_hdr_set_dst_addr(netif_hdr->data, (uint8_t*)&cc110x_pkt->address, addr_len);
     }

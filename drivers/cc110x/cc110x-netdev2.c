@@ -132,8 +132,6 @@ static int _get(netdev2_t *dev, netopt_t opt, void *value, size_t value_len)
 
 static int _set(netdev2_t *dev, netopt_t opt, void *value, size_t value_len)
 {
-    DEBUG("%s:%u\n", __func__, __LINE__);
-
     cc110x_t *cc110x = &((netdev2_cc110x_t*) dev)->cc110x;
 
     switch (opt) {
@@ -201,56 +199,6 @@ static int _init(netdev2_t *dev)
 
     return 0;
 }
-
-#if 0
-int _cc110x_get_state(netdev_t *dev, netdev2_state_t *state)
-{
-    if (dev != &cc110x_dev) {
-        return -ENODEV;
-    }
-
-    switch(radio_state) {
-        case RADIO_IDLE:
-            *state = NETDEV_STATE_POWER_IDLE;
-            break;
-        case RADIO_SEND_BURST:
-            *state = NETDEV_STATE_TX_BURST;
-            break;
-        case RADIO_RX:
-            *state = NETDEV_STATE_RX_MODE;
-            break;
-        case RADIO_UNKNOWN:
-        case RADIO_PWD:
-        default:
-            *state = NETDEV_STATE_POWER_OFF;
-            break;
-    }
-
-    return 0;
-}
-
-int _cc110x_set_state(netdev_t *dev, netdev2_state_t state)
-{
-    if (dev != &cc110x_dev) {
-        return -ENODEV;
-    }
-
-    switch (state) {
-        case NETDEV_STATE_POWER_OFF:
-            gpio_irq_disable(CC110X_GDO2);
-            cc110x_switch_to_pwd();
-            break;
-        case NETDEV_STATE_RX_MODE:
-            gpio_irq_enable(CC110X_GDO2);
-            cc110x_setup_rx_mode();
-            break;
-        default:
-            return -ENOTSUP;
-    }
-
-    return 0;
-}
-#endif
 
 const netdev2_driver_t netdev2_cc110x_driver = {
     .send=_send,
