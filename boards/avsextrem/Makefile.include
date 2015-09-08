@@ -1,2 +1,7 @@
 export INCLUDES += -I$(RIOTCPU)/$(CPU)/include/ -I$(RIOTBOARD)/$(BOARD)/include/
+
+ifneq (,$(filter gnrc_netif_default,$(USEMODULE)))
+	USEMODULE += cc110x gnrc_netdev2 gnrc_cc110x
+endif
+
 include $(RIOTBOARD)/msba2-common/Makefile.include
