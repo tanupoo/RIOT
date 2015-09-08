@@ -14,6 +14,7 @@
  * @brief       Low-level SPI driver implementation
  *
  * @author      Kaspar Schleiser <kaspar@schleiser.de>
+ * @author      Oliver Hahm <oliver.hahm@inria.fr>
  *
  * @}
  */
@@ -26,12 +27,6 @@
 #include "board.h"
 #define ENABLE_DEBUG (0)
 #include "debug.h"
-
-#if SPI_0_EN
-
-#define SPI_TX_EMPTY                (SSP0SR & SSPSR_TFE)
-#define SPI_BUSY                    (SSP0SR & SSPSR_BSY)
-#define SPI_RX_AVAIL                (SSP0SR & SSPSR_RNE)
 
 /**
  * @brief Array holding one pre-initialized mutex for each SPI device
@@ -50,10 +45,6 @@ static mutex_t locks[] =  {
 
 int spi_init_master(spi_t dev, spi_conf_t conf, spi_speed_t speed)
 {
-    if (dev) {
-        return -1;
-    }
-
     uint32_t   f_baud = 0;
     switch(speed)
     {
@@ -101,34 +92,74 @@ int spi_init_master(spi_t dev, spi_conf_t conf, spi_speed_t speed)
     }
 #endif
 
-    /* Power*/
-    PCONP |= PCSSP0;                /* Enable power for SSP0 (default is on)*/
-
-    /* PIN Setup*/
-    PINSEL3 |= BIT8 + BIT9;         /* Set CLK function to SPI*/
-    PINSEL3 |= BIT14 + BIT15;       /* Set MISO function to SPI*/
-    PINSEL3 |= BIT16 + BIT17;       /* Set MOSI function to SPI*/
-
-    /* Interface Setup*/
-    SSP0CR0 = 7;
-
-    /* Clock Setup*/
     uint32_t pclksel;
     uint32_t cpsr;
-    lpc2387_pclk_scale(F_CPU / 1000, f_baud, &pclksel, &cpsr);
-    PCLKSEL1 &= ~(BIT10 | BIT11);   /* CCLK to PCLK divider*/
-    PCLKSEL1 |= pclksel << 10;
-    SSP0CPSR = cpsr;
-
-    /* Enable*/
-    SSP0CR1 |= BIT1;                /* SSP-Enable*/
     int dummy;
 
-    /* Clear RxFIFO:*/
-    while (SPI_RX_AVAIL) {          /* while RNE (Receive FIFO Not Empty)...*/
-        dummy = SSP0DR;             /* read data*/
-    }
+    switch(dev) {
+#ifdef SPI_0_EN
+        case SPI_0:
+            /* Power*/
+            PCONP |= SPI_0_POWER;
 
+            /* PIN Setup*/
+            SPI_0_CLK;
+            SPI_0_MISO;
+            SPI_0_MOSI;
+
+            /* Interface Setup*/
+            SPI_0_SSP = SPI_0_DSS;
+
+            /* Clock Setup*/
+            lpc2387_pclk_scale(F_CPU / 1000, f_baud, &pclksel, &cpsr);
+
+            SPI_0_CCLK;
+            SPI_0_CLK_SEL |= pclksel << SPI_0_CLK_SHIFT;
+            SPI_0_CPSR = cpsr;
+
+            /* Enable*/
+            SPI_0_SSP_EN; /* SSP-Enable*/
+
+            /* Clear RxFIFO:*/
+            while (SPI_0_RX_AVAIL) {          /* while RNE (Receive FIFO Not Empty)...*/
+                dummy = SPI_0_DR;             /* read data*/
+            }
+
+            break;
+#endif
+#ifdef SPI_1_EN
+        case SPI_1:
+            /* Power*/
+            PCONP |= SPI_1_POWER;
+
+            /* PIN Setup*/
+            SPI_1_CLK;
+            SPI_1_MISO;
+            SPI_1_MOSI;
+
+            /* Interface Setup*/
+            SPI_1_SSP = SPI_1_DSS;
+
+            /* Clock Setup*/
+            lpc2387_pclk_scale(F_CPU / 1000, f_baud, &pclksel, &cpsr);
+
+            SPI_1_CCLK;
+            SPI_1_CLK_SEL |= pclksel << SPI_1_CLK_SHIFT;
+            SPI_1_CPSR = cpsr;
+
+            /* Enable*/
+            SPI_1_SSP_EN; /* SSP-Enable*/
+
+            /* Clear RxFIFO:*/
+            while (SPI_1_RX_AVAIL) {          /* while RNE (Receive FIFO Not Empty)...*/
+                dummy = SPI_1_DR;             /* read data*/
+            }
+
+            break;
+#endif
+        default:
+            return -1;
+    }
     /* to suppress unused-but-set-variable */
     (void) dummy;
     return 0;
@@ -172,12 +203,29 @@ int spi_release(spi_t dev)
 
 int spi_transfer_byte(spi_t dev, char out, char *in)
 {
-    while (!SPI_TX_EMPTY);
-    SSP0DR = out;
-    while (SPI_BUSY);
-    while (!SPI_RX_AVAIL);
+    char tmp = 0;
+    switch(dev) {
+#ifdef SPI_0_EN
+        case SPI_0:
+            while (!SPI_0_TX_EMPTY);
+            SPI_0_DR = out;
+            while (SPI_0_BUSY);
+            while (!SPI_0_RX_AVAIL);
 
-    char tmp = (char)SSP0DR;
+            tmp = (char) SPI_0_DR;
+            break;
+#endif
+#ifdef SPI_1_EN
+        case SPI_1:
+            while (!SPI_1_TX_EMPTY);
+            SPI_1_DR = out;
+            while (SPI_1_BUSY);
+            while (!SPI_1_RX_AVAIL);
+
+            tmp = (char) SPI_1_DR;
+            break;
+#endif
+    }
 
     if (in != NULL) {
         *in = tmp;
@@ -194,4 +242,3 @@ void spi_poweroff(spi_t dev)
 {
 }
 
-#endif /* SPI_0_EN */
