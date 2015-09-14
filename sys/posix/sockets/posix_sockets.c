@@ -21,14 +21,12 @@
 #include "fd.h"
 #include "mutex.h"
 #include "net/conn.h"
+#include "net/ipv4/addr.h"
+#include "net/ipv6/addr.h"
 #include "sys/socket.h"
 #include "netinet/in.h"
 
 #define SOCKET_POOL_SIZE    (4)
-#define CONN_IPV4   defined(MODULE_CONN_IP4) || defined(MODULE_CONN_UDP4) || \
-                    defined(MODULE_CONN_TCP4)
-#define CONN_IPV6   defined(MODULE_CONN_IP6) || defined(MODULE_CONN_UDP6) || \
-                    defined(MODULE_CONN_TCP6)
 
 /**
  * @brief   Unitfied connection type.
@@ -37,29 +35,20 @@ typedef union {
     /* is not supposed to be used */
     /* cppcheck-suppress unusedStructMember */
     int undef;                  /**< for case that no connection module is present */
-#ifdef  MODULE_CONN_IP4
-    conn_ip4_t raw4;            /**< raw IPv4 connection */
-#endif  /* MODULE_CONN_IP4 */
-#ifdef  MODULE_CONN_IP6
-    conn_ip6_t raw6;            /**< raw IPv6 connection */
-#endif  /* MODULE_CONN_IP6 */
-#ifdef  MODULE_CONN_TCP4
-    conn_tcp4_t tcp4;           /**< TCP over IPv4 connection */
-#endif  /* MODULE_CONN_TCP4 */
-#ifdef  MODULE_CONN_TCP6
-    conn_tcp6_t tcp6;           /**< TCP over IPv6 connection */
-#endif  /* MODULE_CONN_TCP6 */
-#ifdef  MODULE_CONN_UDP4
-    conn_udp4_t udp4;           /**< UDP over IPv4 connection */
-#endif  /* MODULE_CONN_UDP4 */
-#ifdef  MODULE_CONN_UDP6
-    conn_udp6_t udp6;           /**< UDP over IPv6 connection */
-#endif  /* MODULE_CONN_UDP6 */
+#ifdef  MODULE_CONN_IP
+    conn_ip_t raw;              /**< raw IP connection */
+#endif  /* MODULE_CONN_IP */
+#ifdef  MODULE_CONN_TCP
+    conn_tcp_t tcp;             /**< TCP connection */
+#endif  /* MODULE_CONN_TCP */
+#ifdef  MODULE_CONN_UDP
+    conn_udp_t udp;             /**< UDP connection */
+#endif  /* MODULE_CONN_UDP */
 } socket_conn_t;
 
 typedef struct {
     int fd;
-    int domain;
+    sa_family_t domain;
     int type;
     int protocol;
     socket_conn_t conn;
@@ -96,7 +85,7 @@ static socket_t *_get_socket(int fd)
 static inline int _choose_ipproto(int type, int protocol)
 {
     switch (type) {
-#if defined(MODULE_CONN_TCP4) || defined(MODULE_CONN_TCP6)
+#ifdef MODULE_CONN_TCP
         case SOCK_STREAM:
             if ((protocol == 0) || (protocol == IPPROTO_TCP)) {
                 return protocol;
@@ -106,7 +95,7 @@ static inline int _choose_ipproto(int type, int protocol)
             }
             break;
 #endif
-#if defined(MODULE_CONN_UDP4) || defined(MODULE_CONN_UDP6)
+#ifdef MODULE_CONN_UDP
         case SOCK_DGRAM:
             if ((protocol == 0) || (protocol == IPPROTO_UDP)) {
                 return protocol;
@@ -116,7 +105,7 @@ static inline int _choose_ipproto(int type, int protocol)
             }
             break;
 #endif
-#if defined(MODULE_CONN_IP4) || defined(MODULE_CONN_IP6)
+#ifdef MODULE_CONN_IP
         case SOCK_RAW:
             return protocol;
 #endif
@@ -128,7 +117,11 @@ static inline int _choose_ipproto(int type, int protocol)
     return -1;
 }
 
-#if CONN_IPV4
+static inline void _htons_port(uint16_t *port)
+{
+    *port = htons(*port);
+}
+
 static inline ipv4_addr_t *_in_addr_ptr(struct sockaddr_storage *addr)
 {
     return (ipv4_addr_t *)(&((struct sockaddr_in *)addr)->sin_addr);
@@ -139,14 +132,6 @@ static inline uint16_t *_in_port_ptr(struct sockaddr_storage *addr)
     return &((struct sockaddr_in *)addr)->sin_port;
 }
 
-static inline void _in_htons_port(struct sockaddr_storage *addr)
-{
-    struct sockaddr_in *tmp = (struct sockaddr_in *)addr;
-    tmp->sin_port = htons(tmp->sin_port);
-}
-#endif
-
-#if CONN_IPV6
 static inline ipv6_addr_t *_in6_addr_ptr(struct sockaddr_storage *addr)
 {
     return (ipv6_addr_t *)(&((struct sockaddr_in6 *)addr)->sin6_addr);
@@ -157,14 +142,6 @@ static inline uint16_t *_in6_port_ptr(struct sockaddr_storage *addr)
     return &((struct sockaddr_in6 *)addr)->sin6_port;
 }
 
-static inline void _in6_htons_port(struct sockaddr_storage *addr)
-{
-    struct sockaddr_in6 *tmp = (struct sockaddr_in6 *)addr;
-    tmp->sin6_port = htons(tmp->sin6_port);
-}
-#endif
-
-#if CONN_IPV4 || CONN_IPV6
 static inline socklen_t _addr_truncate(struct sockaddr *out, socklen_t out_len,
                                        struct sockaddr_storage *in, socklen_t target_size)
 {
@@ -172,7 +149,39 @@ static inline socklen_t _addr_truncate(struct sockaddr *out, socklen_t out_len,
     memcpy(out, in, out_len);
     return out_len;
 }
-#endif
+
+static inline int _get_data_from_sockaddr(const struct sockaddr *address, size_t address_len,
+                                          void **addr, size_t *addr_len, uint16_t *port)
+{
+    switch (address->sa_family) {
+        case AF_INET:
+            if (address_len < sizeof(struct sockaddr_in)) {
+                errno = EINVAL;
+                return -1;
+            }
+            struct sockaddr_in *in_addr = (struct sockaddr_in *)address;
+            *addr = &in_addr->sin_addr;
+            *addr_len = sizeof(ipv4_addr_t);
+            /* XXX sin_port is in network byteorder */
+            *port = ntohs(in_addr->sin_port);
+            break;
+        case AF_INET6:
+            if (address_len < sizeof(struct sockaddr_in6)) {
+                errno = EINVAL;
+                return -1;
+            }
+            struct sockaddr_in6 *in6_addr = (struct sockaddr_in6 *)address;
+            *addr = &in6_addr->sin6_addr;
+            *addr_len = sizeof(ipv6_addr_t);
+            /* XXX sin6_port is in network byteorder */
+            *port = ntohs(in6_addr->sin6_port);
+            break;
+        default:
+            errno = EAFNOSUPPORT;
+            return -1;
+    }
+    return 0;
+}
 
 static int socket_close(int socket)
 {
@@ -185,52 +194,29 @@ static int socket_close(int socket)
     s = &_pool[socket];
     s->domain = AF_INET;
     switch (s->domain) {
-#if CONN_IPV4
         case AF_INET:
-            switch (s->type) {
-#ifdef MODULE_CONN_UDP4
-                case SOCK_DGRAM:
-                    conn_udp4_close(&s->conn.udp4);
-                    break;
-#endif
-#ifdef MODULE_CONN_IP4
-                case SOCK_RAW:
-                    conn_ip4_close(&s->conn.raw4);
-                    break;
-#endif
-#ifdef MODULE_CONN_TCP4
-                case SOCK_STREAM:
-                    conn_tcp4_close(&s->conn.tcp4);
-                    break;
-#endif
-                default:
-                    res = -1;
-                    break;
-            }
-#endif
-#if CONN_IPV6
         case AF_INET6:
             switch (s->type) {
-#ifdef MODULE_CONN_UDP6
+#ifdef MODULE_CONN_UDP
                 case SOCK_DGRAM:
-                    conn_udp6_close(&s->conn.udp6);
+                    conn_udp_close(&s->conn.udp);
                     break;
 #endif
-#ifdef MODULE_CONN_IP6
+#ifdef MODULE_CONN_IP
                 case SOCK_RAW:
-                    conn_ip6_close(&s->conn.raw6);
+                    conn_ip_close(&s->conn.raw);
                     break;
 #endif
-#ifdef MODULE_CONN_TCP6
+#ifdef MODULE_CONN_TCP
                 case SOCK_STREAM:
-                    conn_tcp6_close(&s->conn.tcp6);
+                    conn_tcp_close(&s->conn.tcp);
                     break;
 #endif
                 default:
+                    errno = EOPNOTSUPP;
                     res = -1;
                     break;
             }
-#endif
         default:
             res = -1;
             break;
@@ -239,12 +225,12 @@ static int socket_close(int socket)
     return res;
 }
 
-static inline ssize_t socket_read(int socket, void *buf, size_t n)
+static ssize_t socket_read(int socket, void *buf, size_t n)
 {
     return recv(socket, buf, n, 0);
 }
 
-static inline ssize_t socket_write(int socket, const void *buf, size_t n)
+static ssize_t socket_write(int socket, const void *buf, size_t n)
 {
     return send(socket, buf, n, 0);
 }
@@ -261,20 +247,15 @@ int socket(int domain, int type, int protocol)
         return -1;
     }
     switch (domain) {
-#if CONN_IPV4
         case AF_INET:
-#endif
-#if CONN_IPV6
         case AF_INET6:
-#endif
-#if CONN_IPV4 || CONN_IPV6
             s->domain = domain;
             s->type = type;
             if ((s->protocol = _choose_ipproto(type, protocol)) < 0) {
                 res = -1;
             }
             break;
-#endif
+
         default:
             (void)type;
             (void)protocol;
@@ -305,6 +286,9 @@ int accept(int socket, struct sockaddr *restrict address,
     /* May be kept unassigned if no conn module is available */
     /* cppcheck-suppress unassignedVariable */
     struct sockaddr_storage tmp;
+    void *addr;
+    uint16_t *port;
+    socklen_t tmp_len;
     mutex_lock(&_pool_mutex);
     s = _get_socket(socket);
     if (s == NULL) {
@@ -313,120 +297,70 @@ int accept(int socket, struct sockaddr *restrict address,
         return -1;
     }
     switch (s->domain) {
-#if CONN_IPV4
         case AF_INET:
-            switch (s->type) {
-#ifdef MODULE_CONN_TCP4
-                case SOCK_STREAM:
-                    new_s = _get_free_socket();
-                    if (new_s == NULL) {
-                        errno = ENFILE;
-                        res = -1;
-                        break;
-                    }
-                    if ((res = conn_tcp4_accept(&s->conn.tcp4, &new_s->conn.tcp4)) < 0) {
-                        errno = -res;
-                        res = -1;
-                        break;
-                    }
-                    else if ((address != NULL) && (address_len != NULL)) {
-                        /* TODO: add read and write */
-                        int fd = fd_new(new_s - _pool, NULL, NULL, socket_close);
-                        if (fd < 0) {
-                            errno = ENFILE;
-                            res = -1;
-                            break;
-                        }
-                        else {
-                            new_s->fd = res = fd;
-                        }
-                        new_s->domain = s->domain;
-                        new_s->type = s->type;
-                        new_s->protocol = s->protocol;
-                        tmp.ss_family = AF_INET;
-                        if ((res = conn_tcp4_getpeeraddr(&s->conn.tcp4, _in_addr_ptr(&tmp),
-                                                         _in_port_ptr(&tmp))) < 0) {
-                            errno = -res;
-                            res = -1;
-                            break;
-                        }
-                        _in_htons_port(&tmp); /* XXX: sin_port is supposed to be network byte
-                                               *      order */
-                        *address_len = _addr_truncate(address, *address_len, &tmp,
-                                                      sizeof(struct sockaddr_in));
-                    }
-                    break;
-#endif
-                default:
-                    errno = EOPNOTSUPP;
-                    res = -1;
-                    break;
-            }
+            addr = _in_addr_ptr(&tmp);
+            port = _in_port_ptr(&tmp);
+            tmp_len = sizeof(struct sockaddr_in);
             break;
-#endif
-#if CONN_IPV6
         case AF_INET6:
-            if ((address_len != NULL) && (*address_len < sizeof(struct sockaddr_in6))) {
-                errno = ENOMEM;
-                res = -1;
-                break;
-            }
-            switch (s->type) {
-#ifdef MODULE_CONN_TCP6
-                case SOCK_STREAM:
-                    new_s = _get_free_socket();
-                    if (new_s == NULL) {
-                        errno = ENFILE;
-                        res = -1;
-                        break;
-                    }
-                    if ((res = conn_tcp6_accept(&s->conn.tcp6, &new_s->conn.tcp6)) < 0) {
-                        errno = -res;
-                        res = -1;
-                        break;
-                    }
-                    else if ((address != NULL) && (address_len != NULL)) {
-                        /* TODO: add read and write */
-                        int fd = fd_new(new_s - _pool, NULL, NULL, socket_close);
-                        if (fd < 0) {
-                            errno = ENFILE;
-                            res = -1;
-                            break;
-                        }
-                        else {
-                            new_s->fd = res = fd;
-                        }
-                        new_s->domain = s->domain;
-                        new_s->type = s->type;
-                        new_s->protocol = s->protocol;
-                        *address_len = sizeof(struct sockaddr_in6);
-                        tmp.ss_family = AF_INET6;
-                        if ((res = conn_tcp6_getpeeraddr(&s->conn.tcp6, _in6_addr_ptr(&tmp),
-                                                         _in6_port_ptr(&tmp))) < 0) {
-                            errno = -res;
-                            res = -1;
-                            break;
-                        }
-                        _in6_htons_port(&tmp);  /* XXX: sin_port6 is supposed to be network byte
-                                                 *      order */
-                        *address_len = _addr_truncate(address, *address_len, &tmp,
-                                                      sizeof(struct sockaddr_in6));
-                    }
-                    break;
-#endif
-                default:
-                    errno = EOPNOTSUPP;
-                    res = -1;
-                    break;
-            }
+            addr = _in6_addr_ptr(&tmp);
+            port = _in6_port_ptr(&tmp);
+            tmp_len = sizeof(struct sockaddr_in6);
             break;
-#endif
         default:
             (void)address;
             (void)address_len;
             (void)new_s;
             (void)tmp;
+            (void)addr;
+            (void)port;
+            (void)tmp_len;
             errno = EPROTO;
+            res = -1;
+            break;
+    }
+    switch (s->type) {
+#ifdef MODULE_CONN_TCP
+        case SOCK_STREAM:
+            new_s = _get_free_socket();
+            if (new_s == NULL) {
+                errno = ENFILE;
+                res = -1;
+                break;
+            }
+            if ((res = conn_tcp_accept(&s->conn.tcp, &new_s->conn.tcp)) < 0) {
+                errno = -res;
+                res = -1;
+                break;
+            }
+            else if ((address != NULL) && (address_len != NULL)) {
+                /* TODO: add read and write */
+                int fd = fd_new(new_s - _pool, NULL, NULL, socket_close);
+                if (fd < 0) {
+                    errno = ENFILE;
+                    res = -1;
+                    break;
+                }
+                else {
+                    new_s->fd = res = fd;
+                }
+                new_s->domain = s->domain;
+                new_s->type = s->type;
+                new_s->protocol = s->protocol;
+                tmp.ss_family = s->domain;
+                if ((res = conn_tcp_getpeeraddr(&s->conn.tcp, addr, port)) < 0) {
+                    errno = -res;
+                    res = -1;
+                    break;
+                }
+                _htons_port(port);  /* XXX: sin(6)_port is supposed to be network byte
+                                     *      order */
+                *address_len = _addr_truncate(address, *address_len, &tmp, tmp_len);
+            }
+            break;
+#endif
+        default:
+            errno = EOPNOTSUPP;
             res = -1;
             break;
     }
@@ -438,6 +372,9 @@ int bind(int socket, const struct sockaddr *address, socklen_t address_len)
 {
     socket_t *s;
     int res = 0;
+    void *addr;
+    size_t addr_len;
+    uint16_t port;
     mutex_lock(&_pool_mutex);
     s = _get_socket(socket);
     mutex_unlock(&_pool_mutex);
@@ -445,108 +382,45 @@ int bind(int socket, const struct sockaddr *address, socklen_t address_len)
         errno = ENOTSOCK;
         return -1;
     }
-    switch (s->domain) {
-#if CONN_IPV4
-        case AF_INET:
-            if (address->sa_family != AF_INET) {
-                errno = EAFNOSUPPORT;
+    if (address->sa_family != s->domain) {
+        errno = EAFNOSUPPORT;
+        return -1;
+    }
+    if (_get_data_from_sockaddr(address, address_len, &addr, &addr_len, &port) < 0) {
+        return -1;
+    }
+    switch (s->type) {
+#ifdef MODULE_CONN_IP
+        case SOCK_RAW:
+            (void)port;
+            if ((res = conn_ip_create(&s->conn.raw, addr, addr_len, s->domain, s->protocol)) < 0) {
+                errno = -res;
                 return -1;
-            }
-            if (address_len < sizeof(struct sockaddr_in)) {
-                errno = EINVAL;
-                return -1;
-            }
-            struct sockaddr_in *in_addr = (struct sockaddr_in *)address;
-            switch (s->type) {
-#ifdef MODULE_CONN_IP4
-                case SOCK_RAW:
-                    if ((res = conn_ip4_create(&s->conn.raw4, (ipv4_addr_t *)&in_addr->sin_addr,
-                                               s->protocol)) < 0) {
-                        errno = -res;
-                        return -1;
-                    }
-                    break;
-#endif
-#ifdef MODULE_CONN_TCP4
-                case SOCK_STREAM:
-                    /* XXX sin_port is in network byteorder */
-                    if ((res = conn_tcp4_create(&s->conn.tcp4, (ipv4_addr_t *)&in_addr->sin_addr,
-                                                ntohs(in_addr->sin_port))) < 0) {
-                        errno = -res;
-                        return -1;
-                    }
-                    break;
-#endif
-#ifdef MODULE_CONN_UDP4
-                case SOCK_DGRAM:
-                    /* XXX sin_port is in network byteorder */
-                    if ((res = conn_udp4_create(&s->conn.udp4, (ipv4_addr_t *)&in_addr->sin_addr,
-                                                ntohs(in_addr->sin_port))) < 0) {
-                        errno = -res;
-                        return -1;
-                    }
-                    break;
-#endif
-                default:
-                    (void)in_addr;
-                    errno = EOPNOTSUPP;
-                    return -1;
             }
             break;
 #endif
-#if CONN_IPV6
-        case AF_INET6:
-            if (address->sa_family != AF_INET6) {
-                errno = EAFNOSUPPORT;
+#ifdef MODULE_CONN_TCP
+        case SOCK_STREAM:
+            if ((res = conn_tcp_create(&s->conn.tcp, addr, addr_len, s->domain, port)) < 0) {
+                errno = -res;
                 return -1;
             }
-            if (address_len < sizeof(struct sockaddr_in6)) {
-                errno = EINVAL;
+            break;
+#endif
+#ifdef MODULE_CONN_UDP
+        case SOCK_DGRAM:
+            if ((res = conn_udp_create(&s->conn.udp, addr, addr_len, s->domain, port)) < 0) {
+                errno = -res;
                 return -1;
-            }
-            struct sockaddr_in6 *in6_addr = (struct sockaddr_in6 *)address;
-            switch (s->type) {
-#ifdef MODULE_CONN_IP6
-                case SOCK_RAW:
-                    if ((res = conn_ip6_create(&s->conn.raw6, (ipv6_addr_t *)&in6_addr->sin6_addr,
-                                               s->protocol)) < 0) {
-                        errno = -res;
-                        return -1;
-                    }
-                    break;
-#endif
-#ifdef MODULE_CONN_TCP6
-                case SOCK_STREAM:
-                    /* XXX sin6_port is in network byteorder */
-                    if ((res = conn_tcp6_create(&s->conn.tcp6, (ipv6_addr_t *)&in6_addr->sin6_addr,
-                                                ntohs(in6_addr->sin6_port))) < 0) {
-                        errno = -res;
-                        return -1;
-                    }
-                    break;
-#endif
-#ifdef MODULE_CONN_UDP6
-                case SOCK_DGRAM:
-                    /* XXX sin6_port is in network byteorder */
-                    if ((res = conn_udp6_create(&s->conn.udp6, (ipv6_addr_t *)&in6_addr->sin6_addr,
-                                                ntohs(in6_addr->sin6_port))) < 0) {
-                        errno = -res;
-                        return -1;
-                    }
-                    break;
-#endif
-                default:
-                    (void)in6_addr;
-                    errno = EOPNOTSUPP;
-                    return -1;
             }
             break;
 #endif
         default:
-            (void)address;
-            (void)address_len;
+            (void)addr;
+            (void)addr_len;
+            (void)port;
             (void)res;
-            errno = EAFNOSUPPORT;
+            errno = EOPNOTSUPP;
             return -1;
     }
     return 0;
@@ -556,6 +430,9 @@ int connect(int socket, const struct sockaddr *address, socklen_t address_len)
 {
     socket_t *s;
     int res = 0;
+    void *addr;
+    size_t addr_len;
+    uint16_t port;
     mutex_lock(&_pool_mutex);
     s = _get_socket(socket);
     mutex_unlock(&_pool_mutex);
@@ -563,70 +440,26 @@ int connect(int socket, const struct sockaddr *address, socklen_t address_len)
         errno = ENOTSOCK;
         return -1;
     }
-    switch (s->domain) {
-#if CONN_IPV4
-        case AF_INET:
-            if (address->sa_family != AF_INET) {
-                errno = EAFNOSUPPORT;
+    if (address->sa_family != s->domain) {
+        errno = EAFNOSUPPORT;
+        return -1;
+    }
+    if (_get_data_from_sockaddr(address, address_len, &addr, &addr_len, &port) < 0) {
+        return -1;
+    }
+    switch (s->type) {
+#ifdef MODULE_CONN_TCP
+        case SOCK_STREAM:
+            /* XXX sin_port is in network byteorder */
+            if ((res = conn_tcp_connect(&s->conn.tcp, addr, addr_len, port)) < 0) {
+                errno = -res;
                 return -1;
-            }
-            if (address_len < sizeof(struct sockaddr_in)) {
-                errno = EINVAL;
-                return -1;
-            }
-            struct sockaddr_in *in_addr = (struct sockaddr_in *)address;
-            switch (s->type) {
-#ifdef MODULE_CONN_TCP4
-                case SOCK_STREAM:
-                    /* XXX sin_port is in network byteorder */
-                    if ((res = conn_tcp4_connect(&s->conn.tcp4, (ipv4_addr_t *)&in_addr->sin_addr,
-                                                 ntohs(in_addr->sin_port))) < 0) {
-                        errno = -res;
-                        return -1;
-                    }
-                    break;
-#endif
-                default:
-                    (void)in_addr;
-                    errno = EPROTOTYPE;
-                    return -1;
-            }
-            break;
-#endif
-#if CONN_IPV6
-        case AF_INET6:
-            if (address->sa_family != AF_INET6) {
-                errno = EAFNOSUPPORT;
-                return -1;
-            }
-            if (address_len < sizeof(struct sockaddr_in6)) {
-                errno = EINVAL;
-                return -1;
-            }
-            struct sockaddr_in6 *in6_addr = (struct sockaddr_in6 *)address;
-            switch (s->type) {
-#ifdef MODULE_CONN_TCP6
-                case SOCK_STREAM:
-                    /* XXX sin6_port is in network byteorder */
-                    if ((res = conn_tcp6_connect(&s->conn.tcp6, (ipv6_addr_t *)&in6_addr->sin6_addr,
-                                                 ntohs(in6_addr->sin6_port))) < 0) {
-                        errno = -res;
-                        return -1;
-                    }
-                    break;
-#endif
-                default:
-                    (void)in6_addr;
-                    errno = EPROTOTYPE;
-                    return -1;
             }
             break;
 #endif
         default:
-            (void)address;
-            (void)address_len;
             (void)res;
-            errno = EAFNOSUPPORT;
+            errno = EPROTOTYPE;
             return -1;
     }
     return 0;
@@ -640,6 +473,9 @@ int getpeername(int socket, struct sockaddr *__restrict address,
     /* May be kept unassigned if no conn module is available */
     /* cppcheck-suppress unassignedVariable */
     struct sockaddr_storage tmp;
+    void *addr;
+    uint16_t *port;
+    socklen_t tmp_len;
     mutex_lock(&_pool_mutex);
     s = _get_socket(socket);
     mutex_unlock(&_pool_mutex);
@@ -648,59 +484,44 @@ int getpeername(int socket, struct sockaddr *__restrict address,
         return -1;
     }
     switch (s->domain) {
-#if CONN_IPV4
         case AF_INET:
-            switch (s->type) {
-#ifdef MODULE_CONN_TCP4
-                case SOCK_STREAM:
-                    if ((res = conn_tcp4_getpeeraddr(&s->conn.tcp4, _in_addr_ptr(&tmp),
-                                                     _in_port_ptr(&tmp))) < 0) {
-                        errno = -res;
-                        return -1;
-                    }
-                    break;
-#endif
-                default:
-                    errno = EOPNOTSUPP;
-                    return -1;
-            }
-            tmp.ss_family = AF_INET;
-            _in_htons_port(&tmp); /* XXX: sin_port is supposed to be network byte
-                                   *      order */
-            *address_len = _addr_truncate(address, *address_len, &tmp, sizeof(struct sockaddr_in));
+            addr = _in_addr_ptr(&tmp);
+            port = _in_port_ptr(&tmp);
+            tmp_len = sizeof(struct sockaddr_in);
             break;
-#endif
-#if CONN_IPV6
         case AF_INET6:
-            switch (s->type) {
-#ifdef MODULE_CONN_TCP6
-                case SOCK_STREAM:
-                    if ((res = conn_tcp6_getpeeraddr(&s->conn.tcp6, _in6_addr_ptr(&tmp),
-                                                     _in6_port_ptr(&tmp))) < 0) {
-                        errno = -res;
-                        return -1;
-                    }
-                    break;
-#endif
-                default:
-                    errno = EOPNOTSUPP;
-                    return -1;
-            }
-            tmp.ss_family = AF_INET6;
-            _in6_htons_port(&tmp); /* XXX: sin_port6 is supposed to be network byte
-                                    *      order */
-            *address_len = _addr_truncate(address, *address_len, &tmp,
-                                          sizeof(struct sockaddr_in6));
+            addr = _in6_addr_ptr(&tmp);
+            port = _in6_port_ptr(&tmp);
+            tmp_len = sizeof(struct sockaddr_in6);
             break;
-#endif
         default:
             (void)address;
             (void)address_len;
             (void)tmp;
+            (void)addr;
+            (void)port;
+            (void)tmp_len;
             (void)res;
             errno = EAFNOSUPPORT;
             return -1;
     }
+    switch (s->type) {
+#ifdef MODULE_CONN_TCP
+        case SOCK_STREAM:
+            if ((res = conn_tcp_getpeeraddr(&s->conn.tcp, addr, port)) < 0) {
+                errno = -res;
+                return -1;
+            }
+            break;
+#endif
+        default:
+            errno = EOPNOTSUPP;
+            return -1;
+    }
+    tmp.ss_family = s->domain;
+    _htons_port(port);  /* XXX: sin(6)_port is supposed to be network byte
+                         *      order */
+    *address_len = _addr_truncate(address, *address_len, &tmp, tmp_len);
     return 0;
 }
 
@@ -712,6 +533,9 @@ int getsockname(int socket, struct sockaddr *__restrict address,
     /* May be kept unassigned if no conn module is available */
     /* cppcheck-suppress unassignedVariable */
     struct sockaddr_storage tmp;
+    void *addr;
+    uint16_t *port;
+    socklen_t tmp_len;
     mutex_lock(&_pool_mutex);
     s = _get_socket(socket);
     mutex_unlock(&_pool_mutex);
@@ -720,93 +544,60 @@ int getsockname(int socket, struct sockaddr *__restrict address,
         return -1;
     }
     switch (s->domain) {
-#if CONN_IPV4
         case AF_INET:
-            switch (s->type) {
-#ifdef MODULE_CONN_UDP4
-                case SOCK_DGRAM:
-                    if ((res = conn_udp4_getlocaladdr(&s->conn.udp4, _in_addr_ptr(&tmp),
-                                                      _in_port_ptr(&tmp))) < 0) {
-                        errno = -res;
-                        return -1;
-                    }
-                    break;
-#endif
-#ifdef MODULE_CONN_IP4
-                case SOCK_RAW:
-                    if ((res = conn_ip4_getlocaladdr(&s->conn.raw4, _in_addr_ptr(&tmp))) < 0) {
-                        errno = -res;
-                        return -1;
-                    }
-                    break;
-#endif
-#ifdef MODULE_CONN_TCP4
-                case SOCK_STREAM:
-                    if ((res = conn_tcp4_getlocaladdr(&s->conn.tcp4, _in_addr_ptr(&tmp),
-                                                      _in_port_ptr(&tmp))) < 0) {
-                        errno = -res;
-                        return -1;
-                    }
-                    break;
-#endif
-                default:
-                    errno = EOPNOTSUPP;
-                    return -1;
-            }
-            tmp.ss_family = AF_INET;
-            _in_htons_port(&tmp); /* XXX: sin_port is supposed to be network byte
-                                   *      order */
-            *address_len = _addr_truncate(address, *address_len, &tmp, sizeof(struct sockaddr_in));
+            addr = _in_addr_ptr(&tmp);
+            port = _in_port_ptr(&tmp);
+            tmp_len = sizeof(struct sockaddr_in);
             break;
-#endif
-#if CONN_IPV6
         case AF_INET6:
-            switch (s->type) {
-#ifdef MODULE_CONN_UDP6
-                case SOCK_DGRAM:
-                    if ((res = conn_udp6_getlocaladdr(&s->conn.udp6, _in6_addr_ptr(&tmp),
-                                                      _in6_port_ptr(&tmp))) < 0) {
-                        errno = -res;
-                        return -1;
-                    }
-                    break;
-#endif
-#ifdef MODULE_CONN_IP6
-                case SOCK_RAW:
-                    if ((res = conn_ip6_getlocaladdr(&s->conn.raw6, _in6_addr_ptr(&tmp))) < 0) {
-                        errno = -res;
-                        return -1;
-                    }
-                    break;
-#endif
-#ifdef MODULE_CONN_TCP6
-                case SOCK_STREAM:
-                    if ((res = conn_tcp6_getlocaladdr(&s->conn.tcp6, _in6_addr_ptr(&tmp),
-                                                      _in6_port_ptr(&tmp))) < 0) {
-                        errno = -res;
-                        return -1;
-                    }
-                    break;
-#endif
-                default:
-                    errno = EOPNOTSUPP;
-                    return -1;
-            }
-            tmp.ss_family = AF_INET6;
-            _in6_htons_port(&tmp); /* XXX: sin_port6 is supposed to be network byte
-                                    *      order */
-            *address_len = _addr_truncate(address, *address_len, &tmp,
-                                          sizeof(struct sockaddr_in6));
+            addr = _in6_addr_ptr(&tmp);
+            port = _in6_port_ptr(&tmp);
+            tmp_len = sizeof(struct sockaddr_in6);
             break;
-#endif
         default:
             (void)address;
             (void)address_len;
             (void)tmp;
+            (void)addr;
+            (void)port;
+            (void)tmp_len;
             (void)res;
             errno = EAFNOSUPPORT;
             return -1;
     }
+    switch (s->type) {
+#ifdef MODULE_CONN_UDP
+        case SOCK_DGRAM:
+            if ((res = conn_udp_getlocaladdr(&s->conn.udp, addr, port)) < 0) {
+                errno = -res;
+                return -1;
+            }
+            break;
+#endif
+#ifdef MODULE_CONN_IP
+        case SOCK_RAW:
+            if ((res = conn_ip_getlocaladdr(&s->conn.raw, addr)) < 0) {
+                errno = -res;
+                return -1;
+            }
+            break;
+#endif
+#ifdef MODULE_CONN_TCP
+        case SOCK_STREAM:
+            if ((res = conn_tcp_getlocaladdr(&s->conn.tcp, addr, port)) < 0) {
+                errno = -res;
+                return -1;
+            }
+            break;
+#endif
+        default:
+            errno = EOPNOTSUPP;
+            return -1;
+    }
+    tmp.ss_family = AF_INET;
+    _htons_port(port);  /* XXX: sin(6)_port is supposed to be network byte
+                         *      order */
+    *address_len = _addr_truncate(address, *address_len, &tmp, tmp_len);
     return 0;
 }
 
@@ -818,29 +609,12 @@ int listen(int socket, int backlog)
     s = _get_socket(socket);
     mutex_unlock(&_pool_mutex);
     switch (s->domain) {
-#if CONN_IPV4
         case AF_INET:
-            switch (s->type) {
-#ifdef MODULE_CONN_TCP4
-                case SOCK_STREAM:
-                    if ((res = conn_tcp4_listen(&s->conn.tcp4, backlog)) < 0) {
-                        errno = -res;
-                        return -1;
-                    }
-                    break;
-#endif
-                default:
-                    errno = EOPNOTSUPP;
-                    return -1;
-            }
-            break;
-#endif
-#if CONN_IPV6
         case AF_INET6:
             switch (s->type) {
-#ifdef MODULE_CONN_TCP6
+#ifdef MODULE_CONN_TCP
                 case SOCK_STREAM:
-                    if ((res = conn_tcp6_listen(&s->conn.tcp6, backlog)) < 0) {
+                    if ((res = conn_tcp_listen(&s->conn.tcp, backlog)) < 0) {
                         errno = -res;
                         return -1;
                     }
@@ -851,7 +625,6 @@ int listen(int socket, int backlog)
                     return -1;
             }
             break;
-#endif
         default:
             (void)backlog;
             (void)res;
@@ -875,6 +648,10 @@ ssize_t recvfrom(int socket, void *restrict buffer, size_t length, int flags,
     /* May be kept unassigned if no conn module is available */
     /* cppcheck-suppress unassignedVariable */
     struct sockaddr_storage tmp;
+    void *addr;
+    size_t addr_len;
+    uint16_t *port;
+    socklen_t tmp_len;
     (void)flags;
     mutex_lock(&_pool_mutex);
     s = _get_socket(socket);
@@ -884,108 +661,68 @@ ssize_t recvfrom(int socket, void *restrict buffer, size_t length, int flags,
         return -1;
     }
     switch (s->domain) {
-#if CONN_IPV4
         case AF_INET:
-            switch (s->type) {
-#ifdef MODULE_CONN_UDP4
-                case SOCK_DGRAM:
-                    if ((res = conn_udp4_recvfrom(&s->conn.udp4, buffer, length,
-                                                  _in_addr_ptr(&tmp), _in_port_ptr(&tmp))) < 0) {
-                        errno = -res;
-                        return -1;
-                    }
-                    break;
-#endif
-#ifdef MODULE_CONN_IP4
-                case SOCK_RAW:
-                    if ((res = conn_ip4_recvfrom(&s->conn.raw4, buffer, length,
-                                                 _in_addr_ptr(&tmp))) < 0) {
-                        errno = -res;
-                        return -1;
-                    }
-                    break;
-#endif
-#ifdef MODULE_CONN_TCP4
-                case SOCK_STREAM:
-                    if ((res = conn_tcp4_recv(&s->conn.udp4, buffer, length)) < 0) {
-                        errno = -res;
-                        return -1;
-                    }
-                    if ((res = conn_tcp4_getpeeraddr(&s->conn.tcp4, _in_addr_ptr(&tmp),
-                                                     _in_port_ptr(&tmp))) < 0) {
-                        errno = -res;
-                        return -1;
-                    }
-                    break;
-#endif
-                default:
-                    errno = EOPNOTSUPP;
-                    return -1;
-            }
-            if ((address != NULL) && (address_len != NULL)) {
-                tmp.ss_family = AF_INET;
-                _in_htons_port(&tmp); /* XXX: sin_port is supposed to be network byte
-                                       *      order */
-                *address_len = _addr_truncate(address, *address_len, &tmp,
-                                              sizeof(struct sockaddr_in));
-            }
+            addr = _in_addr_ptr(&tmp);
+            port = _in_port_ptr(&tmp);
+            tmp_len = sizeof(struct sockaddr_in);
             break;
-#endif
-#if CONN_IPV6
         case AF_INET6:
-            switch (s->type) {
-#ifdef MODULE_CONN_UDP6
-                case SOCK_DGRAM:
-                    if ((res = conn_udp6_recvfrom(&s->conn.udp6, buffer, length,
-                                                  _in6_addr_ptr(&tmp), _in6_port_ptr(&tmp))) < 0) {
-                        errno = -res;
-                        return -1;
-                    }
-                    break;
-#endif
-#ifdef MODULE_CONN_IP6
-                case SOCK_RAW:
-                    if ((res = conn_ip6_recvfrom(&s->conn.raw6, buffer, length,
-                                                 _in6_addr_ptr(&tmp))) < 0) {
-                        errno = -res;
-                        return -1;
-                    }
-                    break;
-#endif
-#ifdef MODULE_CONN_TCP6
-                case SOCK_STREAM:
-                    if ((res = conn_tcp6_recv(&s->conn.udp6, buffer, length)) < 0) {
-                        errno = -res;
-                        return -1;
-                    }
-                    if ((res = conn_tcp6_getpeeraddr(&s->conn.tcp6, _in6_addr_ptr(&tmp),
-                                                     _in6_port_ptr(&tmp))) < 0) {
-                        errno = -res;
-                        return -1;
-                    }
-                    break;
-#endif
-                default:
-                    errno = EOPNOTSUPP;
-                    return -1;
-            }
-            if ((address != NULL) && (address_len != NULL)) {
-                tmp.ss_family = AF_INET6;
-                _in6_htons_port(&tmp); /* XXX: sin6_port is supposed to be network byte
-                                        *      order */
-                *address_len = _addr_truncate(address, *address_len, &tmp,
-                                              sizeof(struct sockaddr_in));
-            }
+            addr = _in6_addr_ptr(&tmp);
+            port = _in6_port_ptr(&tmp);
+            tmp_len = sizeof(struct sockaddr_in6);
             break;
-#endif
         default:
             (void)buffer;
             (void)length;
             (void)address;
             (void)address_len;
             (void)tmp;
+            (void)addr;
+            (void)port;
+            (void)tmp_len;
             errno = EAFNOSUPPORT;
             return -1;
+    }
+    switch (s->type) {
+#ifdef MODULE_CONN_UDP
+        case SOCK_DGRAM:
+            if ((res = conn_udp_recvfrom(&s->conn.udp, buffer, length, addr, &addr_len,
+                                         port)) < 0) {
+                errno = -res;
+                return -1;
+            }
+            break;
+#endif
+#ifdef MODULE_CONN_IP
+        case SOCK_RAW:
+            if ((res = conn_ip_recvfrom(&s->conn.raw, buffer, length, addr, &addr_len)) < 0) {
+                errno = -res;
+                return -1;
+            }
+            break;
+#endif
+#ifdef MODULE_CONN_TCP
+        case SOCK_STREAM:
+            if ((res = conn_tcp_recv(&s->conn.tcp, buffer, length)) < 0) {
+                errno = -res;
+                return -1;
+            }
+            if ((res = conn_tcp_getpeeraddr(&s->conn.tcp, addr, port)) < 0) {
+                errno = -res;
+                return -1;
+            }
+            break;
+#endif
+        default:
+            (void)addr_len;
+            errno = EOPNOTSUPP;
+            return -1;
+    }
+    if ((address != NULL) && (address_len != NULL)) {
+        tmp.ss_family = s->domain;
+        _htons_port(port);  /* XXX: sin_port is supposed to be network byte
+                             *      order */
+        *address_len = _addr_truncate(address, *address_len, &tmp, tmp_len);
     }
     return res;
 }
@@ -1000,6 +737,9 @@ ssize_t sendto(int socket, const void *buffer, size_t length, int flags,
 {
     socket_t *s;
     int res = 0;
+    void *addr = NULL;
+    size_t addr_len = 0;
+    uint16_t port = 0;
     (void)flags;
     mutex_lock(&_pool_mutex);
     s = _get_socket(socket);
@@ -1008,149 +748,60 @@ ssize_t sendto(int socket, const void *buffer, size_t length, int flags,
         errno = ENOTSOCK;
         return -1;
     }
-    switch (s->domain) {
-#if CONN_IPV4
-        case AF_INET:
-            switch (s->type) {
-#ifdef MODULE_CONN_IP4
-                case SOCK_RAW:
-                    if (address != NULL) {
-                        struct sockaddr_in *in_addr = (struct sockaddr_in *)address;
-                        if (address->sa_family != AF_INET) {
-                            errno = EAFNOSUPPORT;
-                            return -1;
-                        }
-                        if (address_len < sizeof(struct sockaddr_in)) {
-                            errno = EINVAL;
-                            return -1;
-                        }
-                        res = conn_ip4_sendto(&s->conn.raw4, buffer, length,
-                                              (ipv4_addr_t *)&in_addr->sin_addr);
-                    }
-                    else {
-                        res = conn_ip4_sendto(&s->conn.raw4, buffer, length, NULL);
-                    }
-                    if (res < 0) {
-                        errno = -res;
-                        return -1;
-                    }
-                    break;
-#endif
-#ifdef MODULE_CONN_TCP4
-                case SOCK_STREAM:
-                    /* XXX sin_port is in network byteorder */
-                    if ((res = conn_tcp4_send(&s->conn.tcp4, buffer, length)) < 0) {
-                        errno = -res;
-                        return -1;
-                    }
-                    break;
-#endif
-#ifdef MODULE_CONN_UDP4
-                case SOCK_DGRAM:
-                    if (address != NULL) {
-                        struct sockaddr_in *in_addr = (struct sockaddr_in *)address;
-                        if (address->sa_family != AF_INET) {
-                            errno = EAFNOSUPPORT;
-                            return -1;
-                        }
-                        if (address_len < sizeof(struct sockaddr_in)) {
-                            errno = EINVAL;
-                            return -1;
-                        }
-                        /* XXX sin_port is in network byteorder */
-                        res = conn_udp4_sendto(&s->conn.udp4, buffer, length,
-                                               (ipv4_addr_t *)&in_addr->sin_addr,
-                                               ntohs(in_addr->sin_port));
-                    }
-                    else {
-                        res = conn_udp4_sendto(&s->conn.udp4, buffer, length, NULL, 0);
-                    }
-                    if (res < 0) {
-                        errno = -res;
-                        return -1;
-                    }
-                    break;
-#endif
-                default:
-                    errno = EOPNOTSUPP;
-                    return -1;
+    if (address != NULL) {
+        if (address->sa_family != s->domain) {
+            errno = EAFNOSUPPORT;
+            return -1;
+        }
+        if (_get_data_from_sockaddr(address, address_len, &addr, &addr_len, &port) < 0) {
+            return -1;
+        }
+    }
+    switch (s->type) {
+#ifdef MODULE_CONN_IP
+        case SOCK_RAW:
+            if (address != NULL) {
+                res = conn_ip_sendto(&s->conn.raw, buffer, length, addr, addr_len);
+            }
+            else {
+                errno = ENOTCONN;
+                return -1;
+            }
+            if (res < 0) {
+                errno = -res;
+                return -1;
             }
             break;
 #endif
-#if CONN_IPV6
-        case AF_INET6:
-            switch (s->type) {
-#ifdef MODULE_CONN_IP6
-                case SOCK_RAW:
-                    if (address != NULL) {
-                        struct sockaddr_in6 *in6_addr = (struct sockaddr_in6 *)address;
-                        if (address->sa_family != AF_INET6) {
-                            errno = EAFNOSUPPORT;
-                            return -1;
-                        }
-                        if (address_len < sizeof(struct sockaddr_in)) {
-                            errno = EINVAL;
-                            return -1;
-                        }
-                        res = conn_ip6_sendto(&s->conn.raw6, buffer, length,
-                                              (ipv6_addr_t *)&in6_addr->sin6_addr);
-                    }
-                    else {
-                        res = conn_ip6_sendto(&s->conn.raw6, buffer, length, NULL);
-                    }
-                    if (res < 0) {
-                        errno = -res;
-                        return -1;
-                    }
-                    break;
+#ifdef MODULE_CONN_TCP
+        case SOCK_STREAM:
+            /* XXX sin_port is in network byteorder */
+            if ((res = conn_tcp_send(&s->conn.tcp, buffer, length)) < 0) {
+                errno = -res;
+                return -1;
+            }
+            break;
 #endif
-#ifdef MODULE_CONN_TCP6
-                case SOCK_STREAM:
-                    /* XXX sin6_port is in network byteorder */
-                    if ((res = conn_tcp6_send(&s->conn.tcp6, buffer, length)) < 0) {
-                        errno = -res;
-                        return -1;
-                    }
-                    break;
-#endif
-#ifdef MODULE_CONN_UDP6
-                case SOCK_DGRAM:
-                    if (address != NULL) {
-                        struct sockaddr_in6 *in6_addr = (struct sockaddr_in6 *)address;
-                        if (address->sa_family != AF_INET6) {
-                            errno = EAFNOSUPPORT;
-                            return -1;
-                        }
-                        if (address_len < sizeof(struct sockaddr_in)) {
-                            errno = EINVAL;
-                            return -1;
-                        }
-                        /* XXX sin6_port is in network byteorder */
-                        res = conn_udp6_sendto(&s->conn.udp6, buffer, length,
-                                               (ipv6_addr_t *)&in6_addr->sin6_addr,
-                                               ntohs(in6_addr->sin6_port));
-                    }
-                    else {
-                        res = conn_udp6_sendto(&s->conn.udp6, buffer, length, NULL, 0);
-                    }
-                    if (res < 0) {
-                        errno = -res;
-                        return -1;
-                    }
-                    break;
-#endif
-                default:
-                    errno = EOPNOTSUPP;
-                    return -1;
+#ifdef MODULE_CONN_UDP
+        case SOCK_DGRAM:
+            if (address != NULL) {
+                /* XXX sin_port is in network byteorder */
+                res = conn_udp_sendto(&s->conn.udp, buffer, length, addr, addr_len, ntohs(port));
+            }
+            else {
+                errno = ENOTCONN;
+                return -1;
+            }
+            if (res < 0) {
+                errno = -res;
+                return -1;
             }
             break;
 #endif
         default:
             (void)buffer;
             (void)length;
-            (void)address;
-            (void)address_len;
-            errno = EAFNOSUPPORT;
+            errno = EOPNOTSUPP;
             return -1;
     }
     return res;
