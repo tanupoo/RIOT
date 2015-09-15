@@ -40,8 +40,30 @@ static msg_t server_msg_queue[SERVER_MSG_QUEUE_SIZE];
 
 static void *_server_thread(void *args)
 {
-    (void)args;
+    struct sockaddr_in6 server_addr;
+    uint16_t port;
     msg_init_queue(server_msg_queue, SERVER_MSG_QUEUE_SIZE);
+    server_socket = socket(AF_INET6, SOCK_DGRAM, IPPROTO_UDP);
+    /* parse port */
+    port = (uint16_t)atoi((char *)args);
+    if (port == 0) {
+        puts("Error: invalid port specified");
+        return NULL;
+    }
+    server_addr.sin6_family = AF_INET6;
+    memset(&server_addr.sin6_addr, 0, sizeof(server_addr.sin6_addr));
+    server_addr.sin6_port = htons(port);
+    if (server_socket < 0) {
+        perror("error initializing socket");
+        server_socket = 0;
+        return NULL;
+    }
+    if (bind(server_socket, (struct sockaddr *)&server_addr, sizeof(server_addr)) < 0) {
+        server_socket = -1;
+        perror("error binding socket");
+        return NULL;
+    }
+    printf("Success: started UDP server on port %" PRIu16 "\n", port);
     while (1) {
         int res;
         struct sockaddr_in6 src;
@@ -84,13 +106,14 @@ static int udp_send(char *addr_str, char *port_str, char *data, unsigned int num
         perror("error initializing socket");
         return 1;
     }
-    if (bind(s, (struct sockaddr *)&src, sizeof(src)) < 0) {
-        perror("error binding socket");
-        return 1;
-    }
     for (unsigned int i = 0; i < num; i++) {
-        sendto(s, data, data_len, 0, (struct sockaddr *)&dst, sizeof(dst));
-        printf("Success: send %u byte to %s:%u\n", (unsigned)data_len, addr_str, port);
+        if (sendto(s, data, data_len, 0, (struct sockaddr *)&dst, sizeof(dst)) < 0) {
+            perror("could not send");
+        }
+        else {
+            printf("Success: send %u byte to %s:%u\n", (unsigned)data_len, addr_str, port);
+        }
+
         usleep(delay);
     }
     close(s);
@@ -99,42 +122,18 @@ static int udp_send(char *addr_str, char *port_str, char *data, unsigned int num
 
 static int udp_start_server(char *port_str)
 {
-    struct sockaddr_in6 src;
-    uint16_t port;
-
     /* check if server is already running */
     if (server_socket >= 0) {
         puts("Error: server already running");
         return 1;
     }
-    /* parse port */
-    port = (uint16_t)atoi(port_str);
-    if (port == 0) {
-        puts("Error: invalid port specified");
-        return 1;
-    }
-    src.sin6_family = AF_INET6;
-    memset(&src.sin6_addr, 0, sizeof(src.sin6_addr));
-    src.sin6_port = htons(port);
     /* start server (which means registering pktdump for the chosen port) */
-    server_socket = socket(AF_INET6, SOCK_DGRAM, IPPROTO_UDP);
-    if (server_socket < 0) {
-        perror("error initializing socket");
-        server_socket = 0;
-        return 1;
-    }
-    if (bind(server_socket, (struct sockaddr *)&src, sizeof(src)) < 0) {
-        server_socket = -1;
-        perror("error binding socket");
-        return 1;
-    }
     if (thread_create(server_stack, sizeof(server_stack), THREAD_PRIORITY_MAIN - 1,
-                      CREATE_STACKTEST, _server_thread, NULL, "UDP server") <= KERNEL_PID_UNDEF) {
+                      CREATE_STACKTEST, _server_thread, port_str, "UDP server") <= KERNEL_PID_UNDEF) {
         server_socket = -1;
         puts("error initializing thread");
         return 1;
     }
-    printf("Success: started UDP server on port %" PRIu16 "\n", port);
     return 0;
 }
 
