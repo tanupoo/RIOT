@@ -16,6 +16,7 @@
 
 #include <arpa/inet.h>
 #include <errno.h>
+#include <stdbool.h>
 #include <string.h>
 
 #include "fd.h"
@@ -51,6 +52,7 @@ typedef struct {
     sa_family_t domain;
     int type;
     int protocol;
+    bool bound;
     socket_conn_t conn;
 } socket_t;
 
@@ -192,7 +194,6 @@ static int socket_close(int socket)
     }
     mutex_lock(&_pool_mutex);
     s = &_pool[socket];
-    s->domain = AF_INET;
     switch (s->domain) {
         case AF_INET:
         case AF_INET6:
@@ -221,6 +222,7 @@ static int socket_close(int socket)
             res = -1;
             break;
     }
+    s->domain = AF_UNSPEC;
     mutex_unlock(&_pool_mutex);
     return res;
 }
@@ -273,6 +275,7 @@ int socket(int domain, int type, int protocol)
             s->fd = res = fd;
         }
     }
+    s->bound = false;
     mutex_unlock(&_pool_mutex);
     return res;
 }
@@ -294,6 +297,11 @@ int accept(int socket, struct sockaddr *restrict address,
     if (s == NULL) {
         mutex_unlock(&_pool_mutex);
         errno = ENOTSOCK;
+        return -1;
+    }
+    if (!s->bound) {
+        mutex_unlock(&_pool_mutex);
+        errno = EINVAL;
         return -1;
     }
     switch (s->domain) {
@@ -423,6 +431,7 @@ int bind(int socket, const struct sockaddr *address, socklen_t address_len)
             errno = EOPNOTSUPP;
             return -1;
     }
+    s->bound = true;
     return 0;
 }
 
@@ -438,6 +447,10 @@ int connect(int socket, const struct sockaddr *address, socklen_t address_len)
     mutex_unlock(&_pool_mutex);
     if (s == NULL) {
         errno = ENOTSOCK;
+        return -1;
+    }
+    if (!s->bound) {
+        errno = EINVAL;
         return -1;
     }
     if (address->sa_family != s->domain) {
@@ -502,8 +515,12 @@ int getpeername(int socket, struct sockaddr *__restrict address,
             (void)port;
             (void)tmp_len;
             (void)res;
-            errno = EAFNOSUPPORT;
+            errno = EBADF;
             return -1;
+    }
+    if (*address_len != tmp_len) {
+        errno = EINVAL;
+        return -1;
     }
     switch (s->type) {
 #ifdef MODULE_CONN_TCP
@@ -515,7 +532,7 @@ int getpeername(int socket, struct sockaddr *__restrict address,
             break;
 #endif
         default:
-            errno = EOPNOTSUPP;
+            errno = ENOTCONN;
             return -1;
     }
     tmp.ss_family = s->domain;
@@ -543,6 +560,10 @@ int getsockname(int socket, struct sockaddr *__restrict address,
         errno = ENOTSOCK;
         return -1;
     }
+    if (!s->bound) {
+        memset(address, 0, *address_len);
+        return 0;
+    }
     switch (s->domain) {
         case AF_INET:
             addr = _in_addr_ptr(&tmp);
@@ -562,8 +583,12 @@ int getsockname(int socket, struct sockaddr *__restrict address,
             (void)port;
             (void)tmp_len;
             (void)res;
-            errno = EAFNOSUPPORT;
+            errno = EBADF;
             return -1;
+    }
+    if (*address_len != tmp_len) {
+        errno = EINVAL;
+        return -1;
     }
     switch (s->type) {
 #ifdef MODULE_CONN_UDP
@@ -608,6 +633,10 @@ int listen(int socket, int backlog)
     mutex_lock(&_pool_mutex);
     s = _get_socket(socket);
     mutex_unlock(&_pool_mutex);
+    if (!s->bound) {
+        errno = EINVAL;
+        return -1;
+    }
     switch (s->domain) {
         case AF_INET:
         case AF_INET6:
@@ -658,6 +687,10 @@ ssize_t recvfrom(int socket, void *restrict buffer, size_t length, int flags,
     mutex_unlock(&_pool_mutex);
     if (s == NULL) {
         errno = ENOTSOCK;
+        return -1;
+    }
+    if (!s->bound) {
+        errno = EINVAL;
         return -1;
     }
     switch (s->domain) {
@@ -775,7 +808,6 @@ ssize_t sendto(int socket, const void *buffer, size_t length, int flags,
 #endif
 #ifdef MODULE_CONN_TCP
         case SOCK_STREAM:
-            /* XXX sin_port is in network byteorder */
             if ((res = conn_tcp_send(&s->conn.tcp, buffer, length)) < 0) {
                 errno = -res;
                 return -1;
@@ -785,8 +817,7 @@ ssize_t sendto(int socket, const void *buffer, size_t length, int flags,
 #ifdef MODULE_CONN_UDP
         case SOCK_DGRAM:
             if (address != NULL) {
-                /* XXX sin_port is in network byteorder */
-                res = conn_udp_sendto(&s->conn.udp, buffer, length, addr, addr_len, ntohs(port));
+                res = conn_udp_sendto(&s->conn.udp, buffer, length, addr, addr_len, port);
             }
             else {
                 errno = ENOTCONN;
