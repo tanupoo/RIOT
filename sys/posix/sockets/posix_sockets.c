@@ -24,6 +24,8 @@
 #include "net/conn.h"
 #include "net/ipv4/addr.h"
 #include "net/ipv6/addr.h"
+#include "random.h"
+
 #include "sys/socket.h"
 #include "netinet/in.h"
 
@@ -194,33 +196,35 @@ static int socket_close(int socket)
     }
     mutex_lock(&_pool_mutex);
     s = &_pool[socket];
-    switch (s->domain) {
-        case AF_INET:
-        case AF_INET6:
-            switch (s->type) {
+    if (s->bound) {
+        switch (s->domain) {
+            case AF_INET:
+            case AF_INET6:
+                switch (s->type) {
 #ifdef MODULE_CONN_UDP
-                case SOCK_DGRAM:
-                    conn_udp_close(&s->conn.udp);
-                    break;
+                    case SOCK_DGRAM:
+                        conn_udp_close(&s->conn.udp);
+                        break;
 #endif
 #ifdef MODULE_CONN_IP
-                case SOCK_RAW:
-                    conn_ip_close(&s->conn.raw);
-                    break;
+                    case SOCK_RAW:
+                        conn_ip_close(&s->conn.raw);
+                        break;
 #endif
 #ifdef MODULE_CONN_TCP
-                case SOCK_STREAM:
-                    conn_tcp_close(&s->conn.tcp);
-                    break;
+                    case SOCK_STREAM:
+                        conn_tcp_close(&s->conn.tcp);
+                        break;
 #endif
-                default:
-                    errno = EOPNOTSUPP;
-                    res = -1;
-                    break;
-            }
-        default:
-            res = -1;
-            break;
+                    default:
+                        errno = EOPNOTSUPP;
+                        res = -1;
+                        break;
+                }
+            default:
+                res = -1;
+                break;
+        }
     }
     s->domain = AF_UNSPEC;
     mutex_unlock(&_pool_mutex);
@@ -697,11 +701,13 @@ ssize_t recvfrom(int socket, void *restrict buffer, size_t length, int flags,
         case AF_INET:
             addr = _in_addr_ptr(&tmp);
             port = _in_port_ptr(&tmp);
+            addr_len = sizeof(ipv4_addr_t);
             tmp_len = sizeof(struct sockaddr_in);
             break;
         case AF_INET6:
             addr = _in6_addr_ptr(&tmp);
             port = _in6_port_ptr(&tmp);
+            addr_len = sizeof(ipv6_addr_t);
             tmp_len = sizeof(struct sockaddr_in6);
             break;
         default:
@@ -793,8 +799,23 @@ ssize_t sendto(int socket, const void *buffer, size_t length, int flags,
     switch (s->type) {
 #ifdef MODULE_CONN_IP
         case SOCK_RAW:
-            if (address != NULL) {
-                res = conn_ip_sendto(&s->conn.raw, buffer, length, addr, addr_len);
+            if ((address != NULL) && (s->bound)) {
+                uint8_t src_addr[sizeof(ipv6_addr_t)];
+                size_t src_len;
+                int res = conn_ip_getlocaladdr(&s->conn.raw, src_addr);
+                if (res < 0) {
+                    errno = ENOTSOCK;   /* Something seems to be wrong with the socket */
+                    return -1;
+                }
+                src_len = (size_t)res;
+                /* cppcheck bug? res is read below in l824 */
+                /* cppcheck-suppress unreadVariable */
+                res = conn_ip_sendto(buffer, length, src_addr, src_len, addr, addr_len, s->domain,
+                                     s->protocol);
+            }
+            else if (address != NULL) {
+                res = conn_ip_sendto(buffer, length, NULL, 0, addr, addr_len, s->domain,
+                                     s->protocol);
             }
             else {
                 errno = ENOTCONN;
@@ -808,6 +829,14 @@ ssize_t sendto(int socket, const void *buffer, size_t length, int flags,
 #endif
 #ifdef MODULE_CONN_TCP
         case SOCK_STREAM:
+            if (!s->bound) {
+                errno = ENOTCONN;
+                return -1;
+            }
+            if (address != NULL) {
+                errno = EISCONN;
+                return -1;
+            }
             if ((res = conn_tcp_send(&s->conn.tcp, buffer, length)) < 0) {
                 errno = -res;
                 return -1;
@@ -816,8 +845,25 @@ ssize_t sendto(int socket, const void *buffer, size_t length, int flags,
 #endif
 #ifdef MODULE_CONN_UDP
         case SOCK_DGRAM:
-            if (address != NULL) {
-                res = conn_udp_sendto(&s->conn.udp, buffer, length, addr, addr_len, port);
+            if ((address != NULL) && (s->bound)) {
+                uint8_t src_addr[sizeof(ipv6_addr_t)];
+                size_t src_len;
+                uint16_t sport;
+                int res = conn_udp_getlocaladdr(&s->conn.udp, src_addr, &sport);
+                if (res < 0) {
+                    errno = ENOTSOCK;   /* Something seems to be wrong with the socket */
+                    return -1;
+                }
+                src_len = (size_t)res;
+                /* cppcheck bug? res is read below in l824 */
+                /* cppcheck-suppress unreadVariable */
+                res = conn_udp_sendto(buffer, length, src_addr, src_len, addr, addr_len, s->domain,
+                                      sport, port);
+            }
+            else if (address != NULL) {
+                uint16_t sport = (uint16_t)genrand_uint32_range(1 << 10, 1 << 16);
+                res = conn_udp_sendto(buffer, length, NULL, 0, addr, addr_len, s->domain,
+                                      sport, port);
             }
             else {
                 errno = ENOTCONN;

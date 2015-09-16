@@ -278,6 +278,7 @@ endif
 
 ifneq (,$(filter posix_sockets,$(USEMODULE)))
   USEMODULE += posix
+  USEMODULE += random
 endif
 
 ifneq (,$(filter posix,$(USEMODULE)))
