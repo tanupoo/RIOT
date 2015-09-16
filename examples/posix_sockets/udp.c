@@ -76,7 +76,7 @@ static void *_server_thread(void *args)
             puts("Peer did shut down");
         }
         else {
-            printf("%s", server_buffer);
+            puts(server_buffer);
         }
     }
     return NULL;
