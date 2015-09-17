@@ -308,7 +308,6 @@ endif
 
 ifneq (,$(filter oonf_common,$(USEMODULE)))
   USEPKG += oonf_api
-  USEMODULE += socket_base
 endif
 
 ifneq (,$(filter %_conn_ip,$(USEMODULE)))

@@ -1,7 +1,7 @@
-From 2c8298434b94506140893c540c49760ad7eb636f Mon Sep 17 00:00:00 2001
+From 21eecb163f71dae366126533473b234d893dc38b Mon Sep 17 00:00:00 2001
 From: Benjamin Valentin <benpicco@zedat.fu-berlin.de>
 Date: Tue, 23 Jul 2013 21:08:31 +0200
-Subject: [PATCH 2/3] port tests to riot
+Subject: [PATCH 02/10] port tests to riot
 
 ---
  tests/common/.Makefile.template                 | 45 +++++++++++++++++++++++++
@@ -12,8 +12,8 @@ Subject: [PATCH 2/3] port tests to riot
  tests/rfc5444/.Makefile.template                | 39 +++++++++++++++++++++
  tests/rfc5444/bin/.gitignore                    |  0
  tests/rfc5444/generate_makefiles.sh             |  8 +++++
- tests/rfc5444/test_rfc5444_reader_dropcontext.c |  2 +-
- 9 files changed, 109 insertions(+), 6 deletions(-)
+ tests/rfc5444/test_rfc5444_reader_dropcontext.c |  1 +
+ 9 files changed, 109 insertions(+), 5 deletions(-)
  create mode 100644 tests/common/.Makefile.template
  create mode 100644 tests/common/bin/.gitignore
  create mode 100755 tests/common/generate_makefiles.sh
@@ -24,7 +24,7 @@ Subject: [PATCH 2/3] port tests to riot
 
 diff --git a/tests/common/.Makefile.template b/tests/common/.Makefile.template
 new file mode 100644
-index 0000000..c286ad3
+index 0000000..2c66cfa
 --- /dev/null
 +++ b/tests/common/.Makefile.template
 @@ -0,0 +1,45 @@
@@ -128,7 +128,7 @@ index 0000000..5e0046d
 +include $(RIOTBASE)/Makefile.base
 diff --git a/tests/rfc5444/.Makefile.template b/tests/rfc5444/.Makefile.template
 new file mode 100644
-index 0000000..8a0452d
+index 0000000..fb1ceca
 --- /dev/null
 +++ b/tests/rfc5444/.Makefile.template
 @@ -0,0 +1,39 @@
@@ -189,18 +189,17 @@ index 0000000..8bf9faa
 +	cp $test\.c $test
 +done
 diff --git a/tests/rfc5444/test_rfc5444_reader_dropcontext.c b/tests/rfc5444/test_rfc5444_reader_dropcontext.c
-index df203fd..29daff6 100644
+index df203fd..0a305e3 100644
 --- a/tests/rfc5444/test_rfc5444_reader_dropcontext.c
 +++ b/tests/rfc5444/test_rfc5444_reader_dropcontext.c
-@@ -38,7 +38,7 @@
-  * the copyright holders.
+@@ -39,6 +39,7 @@
   *
   */
--#include <arpa/inet.h>
+ #include <arpa/inet.h>
 +
  #include <assert.h>
  #include <stdio.h>
 
 --
-1.8.3.2
+1.9.1
 
