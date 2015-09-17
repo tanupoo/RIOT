@@ -32,6 +32,7 @@
 #include "net/ipv4/addr.h"
 #include "net/ipv6/addr.h"
 #include "sys/bytes.h"
+#include "netinet/in.h"
 
 #ifdef __cplusplus
 extern "C" {
