@@ -10,6 +10,7 @@
  * @{
  *
  * @file
+ * @author  Martine Lenders <mlenders@inf.fu-berlin.de>
  */
 
 #include "net/conn.h"
