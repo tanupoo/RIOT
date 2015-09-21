@@ -1,7 +1,7 @@
-From d81d24b9d4c897c508799cb390b13cb018758709 Mon Sep 17 00:00:00 2001
+From 7d9815ef60b00047a05379f908da43764005c3af Mon Sep 17 00:00:00 2001
 From: Benjamin Valentin <benpicco@zedat.fu-berlin.de>
 Date: Fri, 10 Oct 2014 02:05:01 +0200
-Subject: [PATCH] only define container_of when necessary
+Subject: [PATCH 05/10] only define container_of when necessary
 
 ---
  src-api/common/container_of.h | 2 ++
@@ -26,3 +26,4 @@ index 9fd1893..fcb38fe 100644
   * Helper function for NULL safe container_of macro
 --
 1.9.1
+
