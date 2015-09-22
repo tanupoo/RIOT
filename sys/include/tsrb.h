@@ -7,14 +7,19 @@
  */
 
 /**
+ * @defgroup    sys_tsrb Thread safe ringbuffer
  * @ingroup     sys
- * @file
  * @{
- *
+ */
+
+/*
+ * @file
  * @brief       Thread-safe ringbuffer implementation
  *
  * This ringbuffer implementation can be used without locking if
  * there's only one producer and one consumer.
+ *
+ * @note Buffer size must be a power of two!
  *
  * @author      Kaspar Schleiser <kaspar@schleiser.de>
  */
@@ -22,6 +27,7 @@
 #ifndef TSRB_H
 #define TSRB_H
 
+#include <assert.h>
 #include <stddef.h>
 
 #ifdef __cplusplus
@@ -51,6 +57,11 @@ typedef struct tsrb {
  */
 static inline void tsrb_init(tsrb_t *rb, char *buffer, unsigned bufsize)
 {
+    /* make sure bufsize is a pwer of two.
+     * http://www.exploringbinary.com/ten-ways-to-check-if-an-integer-is-a-power-of-two-in-c/
+     */
+    assert((bufsize != 0) && ((bufsize & (~bufsize + 1)) == bufsize));
+
     rb->buf = buffer;
     rb->size = bufsize;
     rb->reads = 0;
@@ -59,9 +70,7 @@ static inline void tsrb_init(tsrb_t *rb, char *buffer, unsigned bufsize)
 
 /**
  * @brief       Test if the tsrb is empty.
- *
  * @param[in]   rb  Ringbuffer to operate on
- *
  * @return      0   if not empty
  * @return      1   otherwise
  */
@@ -73,9 +82,7 @@ static inline int tsrb_empty(const tsrb_t *rb)
 
 /**
  * @brief       Get number of bytes available for reading
- *
  * @param[in]   rb  Ringbuffer to operate on
- *
  * @return      nr of available bytes 
  */
 static inline unsigned int tsrb_avail(const tsrb_t *rb)
