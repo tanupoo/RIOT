@@ -12,7 +12,7 @@
  * @{
  */
 
-/*
+/**
  * @file
  * @brief       Thread-safe ringbuffer implementation
  *
