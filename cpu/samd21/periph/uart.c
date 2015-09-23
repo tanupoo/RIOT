@@ -132,7 +132,8 @@ int uart_write(uart_t uart, char data)
 
 int uart_write_blocking(uart_t uart, char data)
 {
-    while (!(_uart(uart)->INTFLAG.reg & SERCOM_USART_INTFLAG_DRE));
+    int i = 100000;
+    while (i-- && !(_uart(uart)->INTFLAG.reg & SERCOM_USART_INTFLAG_DRE));
     _uart(uart)->DATA.reg = (uint8_t)data;
     return 1;
 }
