@@ -68,7 +68,7 @@ static inline int _snd_rcv(kernel_pid_t pid, uint16_t type, gnrc_pktsnip_t *pkt)
     /* send message */
     int ret = msg_try_send(&msg, pid);
     if (ret < 1) {
-        DEBUG("gnrc_netapi: dropped messaage to %" PRIkernel_pid "\n", pid);
+        DEBUG("gnrc_netapi: dropped message to %" PRIkernel_pid "\n", pid);
     }
     return ret;
 }
