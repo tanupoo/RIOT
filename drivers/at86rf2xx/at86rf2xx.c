@@ -160,6 +160,13 @@ void at86rf2xx_reset(at86rf2xx_t *dev)
     tmp &= ~(AT86RF2XX_TRX_CTRL_1_MASK__IRQ_MASK_MODE);
     at86rf2xx_reg_write(dev, AT86RF2XX_REG__TRX_CTRL_1, tmp);
 
+    /* disable clock output to save power */
+    tmp = at86rf2xx_reg_read(dev, AT86RF2XX_REG__TRX_CTRL_0);
+    tmp &= ~(AT86RF2XX_TRX_CTRL_0_MASK__CLKM_CTRL);
+    tmp &= ~(AT86RF2XX_TRX_CTRL_0_MASK__CLKM_SHA_SEL);
+    tmp |= (AT86RF2XX_TRX_CTRL_0_CLKM_CTRL__OFF);
+    at86rf2xx_reg_write(dev, AT86RF2XX_REG__TRX_CTRL_0, tmp);
+
     /* enable interrupts */
     at86rf2xx_reg_write(dev, AT86RF2XX_REG__IRQ_MASK,
                         AT86RF2XX_IRQ_STATUS_MASK__TRX_END);
@@ -215,9 +222,13 @@ void at86rf2xx_tx_prepare(at86rf2xx_t *dev)
     do {
         state = at86rf2xx_get_status(dev);
     }
-    while (state == AT86RF2XX_STATE_BUSY_RX_AACK ||
-           state == AT86RF2XX_STATE_BUSY_TX_ARET);
-    if (state != AT86RF2XX_STATE_TX_ARET_ON) {
+    while (state == AT86RF2XX_STATE_BUSY_TX_ARET);
+
+    /* if receiving cancel */
+    if(state == AT86RF2XX_STATE_BUSY_RX_AACK) {
+        at86rf2xx_force_trx_off(dev);
+        dev->idle_state = AT86RF2XX_STATE_RX_AACK_ON;
+    } else if (state != AT86RF2XX_STATE_TX_ARET_ON) {
         dev->idle_state = state;
     }
     at86rf2xx_set_state(dev, AT86RF2XX_STATE_TX_ARET_ON);
