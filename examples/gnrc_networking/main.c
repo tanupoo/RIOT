@@ -22,14 +22,26 @@
 
 #include "shell.h"
 #include "msg.h"
+#include "net/gnrc/pktbuf.h"
 
 #define MAIN_QUEUE_SIZE     (8)
 static msg_t _main_msg_queue[MAIN_QUEUE_SIZE];
 
 extern int udp_cmd(int argc, char **argv);
+extern bool gnrc_pktbuf_is_sane(void);
+
+int _gnrc_pktbuf_stats(int argc, char **args)
+{
+    (void) argc;
+    (void) args;
+    gnrc_pktbuf_stats();
+    printf("Packetbuffer is sane? %s\n", gnrc_pktbuf_is_sane() ? "Yes" : "No");
+    return 0;
+}
 
 static const shell_command_t shell_commands[] = {
     { "udp", "send data over UDP and listen on UDP ports", udp_cmd },
+    { "stats", "print packet buffer", _gnrc_pktbuf_stats},
     { NULL, NULL, NULL }
 };
 

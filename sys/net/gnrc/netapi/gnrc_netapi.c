@@ -87,7 +87,7 @@ int gnrc_netapi_dispatch(gnrc_nettype_t type, uint32_t demux_ctx,
         while (sendto) {
             if (_snd_rcv(sendto->pid, cmd, pkt) < 1) {
                 /* unable to dispatch packet */
-                printf("%s,%u release size: %u\n", RIOT_FILE_RELATIVE, __LINE__, pkt->size); gnrc_pktbuf_release(pkt);
+                printf("%s,%u release size: %u\n", __FILE__, __LINE__, pkt->size); gnrc_pktbuf_release(pkt);
             }
             sendto = gnrc_netreg_getnext(sendto);
         }

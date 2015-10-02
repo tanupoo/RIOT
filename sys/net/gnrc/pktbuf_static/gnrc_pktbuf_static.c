@@ -31,7 +31,7 @@
 #include "net/gnrc/nettype.h"
 #include "net/gnrc/pkt.h"
 
-#define ENABLE_DEBUG (0)
+#define ENABLE_DEBUG (1)
 #include "debug.h"
 
 #define _ALIGNMENT_MASK    (sizeof(void *) - 1)
@@ -189,6 +189,7 @@ int gnrc_pktbuf_realloc_data(gnrc_pktsnip_t *pkt, size_t size)
 
 void gnrc_pktbuf_hold(gnrc_pktsnip_t *pkt, unsigned int num)
 {
+    assert(num < 10);
     mutex_lock(&_mutex);
     while (pkt) {
         pkt->users += num;
@@ -197,7 +198,7 @@ void gnrc_pktbuf_hold(gnrc_pktsnip_t *pkt, unsigned int num)
     mutex_unlock(&_mutex);
 }
 
-void printf("%s,%u release size: %u\n", RIOT_FILE_RELATIVE, __LINE__, gnrc_pktsnip_t *pkt->size); gnrc_pktbuf_release(gnrc_pktsnip_t *pkt)
+void gnrc_pktbuf_release(gnrc_pktsnip_t *pkt)
 {
     mutex_lock(&_mutex);
     while (pkt) {
@@ -326,7 +327,6 @@ void gnrc_pktbuf_stats(void)
 }
 #endif
 
-#ifdef TEST_SUITES
 bool gnrc_pktbuf_is_empty(void)
 {
     return (_first_unused == (_unused_t *)_pktbuf) &&
@@ -363,7 +363,6 @@ bool gnrc_pktbuf_is_sane(void)
 
     return true;
 }
-#endif
 
 static gnrc_pktsnip_t *_create_snip(gnrc_pktsnip_t *next, void *data, size_t size,
                                     gnrc_nettype_t type)
@@ -443,6 +442,7 @@ static void _pktbuf_free(void *data, size_t size)
 {
     _unused_t *new = (_unused_t *)data, *prev = NULL, *ptr = _first_unused;
     if (!_pktbuf_contains(data)) {
+        puts("no freeing because not part of the buffer");
         return;
     }
     while (ptr && (((void *)ptr) < data)) {

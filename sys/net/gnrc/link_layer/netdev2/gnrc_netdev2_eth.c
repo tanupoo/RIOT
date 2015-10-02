@@ -92,6 +92,7 @@ static gnrc_pktsnip_t *_recv(gnrc_netdev2_t *gnrc_netdev2)
         od_hex_dump(hdr, nread, OD_WIDTH_DEFAULT);
 #endif
 
+        puts("netdev remove snip");
         gnrc_pktbuf_remove_snip(pkt, eth_hdr);
         LL_APPEND(pkt, netif_hdr);
     }
@@ -100,7 +101,9 @@ out:
     return pkt;
 
 safe_out:
-    printf("%s,%u release size: %u\n", RIOT_FILE_RELATIVE, __LINE__, pkt->size); gnrc_pktbuf_release(pkt);
+    gnrc_pktbuf_stats();
+    printf("%s,%u release size: %u\n", __FILE__, __LINE__, pkt->size); gnrc_pktbuf_release(pkt);
+    gnrc_pktbuf_stats();
     return NULL;
 }
 
@@ -197,7 +200,7 @@ static int _send(gnrc_netdev2_t *gnrc_netdev2, gnrc_pktsnip_t *pkt)
     vector[0].iov_len = sizeof(ethernet_hdr_t);
     dev->driver->send(dev, vector, n);
 
-    printf("%s,%u release size: %u\n", RIOT_FILE_RELATIVE, __LINE__, pkt->size); gnrc_pktbuf_release(pkt);
+    printf("%s,%u release size: %u\n", __FILE__, __LINE__, pkt->size); gnrc_pktbuf_release(pkt);
 
     return 0;
 }

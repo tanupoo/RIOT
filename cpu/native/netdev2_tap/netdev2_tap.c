@@ -312,7 +312,7 @@ static void _tap_isr(void) {
 
 static int _init(netdev2_t *netdev)
 {
-    DEBUG("%s:%s:%u\n", RIOT_FILE_RELATIVE, __func__, __LINE__);
+    DEBUG("%s:%s:%u\n", __FILE__, __func__, __LINE__);
 
     netdev2_tap_t *dev = (netdev2_tap_t*)netdev;
 

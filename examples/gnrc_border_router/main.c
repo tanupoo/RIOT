@@ -22,6 +22,20 @@
 
 #include "shell.h"
 #include "msg.h"
+#include "net/gnrc/pktbuf.h"
+
+int _gnrc_pktbuf_stats(int argc, char **args)
+{
+    (void) argc;
+    (void) args;
+    gnrc_pktbuf_stats();
+    return 0;
+}
+
+static const shell_command_t shell_commands[] = {
+    { "stats", "print packet buffer", _gnrc_pktbuf_stats},
+    { NULL, NULL, NULL }
+};
 
 #define MAIN_QUEUE_SIZE     (8)
 static msg_t _main_msg_queue[MAIN_QUEUE_SIZE];
@@ -36,7 +50,7 @@ int main(void)
     /* start shell */
     puts("All up, running the shell now");
     char line_buf[SHELL_DEFAULT_BUFSIZE];
-    shell_run(NULL, line_buf, SHELL_DEFAULT_BUFSIZE);
+    shell_run(shell_commands, line_buf, SHELL_DEFAULT_BUFSIZE);
 
     /* should be never reached */
     return 0;

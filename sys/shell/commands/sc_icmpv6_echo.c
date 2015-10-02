@@ -213,7 +213,7 @@ int _icmpv6_ping(int argc, char **argv)
 
     while ((remaining--) > 0) {
         gnrc_pktsnip_t *pkt;
-        timex_t start, stop, timeout = { 5, 0 };
+        timex_t start, stop, timeout = { 0, 600000 };
 
         pkt = gnrc_icmpv6_echo_req_build(id, ++max_seq_expected, NULL,
                                          payload_len);
@@ -236,7 +236,7 @@ int _icmpv6_ping(int argc, char **argv)
         vtimer_now(&start);
         if (gnrc_netapi_send(ipv6_entry->pid, pkt) < 1) {
             puts("error: unable to send ICMPv6 echo request\n");
-            printf("%s,%u release size: %u\n", RIOT_FILE_RELATIVE, __LINE__, pkt->size); gnrc_pktbuf_release(pkt);
+            printf("%s,%u release size: %u\n", __FILE__, __LINE__, pkt->size); gnrc_pktbuf_release(pkt);
             continue;
         }
 
@@ -248,7 +248,7 @@ int _icmpv6_ping(int argc, char **argv)
 
                     gnrc_pktsnip_t *pkt = (gnrc_pktsnip_t *)msg.content.ptr;
                     success += _handle_reply(pkt, timex_uint64(stop));
-                    printf("%s,%u release size: %u\n", RIOT_FILE_RELATIVE, __LINE__, pkt->size); gnrc_pktbuf_release(pkt);
+                    printf("%s,%u release size: %u\n", __FILE__, __LINE__, pkt->size); gnrc_pktbuf_release(pkt);
 
                     if (timex_cmp(stop, max_rtt) > 0) {
                         max_rtt = stop;
@@ -272,6 +272,13 @@ int _icmpv6_ping(int argc, char **argv)
             puts("ping timeout");
         }
 
+        while(msg_try_receive(&msg) > 0) {
+            if (msg.type == GNRC_NETAPI_MSG_TYPE_RCV) {
+                printf("dropping additional response packet (probably caused by duplicates)\n");
+                gnrc_pktsnip_t *pkt = (gnrc_pktsnip_t *)msg.content.ptr;
+                gnrc_pktbuf_release(pkt);
+            }
+        }
         if (remaining > 0) {
             vtimer_sleep(delay);
         }
@@ -288,7 +295,7 @@ int _icmpv6_ping(int argc, char **argv)
         if (msg.type == GNRC_NETAPI_MSG_TYPE_RCV) {
             printf("dropping additional response packet (probably caused by duplicates)\n");
             gnrc_pktsnip_t *pkt = (gnrc_pktsnip_t *)msg.content.ptr;
-            printf("%s,%u release size: %u\n", RIOT_FILE_RELATIVE, __LINE__, pkt->size); gnrc_pktbuf_release(pkt);
+            printf("%s,%u release size: %u\n", __FILE__, __LINE__, pkt->size); gnrc_pktbuf_release(pkt);
         }
     }
 
