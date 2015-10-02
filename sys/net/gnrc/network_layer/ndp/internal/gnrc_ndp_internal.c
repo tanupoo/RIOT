@@ -185,7 +185,7 @@ void gnrc_ndp_internal_send_nbr_adv(kernel_pid_t iface, ipv6_addr_t *tgt, ipv6_a
 
             if (pkt == NULL) {
                 DEBUG("ndp internal: error allocating Target Link-layer address option.\n");
-                printf("release size: %u\n", ext_opts->size); gnrc_pktbuf_release(ext_opts);
+                printf("%s,%u release size: %u\n", RIOT_FILE_RELATIVE, __LINE__, ext_opts->size); gnrc_pktbuf_release(ext_opts);
                 return;
             }
         }
@@ -201,14 +201,14 @@ void gnrc_ndp_internal_send_nbr_adv(kernel_pid_t iface, ipv6_addr_t *tgt, ipv6_a
 
     if (hdr == NULL) {
         DEBUG("ndp internal: error allocating Neighbor advertisement.\n");
-        printf("release size: %u\n", pkt->size); gnrc_pktbuf_release(pkt);
+        printf("%s,%u release size: %u\n", RIOT_FILE_RELATIVE, __LINE__, pkt->size); gnrc_pktbuf_release(pkt);
         return;
     }
     pkt = hdr;
     hdr = _build_headers(iface, pkt, dst, NULL);
     if (hdr == NULL) {
         DEBUG("ndp internal: error adding lower-layer headers.\n");
-        printf("release size: %u\n", pkt->size); gnrc_pktbuf_release(pkt);
+        printf("%s,%u release size: %u\n", RIOT_FILE_RELATIVE, __LINE__, pkt->size); gnrc_pktbuf_release(pkt);
         return;
     }
     if (gnrc_ipv6_netif_addr_is_non_unicast(tgt)) {
@@ -225,7 +225,7 @@ void gnrc_ndp_internal_send_nbr_adv(kernel_pid_t iface, ipv6_addr_t *tgt, ipv6_a
     }
     else if (gnrc_netapi_send(gnrc_ipv6_pid, hdr) < 1) {
         DEBUG("ndp internal: unable to send neighbor advertisement\n");
-        printf("release size: %u\n", hdr->size); gnrc_pktbuf_release(hdr);
+        printf("%s,%u release size: %u\n", RIOT_FILE_RELATIVE, __LINE__, hdr->size); gnrc_pktbuf_release(hdr);
     }
 }
 
@@ -261,7 +261,7 @@ void gnrc_ndp_internal_send_nbr_sol(kernel_pid_t iface, ipv6_addr_t *src, ipv6_a
 
             if (pkt == NULL) {
                 DEBUG("ndp internal: error allocating Source Link-layer address option.\n");
-                printf("release size: %u\n", pkt->size); gnrc_pktbuf_release(pkt);
+                printf("%s,%u release size: %u\n", RIOT_FILE_RELATIVE, __LINE__, pkt->size); gnrc_pktbuf_release(pkt);
                 return;
             }
         }
@@ -274,14 +274,14 @@ void gnrc_ndp_internal_send_nbr_sol(kernel_pid_t iface, ipv6_addr_t *src, ipv6_a
                                                   sizeof(l2src));
             if (l2src_len != sizeof(eui64_t)) {
                 DEBUG("ndp internal: can't get EUI-64 of the interface\n");
-                printf("release size: %u\n", pkt->size); gnrc_pktbuf_release(pkt);
+                printf("%s,%u release size: %u\n", RIOT_FILE_RELATIVE, __LINE__, pkt->size); gnrc_pktbuf_release(pkt);
                 return;
             }
         }
         hdr = gnrc_sixlowpan_nd_opt_ar_build(0, GNRC_SIXLOWPAN_ND_AR_LTIME, (eui64_t *)l2src, pkt);
         if (hdr == NULL) {
             DEBUG("ndp internal: error allocatin Address Registration option.\n");
-            printf("release size: %u\n", pkt->size); gnrc_pktbuf_release(pkt);
+            printf("%s,%u release size: %u\n", RIOT_FILE_RELATIVE, __LINE__, pkt->size); gnrc_pktbuf_release(pkt);
             return;
         }
         pkt = hdr;
@@ -292,19 +292,19 @@ void gnrc_ndp_internal_send_nbr_sol(kernel_pid_t iface, ipv6_addr_t *src, ipv6_a
 
     if (hdr == NULL) {
         DEBUG("ndp internal: error allocating Neighbor solicitation.\n");
-        printf("release size: %u\n", pkt->size); gnrc_pktbuf_release(pkt);
+        printf("%s,%u release size: %u\n", RIOT_FILE_RELATIVE, __LINE__, pkt->size); gnrc_pktbuf_release(pkt);
         return;
     }
     pkt = hdr;
     hdr = _build_headers(iface, pkt, dst, src);
     if (hdr == NULL) {
         DEBUG("ndp internal: error adding lower-layer headers.\n");
-        printf("release size: %u\n", pkt->size); gnrc_pktbuf_release(pkt);
+        printf("%s,%u release size: %u\n", RIOT_FILE_RELATIVE, __LINE__, pkt->size); gnrc_pktbuf_release(pkt);
         return;
     }
     else if (gnrc_netapi_send(gnrc_ipv6_pid, hdr) < 1) {
         DEBUG("ndp internal: unable to send neighbor solicitation\n");
-        printf("release size: %u\n", hdr->size); gnrc_pktbuf_release(hdr);
+        printf("%s,%u release size: %u\n", RIOT_FILE_RELATIVE, __LINE__, hdr->size); gnrc_pktbuf_release(hdr);
     }
 }
 
@@ -328,7 +328,7 @@ void gnrc_ndp_internal_send_rtr_sol(kernel_pid_t iface, ipv6_addr_t *dst)
 
             if (pkt == NULL) {
                 DEBUG("ndp internal: error allocating Source Link-layer address option.\n");
-                printf("release size: %u\n", pkt->size); gnrc_pktbuf_release(pkt);
+                printf("%s,%u release size: %u\n", RIOT_FILE_RELATIVE, __LINE__, pkt->size); gnrc_pktbuf_release(pkt);
                 return;
             }
         }
@@ -336,19 +336,19 @@ void gnrc_ndp_internal_send_rtr_sol(kernel_pid_t iface, ipv6_addr_t *dst)
     hdr = gnrc_ndp_rtr_sol_build(pkt);
     if (hdr == NULL) {
         DEBUG("ndp internal: error allocating router solicitation.\n");
-        printf("release size: %u\n", pkt->size); gnrc_pktbuf_release(pkt);
+        printf("%s,%u release size: %u\n", RIOT_FILE_RELATIVE, __LINE__, pkt->size); gnrc_pktbuf_release(pkt);
         return;
     }
     pkt = hdr;
     hdr = _build_headers(iface, pkt, dst, src);
     if (hdr == NULL) {
         DEBUG("ndp internal: error adding lower-layer headers.\n");
-        printf("release size: %u\n", pkt->size); gnrc_pktbuf_release(pkt);
+        printf("%s,%u release size: %u\n", RIOT_FILE_RELATIVE, __LINE__, pkt->size); gnrc_pktbuf_release(pkt);
         return;
     }
     else if (gnrc_netapi_send(gnrc_ipv6_pid, hdr) < 1) {
         DEBUG("ndp internal: unable to send router solicitation\n");
-        printf("release size: %u\n", hdr->size); gnrc_pktbuf_release(hdr);
+        printf("%s,%u release size: %u\n", RIOT_FILE_RELATIVE, __LINE__, hdr->size); gnrc_pktbuf_release(hdr);
     }
 }
 
@@ -408,7 +408,7 @@ static gnrc_pktsnip_t *_add_pios(gnrc_ipv6_netif_t *ipv6_iface, gnrc_pktsnip_t *
             }
             else {
                 DEBUG("ndp rtr: error allocating PIO\n");
-                printf("release size: %u\n", pkt->size); gnrc_pktbuf_release(pkt);
+                printf("%s,%u release size: %u\n", RIOT_FILE_RELATIVE, __LINE__, pkt->size); gnrc_pktbuf_release(pkt);
                 return NULL;
             }
         }
@@ -475,7 +475,7 @@ void gnrc_ndp_internal_send_rtr_adv(kernel_pid_t iface, ipv6_addr_t *src, ipv6_a
                     }
                     else {
                         DEBUG("ndp rtr: error allocating PIO\n");
-                        printf("release size: %u\n", pkt->size); gnrc_pktbuf_release(pkt);
+                        printf("%s,%u release size: %u\n", RIOT_FILE_RELATIVE, __LINE__, pkt->size); gnrc_pktbuf_release(pkt);
                         return;
                     }
                 }
@@ -491,7 +491,7 @@ void gnrc_ndp_internal_send_rtr_adv(kernel_pid_t iface, ipv6_addr_t *src, ipv6_a
                                                        &ctx->prefix, pkt);
                 if (hdr == NULL) {
                     DEBUG("ndp rtr: error allocating 6CO\n");
-                    printf("release size: %u\n", pkt->size); gnrc_pktbuf_release(pkt);
+                    printf("%s,%u release size: %u\n", RIOT_FILE_RELATIVE, __LINE__, pkt->size); gnrc_pktbuf_release(pkt);
                     return;
                 }
                 pkt = hdr;
@@ -499,7 +499,7 @@ void gnrc_ndp_internal_send_rtr_adv(kernel_pid_t iface, ipv6_addr_t *src, ipv6_a
             hdr = gnrc_sixlowpan_nd_opt_abr_build(abr->version, abr->ltime, &abr->addr, pkt);
             if (hdr == NULL) {
                 DEBUG("ndp internal: error allocating ABRO.\n");
-                printf("release size: %u\n", pkt->size); gnrc_pktbuf_release(pkt);
+                printf("%s,%u release size: %u\n", RIOT_FILE_RELATIVE, __LINE__, pkt->size); gnrc_pktbuf_release(pkt);
                 return;
             }
             pkt = hdr;
@@ -510,7 +510,7 @@ void gnrc_ndp_internal_send_rtr_adv(kernel_pid_t iface, ipv6_addr_t *src, ipv6_a
         if ((hdr = gnrc_ndp_opt_mtu_build(ipv6_iface->mtu, pkt)) == NULL) {
             DEBUG("ndp rtr: no space left in packet buffer\n");
             mutex_unlock(&ipv6_iface->mutex);
-            printf("release size: %u\n", pkt->size); gnrc_pktbuf_release(pkt);
+            printf("%s,%u release size: %u\n", RIOT_FILE_RELATIVE, __LINE__, pkt->size); gnrc_pktbuf_release(pkt);
             return;
         }
         pkt = hdr;
@@ -537,7 +537,7 @@ void gnrc_ndp_internal_send_rtr_adv(kernel_pid_t iface, ipv6_addr_t *src, ipv6_a
             if (hdr == NULL) {
                 DEBUG("ndp internal: error allocating Source Link-layer address option.\n");
                 mutex_unlock(&ipv6_iface->mutex);
-                printf("release size: %u\n", pkt->size); gnrc_pktbuf_release(pkt);
+                printf("%s,%u release size: %u\n", RIOT_FILE_RELATIVE, __LINE__, pkt->size); gnrc_pktbuf_release(pkt);
                 return;
             }
             pkt = hdr;
@@ -572,19 +572,19 @@ void gnrc_ndp_internal_send_rtr_adv(kernel_pid_t iface, ipv6_addr_t *src, ipv6_a
                                  adv_ltime, reach_time, retrans_timer, pkt);
     if (hdr == NULL) {
         DEBUG("ndp internal: error allocating router advertisement.\n");
-        printf("release size: %u\n", pkt->size); gnrc_pktbuf_release(pkt);
+        printf("%s,%u release size: %u\n", RIOT_FILE_RELATIVE, __LINE__, pkt->size); gnrc_pktbuf_release(pkt);
         return;
     }
     pkt = hdr;
     hdr = _build_headers(iface, pkt, dst, src);
     if (hdr == NULL) {
         DEBUG("ndp internal: error adding lower-layer headers.\n");
-        printf("release size: %u\n", pkt->size); gnrc_pktbuf_release(pkt);
+        printf("%s,%u release size: %u\n", RIOT_FILE_RELATIVE, __LINE__, pkt->size); gnrc_pktbuf_release(pkt);
         return;
     }
     else if (gnrc_netapi_send(gnrc_ipv6_pid, hdr) < 1) {
         DEBUG("ndp internal: unable to send router advertisement\n");
-        printf("release size: %u\n", hdr->size); gnrc_pktbuf_release(hdr);
+        printf("%s,%u release size: %u\n", RIOT_FILE_RELATIVE, __LINE__, hdr->size); gnrc_pktbuf_release(hdr);
     }
 }
 #endif

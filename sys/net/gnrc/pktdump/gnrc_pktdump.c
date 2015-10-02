@@ -114,7 +114,7 @@ static void _dump(gnrc_pktsnip_t *pkt)
     }
 
     printf("~~ PKT    - %2i snips, total size: %3i byte\n", snips, size);
-    printf("release size: %u\n", pkt->size); gnrc_pktbuf_release(pkt);
+    printf("%s,%u release size: %u\n", RIOT_FILE_RELATIVE, __LINE__, pkt->size); gnrc_pktbuf_release(pkt);
 }
 
 static void *_eventloop(void *arg)

@@ -100,7 +100,7 @@ out:
     return pkt;
 
 safe_out:
-    printf("release size: %u\n", pkt->size); gnrc_pktbuf_release(pkt);
+    printf("%s,%u release size: %u\n", RIOT_FILE_RELATIVE, __LINE__, pkt->size); gnrc_pktbuf_release(pkt);
     return NULL;
 }
 
@@ -197,7 +197,7 @@ static int _send(gnrc_netdev2_t *gnrc_netdev2, gnrc_pktsnip_t *pkt)
     vector[0].iov_len = sizeof(ethernet_hdr_t);
     dev->driver->send(dev, vector, n);
 
-    printf("release size: %u\n", pkt->size); gnrc_pktbuf_release(pkt);
+    printf("%s,%u release size: %u\n", RIOT_FILE_RELATIVE, __LINE__, pkt->size); gnrc_pktbuf_release(pkt);
 
     return 0;
 }

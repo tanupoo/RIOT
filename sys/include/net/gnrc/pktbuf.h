@@ -147,7 +147,7 @@ void gnrc_pktbuf_hold(gnrc_pktsnip_t *pkt, unsigned int num);
  *
  * @param[in] pkt   A packet.
  */
-void printf("release size: %u\n", gnrc_pktsnip_t *pkt->size); gnrc_pktbuf_release(gnrc_pktsnip_t *pkt);
+void printf("%s,%u release size: %u\n", RIOT_FILE_RELATIVE, __LINE__, gnrc_pktsnip_t *pkt->size); gnrc_pktbuf_release(gnrc_pktsnip_t *pkt);
 
 /**
  * @brief   Must be called once before there is a write operation in a thread.
@@ -193,7 +193,7 @@ static inline gnrc_pktsnip_t *gnrc_pktbuf_remove_snip(gnrc_pktsnip_t *pkt,
 {
     LL_DELETE(pkt, snip);
     snip->next = NULL;
-    printf("release size: %u\n", snip->size); gnrc_pktbuf_release(snip);
+    printf("%s,%u release size: %u\n", RIOT_FILE_RELATIVE, __LINE__, snip->size); gnrc_pktbuf_release(snip);
 
     return pkt;
 }

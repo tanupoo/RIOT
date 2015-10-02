@@ -97,7 +97,7 @@ void rbuf_add(gnrc_netif_hdr_t *netif_hdr, gnrc_pktsnip_t *pkt,
                                                   sizeof(sixlowpan_frag_t));
             if (iphc_len == 0) {
                 DEBUG("6lo rfrag: could not decode IPHC dispatch\n");
-                printf("release size: %u\n", entry->pkt->size); gnrc_pktbuf_release(entry->pkt);
+                printf("%s,%u release size: %u\n", RIOT_FILE_RELATIVE, __LINE__, entry->pkt->size); gnrc_pktbuf_release(entry->pkt);
                 _rbuf_rem(entry);
                 return;
             }
@@ -114,7 +114,7 @@ void rbuf_add(gnrc_netif_hdr_t *netif_hdr, gnrc_pktsnip_t *pkt,
 
     if ((offset + frag_size) > entry->pkt->size) {
         DEBUG("6lo rfrag: fragment too big for resulting datagram, discarding datagram\n");
-        printf("release size: %u\n", entry->pkt->size); gnrc_pktbuf_release(entry->pkt);
+        printf("%s,%u release size: %u\n", RIOT_FILE_RELATIVE, __LINE__, entry->pkt->size); gnrc_pktbuf_release(entry->pkt);
         _rbuf_rem(entry);
         return;
     }
@@ -122,7 +122,7 @@ void rbuf_add(gnrc_netif_hdr_t *netif_hdr, gnrc_pktsnip_t *pkt,
     while (ptr != NULL) {
         if (_rbuf_int_in(ptr, offset, offset + frag_size - 1)) {
             DEBUG("6lo rfrag: overlapping or same intervals, discarding datagram\n");
-            printf("release size: %u\n", entry->pkt->size); gnrc_pktbuf_release(entry->pkt);
+            printf("%s,%u release size: %u\n", RIOT_FILE_RELATIVE, __LINE__, entry->pkt->size); gnrc_pktbuf_release(entry->pkt);
             _rbuf_rem(entry);
             return;
         }
@@ -143,7 +143,7 @@ void rbuf_add(gnrc_netif_hdr_t *netif_hdr, gnrc_pktsnip_t *pkt,
 
         if (netif == NULL) {
             DEBUG("6lo rbuf: error allocating netif header\n");
-            printf("release size: %u\n", entry->pkt->size); gnrc_pktbuf_release(entry->pkt);
+            printf("%s,%u release size: %u\n", RIOT_FILE_RELATIVE, __LINE__, entry->pkt->size); gnrc_pktbuf_release(entry->pkt);
             _rbuf_rem(entry);
             return;
         }
@@ -162,7 +162,7 @@ void rbuf_add(gnrc_netif_hdr_t *netif_hdr, gnrc_pktsnip_t *pkt,
         if (!gnrc_netapi_dispatch_receive(GNRC_NETTYPE_IPV6, GNRC_NETREG_DEMUX_CTX_ALL,
                                           entry->pkt)) {
             DEBUG("6lo rbuf: No receivers for this packet found\n");
-            printf("release size: %u\n", entry->pkt->size); gnrc_pktbuf_release(entry->pkt);
+            printf("%s,%u release size: %u\n", RIOT_FILE_RELATIVE, __LINE__, entry->pkt->size); gnrc_pktbuf_release(entry->pkt);
         }
 
         _rbuf_rem(entry);
@@ -249,7 +249,7 @@ static void _rbuf_gc(void)
                                          rbuf[i].dst_len),
                   (unsigned)rbuf[i].pkt->size, rbuf[i].tag);
 
-            printf("release size: %u\n", rbuf[i].pkt->size); gnrc_pktbuf_release(rbuf[i].pkt);
+            printf("%s,%u release size: %u\n", RIOT_FILE_RELATIVE, __LINE__, rbuf[i].pkt->size); gnrc_pktbuf_release(rbuf[i].pkt);
             _rbuf_rem(&(rbuf[i]));
         }
         else if ((oldest == NULL) || (rbuf[i].arrival < oldest->arrival)) {
@@ -259,7 +259,7 @@ static void _rbuf_gc(void)
 
     if ((i >= RBUF_SIZE) && (oldest != NULL) && (oldest->pkt != NULL)) {
         DEBUG("6lo rfrag: reassembly buffer full, remove oldest entry\n");
-        printf("release size: %u\n", oldest->pkt->size); gnrc_pktbuf_release(oldest->pkt);
+        printf("%s,%u release size: %u\n", RIOT_FILE_RELATIVE, __LINE__, oldest->pkt->size); gnrc_pktbuf_release(oldest->pkt);
         _rbuf_rem(oldest);
     }
 }

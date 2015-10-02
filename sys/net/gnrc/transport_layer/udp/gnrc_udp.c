@@ -100,14 +100,14 @@ static void _receive(gnrc_pktsnip_t *pkt)
     udp = gnrc_pktbuf_start_write(pkt);
     if (udp == NULL) {
         DEBUG("udp: unable to get write access to packet\n");
-        printf("release size: %u\n", pkt->size); gnrc_pktbuf_release(pkt);
+        printf("%s,%u release size: %u\n", RIOT_FILE_RELATIVE, __LINE__, pkt->size); gnrc_pktbuf_release(pkt);
         return;
     }
     pkt = udp;
     udp = gnrc_pktbuf_mark(pkt, sizeof(udp_hdr_t), GNRC_NETTYPE_UDP);
     if (udp == NULL) {
         DEBUG("udp: error marking UDP header, dropping packet\n");
-        printf("release size: %u\n", pkt->size); gnrc_pktbuf_release(pkt);
+        printf("%s,%u release size: %u\n", RIOT_FILE_RELATIVE, __LINE__, pkt->size); gnrc_pktbuf_release(pkt);
         return;
     }
     /* mark payload as Type: UNDEF */
@@ -122,7 +122,7 @@ static void _receive(gnrc_pktsnip_t *pkt)
     /* validate checksum */
     if (_calc_csum(udp, ipv6, pkt)) {
         DEBUG("udp: received packet with invalid checksum, dropping it\n");
-        printf("release size: %u\n", pkt->size); gnrc_pktbuf_release(pkt);
+        printf("%s,%u release size: %u\n", RIOT_FILE_RELATIVE, __LINE__, pkt->size); gnrc_pktbuf_release(pkt);
         return;
     }
 
@@ -132,7 +132,7 @@ static void _receive(gnrc_pktsnip_t *pkt)
     /* send payload to receivers */
     if (!gnrc_netapi_dispatch_receive(GNRC_NETTYPE_UDP, port, pkt)) {
         DEBUG("udp: unable to forward packet as no one is interested in it\n");
-        printf("release size: %u\n", pkt->size); gnrc_pktbuf_release(pkt);
+        printf("%s,%u release size: %u\n", RIOT_FILE_RELATIVE, __LINE__, pkt->size); gnrc_pktbuf_release(pkt);
     }
 }
 
@@ -145,7 +145,7 @@ static void _send(gnrc_pktsnip_t *pkt)
     tmp = gnrc_pktbuf_start_write(pkt);
     if (tmp == NULL) {
         DEBUG("udp: cannot send packet: unable to allocate packet\n");
-        printf("release size: %u\n", pkt->size); gnrc_pktbuf_release(pkt);
+        printf("%s,%u release size: %u\n", RIOT_FILE_RELATIVE, __LINE__, pkt->size); gnrc_pktbuf_release(pkt);
         return;
     }
     pkt = tmp;
@@ -156,7 +156,7 @@ static void _send(gnrc_pktsnip_t *pkt)
         udp_snip = gnrc_pktbuf_start_write(udp_snip);
         if (udp_snip == NULL) {
             DEBUG("udp: cannot send packet: unable to allocate packet\n");
-            printf("release size: %u\n", pkt->size); gnrc_pktbuf_release(pkt);
+            printf("%s,%u release size: %u\n", RIOT_FILE_RELATIVE, __LINE__, pkt->size); gnrc_pktbuf_release(pkt);
             return;
         }
         tmp->next = udp_snip;
@@ -170,7 +170,7 @@ static void _send(gnrc_pktsnip_t *pkt)
     udp_snip = gnrc_pktbuf_start_write(udp_snip);
     if (udp_snip == NULL) {
         DEBUG("udp: cannot send packet: unable to allocate packet\n");
-        printf("release size: %u\n", pkt->size); gnrc_pktbuf_release(pkt);
+        printf("%s,%u release size: %u\n", RIOT_FILE_RELATIVE, __LINE__, pkt->size); gnrc_pktbuf_release(pkt);
         return;
     }
     hdr = (udp_hdr_t *)udp_snip->data;
@@ -180,7 +180,7 @@ static void _send(gnrc_pktsnip_t *pkt)
     /* and forward packet to the network layer */
     if (!gnrc_netapi_dispatch_send(pkt->type, GNRC_NETREG_DEMUX_CTX_ALL, pkt)) {
         DEBUG("udp: cannot send packet: network layer not found\n");
-        printf("release size: %u\n", pkt->size); gnrc_pktbuf_release(pkt);
+        printf("%s,%u release size: %u\n", RIOT_FILE_RELATIVE, __LINE__, pkt->size); gnrc_pktbuf_release(pkt);
     }
 }
 

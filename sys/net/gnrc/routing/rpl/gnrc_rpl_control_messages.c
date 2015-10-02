@@ -53,7 +53,7 @@ void gnrc_rpl_send(gnrc_pktsnip_t *pkt, ipv6_addr_t *src, ipv6_addr_t *dst, ipv6
     kernel_pid_t iface = gnrc_ipv6_netif_find_by_addr(NULL, &all_RPL_nodes);
     if (iface == KERNEL_PID_UNDEF) {
         DEBUG("RPL: no suitable interface found for this destination address\n");
-        printf("release size: %u\n", pkt->size); gnrc_pktbuf_release(pkt);
+        printf("%s,%u release size: %u\n", RIOT_FILE_RELATIVE, __LINE__, pkt->size); gnrc_pktbuf_release(pkt);
         return;
     }
 
@@ -63,7 +63,7 @@ void gnrc_rpl_send(gnrc_pktsnip_t *pkt, ipv6_addr_t *src, ipv6_addr_t *dst, ipv6
 
         if (src == NULL) {
             DEBUG("RPL: no suitable src address found\n");
-            printf("release size: %u\n", pkt->size); gnrc_pktbuf_release(pkt);
+            printf("%s,%u release size: %u\n", RIOT_FILE_RELATIVE, __LINE__, pkt->size); gnrc_pktbuf_release(pkt);
             return;
         }
     }
@@ -77,13 +77,13 @@ void gnrc_rpl_send(gnrc_pktsnip_t *pkt, ipv6_addr_t *src, ipv6_addr_t *dst, ipv6
 
     if (hdr == NULL) {
         DEBUG("RPL: Send - no space left in packet buffer\n");
-        printf("release size: %u\n", pkt->size); gnrc_pktbuf_release(pkt);
+        printf("%s,%u release size: %u\n", RIOT_FILE_RELATIVE, __LINE__, pkt->size); gnrc_pktbuf_release(pkt);
         return;
     }
 
     if (!gnrc_netapi_dispatch_send(GNRC_NETTYPE_IPV6, GNRC_NETREG_DEMUX_CTX_ALL,hdr)) {
         DEBUG("RPL: cannot send packet: no subscribers found.\n");
-        printf("release size: %u\n", hdr->size); gnrc_pktbuf_release(hdr);
+        printf("%s,%u release size: %u\n", RIOT_FILE_RELATIVE, __LINE__, hdr->size); gnrc_pktbuf_release(hdr);
     }
 
 }

@@ -142,7 +142,7 @@ void gnrc_icmpv6_demux(kernel_pid_t iface, gnrc_pktsnip_t *pkt)
     while (sendto != NULL) {
         if (gnrc_netapi_receive(sendto->pid, pkt) < 1) {
             DEBUG("icmpv6: unable to deliver packet\n");
-            printf("release size: %u\n", pkt->size); gnrc_pktbuf_release(pkt);
+            printf("%s,%u release size: %u\n", RIOT_FILE_RELATIVE, __LINE__, pkt->size); gnrc_pktbuf_release(pkt);
         }
         sendto = gnrc_netreg_getnext(sendto);
     }

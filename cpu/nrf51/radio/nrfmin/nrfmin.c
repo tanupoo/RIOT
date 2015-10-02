@@ -497,7 +497,7 @@ static void _receive_data(void)
     pkt = gnrc_pktbuf_add(pkt_head, data->payload, data->length - 6, nettype);
     if (pkt == NULL) {
         DEBUG("nrfmin: Error allocating packet payload on RX\n");
-        printf("release size: %u\n", pkt_head->size); gnrc_pktbuf_release(pkt_head);
+        printf("%s,%u release size: %u\n", RIOT_FILE_RELATIVE, __LINE__, pkt_head->size); gnrc_pktbuf_release(pkt_head);
         return;
     }
 
@@ -594,7 +594,7 @@ int _send(gnrc_netdev_t *dev, gnrc_pktsnip_t *pkt)
     /* check if payload is withing length bounds */
     size = gnrc_pkt_len(pkt->next);
     if (size > CONF_PAYLOAD_LEN) {
-        printf("release size: %u\n", pkt->size); gnrc_pktbuf_release(pkt);
+        printf("%s,%u release size: %u\n", RIOT_FILE_RELATIVE, __LINE__, pkt->size); gnrc_pktbuf_release(pkt);
         DEBUG("nrfmin: Error sending packet: payload to large\n");
         return -EOVERFLOW;
     }
@@ -602,7 +602,7 @@ int _send(gnrc_netdev_t *dev, gnrc_pktsnip_t *pkt)
     hdr = (gnrc_netif_hdr_t *)pkt->data;
     if (hdr->dst_l2addr_len != 2) {
         DEBUG("nrfmin: Error sending packet: dest address has invalid size\n");
-        printf("release size: %u\n", pkt->size); gnrc_pktbuf_release(pkt);
+        printf("%s,%u release size: %u\n", RIOT_FILE_RELATIVE, __LINE__, pkt->size); gnrc_pktbuf_release(pkt);
         return -ENOMSG;
     }
     dst_addr = gnrc_netif_hdr_get_dst_addr(hdr);
@@ -640,7 +640,7 @@ int _send(gnrc_netdev_t *dev, gnrc_pktsnip_t *pkt)
     NRF_RADIO->TASKS_TXEN = 1;
 
     /* release packet */
-    printf("release size: %u\n", pkt->size); gnrc_pktbuf_release(pkt);
+    printf("%s,%u release size: %u\n", RIOT_FILE_RELATIVE, __LINE__, pkt->size); gnrc_pktbuf_release(pkt);
     return (int)size;
 }
 

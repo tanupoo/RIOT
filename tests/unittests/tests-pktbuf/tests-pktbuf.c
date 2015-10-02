@@ -227,14 +227,14 @@ static void test_pktbuf_add__unaligned_in_aligned_hole(void)
     gnrc_pktsnip_t *pkt4;
     void *tmp_data2 = pkt2->data;
 
-    printf("release size: %u\n", pkt2->size); gnrc_pktbuf_release(pkt2);
+    printf("%s,%u release size: %u\n", RIOT_FILE_RELATIVE, __LINE__, pkt2->size); gnrc_pktbuf_release(pkt2);
     pkt4 = gnrc_pktbuf_add(NULL, TEST_STRING12, 9, GNRC_NETTYPE_TEST);
 
     TEST_ASSERT(tmp_data2 != pkt4->data);
 
-    printf("release size: %u\n", pkt1->size); gnrc_pktbuf_release(pkt1);
-    printf("release size: %u\n", pkt3->size); gnrc_pktbuf_release(pkt3);
-    printf("release size: %u\n", pkt4->size); gnrc_pktbuf_release(pkt4);
+    printf("%s,%u release size: %u\n", RIOT_FILE_RELATIVE, __LINE__, pkt1->size); gnrc_pktbuf_release(pkt1);
+    printf("%s,%u release size: %u\n", RIOT_FILE_RELATIVE, __LINE__, pkt3->size); gnrc_pktbuf_release(pkt3);
+    printf("%s,%u release size: %u\n", RIOT_FILE_RELATIVE, __LINE__, pkt4->size); gnrc_pktbuf_release(pkt4);
     TEST_ASSERT(gnrc_pktbuf_is_empty());
 }
 
@@ -333,8 +333,8 @@ static void test_pktbuf_mark__success_large(void)
     TEST_ASSERT_EQUAL_INT(1, pkt1->users);
 
     /* check if everything can be cleaned up */
-    printf("release size: %u\n", pkt1->size); gnrc_pktbuf_release(pkt1);
-    printf("release size: %u\n", pkt2->size); gnrc_pktbuf_release(pkt2);
+    printf("%s,%u release size: %u\n", RIOT_FILE_RELATIVE, __LINE__, pkt1->size); gnrc_pktbuf_release(pkt1);
+    printf("%s,%u release size: %u\n", RIOT_FILE_RELATIVE, __LINE__, pkt2->size); gnrc_pktbuf_release(pkt2);
     TEST_ASSERT(gnrc_pktbuf_is_empty());
 }
 
@@ -379,8 +379,8 @@ static void test_pktbuf_mark__success_aligned(void)
     TEST_ASSERT_EQUAL_INT(1, pkt1->users);
 
     /* check if everything can be cleaned up */
-    printf("release size: %u\n", pkt1->size); gnrc_pktbuf_release(pkt1);
-    printf("release size: %u\n", pkt2->size); gnrc_pktbuf_release(pkt2);
+    printf("%s,%u release size: %u\n", RIOT_FILE_RELATIVE, __LINE__, pkt1->size); gnrc_pktbuf_release(pkt1);
+    printf("%s,%u release size: %u\n", RIOT_FILE_RELATIVE, __LINE__, pkt2->size); gnrc_pktbuf_release(pkt2);
     TEST_ASSERT(gnrc_pktbuf_is_empty());
 }
 
@@ -423,8 +423,8 @@ static void test_pktbuf_mark__success_small(void)
     TEST_ASSERT_EQUAL_INT(1, pkt1->users);
 
     /* check if everything can be cleaned up */
-    printf("release size: %u\n", pkt1->size); gnrc_pktbuf_release(pkt1);
-    printf("release size: %u\n", pkt2->size); gnrc_pktbuf_release(pkt2);
+    printf("%s,%u release size: %u\n", RIOT_FILE_RELATIVE, __LINE__, pkt1->size); gnrc_pktbuf_release(pkt1);
+    printf("%s,%u release size: %u\n", RIOT_FILE_RELATIVE, __LINE__, pkt2->size); gnrc_pktbuf_release(pkt2);
     TEST_ASSERT(gnrc_pktbuf_is_empty());
 }
 
@@ -433,7 +433,7 @@ static void test_pktbuf_realloc_data__size_0(void)
     gnrc_pktsnip_t *pkt = gnrc_pktbuf_add(NULL, NULL, sizeof(TEST_STRING8), GNRC_NETTYPE_TEST);
 
     TEST_ASSERT_EQUAL_INT(ENOMEM, gnrc_pktbuf_realloc_data(pkt, 0));
-    printf("release size: %u\n", pkt->size); gnrc_pktbuf_release(pkt);
+    printf("%s,%u release size: %u\n", RIOT_FILE_RELATIVE, __LINE__, pkt->size); gnrc_pktbuf_release(pkt);
     TEST_ASSERT(gnrc_pktbuf_is_empty());
 }
 
@@ -442,7 +442,7 @@ static void test_pktbuf_realloc_data__memfull(void)
     gnrc_pktsnip_t *pkt = gnrc_pktbuf_add(NULL, NULL, sizeof(TEST_STRING8), GNRC_NETTYPE_TEST);
 
     TEST_ASSERT_EQUAL_INT(ENOMEM, gnrc_pktbuf_realloc_data(pkt, GNRC_PKTBUF_SIZE + 1));
-    printf("release size: %u\n", pkt->size); gnrc_pktbuf_release(pkt);
+    printf("%s,%u release size: %u\n", RIOT_FILE_RELATIVE, __LINE__, pkt->size); gnrc_pktbuf_release(pkt);
     TEST_ASSERT(gnrc_pktbuf_is_empty());
 }
 
@@ -492,7 +492,7 @@ static void test_pktbuf_realloc_data__nomemenough(void)
     TEST_ASSERT_NOT_NULL(pkt2);
     TEST_ASSERT_NOT_NULL(gnrc_pktbuf_add(NULL, NULL, 4, GNRC_NETTYPE_TEST));
 
-    printf("release size: %u\n", pkt2->size); gnrc_pktbuf_release(pkt2);
+    printf("%s,%u release size: %u\n", RIOT_FILE_RELATIVE, __LINE__, pkt2->size); gnrc_pktbuf_release(pkt2);
 
     TEST_ASSERT_EQUAL_INT(0, gnrc_pktbuf_realloc_data(pkt1, 200));
     TEST_ASSERT_NULL(pkt1->next);
@@ -585,7 +585,7 @@ static void test_pktbuf_release__short_pktsnips(void)
     TEST_ASSERT(hdr->next == NULL);
     TEST_ASSERT_EQUAL_INT(hdr->size, sizeof(TEST_STRING8) - 1);
     TEST_ASSERT_EQUAL_INT(pkt->size, 1);
-    printf("release size: %u\n", pkt->size); gnrc_pktbuf_release(pkt);
+    printf("%s,%u release size: %u\n", RIOT_FILE_RELATIVE, __LINE__, pkt->size); gnrc_pktbuf_release(pkt);
     TEST_ASSERT(gnrc_pktbuf_is_empty());
 }
 
@@ -604,12 +604,12 @@ static void test_pktbuf_release__success(void)
 
     for (uint8_t i = 0; i < TEST_UINT8; i++) {
         uint8_t prev_users = pkt->users;
-        printf("release size: %u\n", pkt->size); gnrc_pktbuf_release(pkt);
+        printf("%s,%u release size: %u\n", RIOT_FILE_RELATIVE, __LINE__, pkt->size); gnrc_pktbuf_release(pkt);
         TEST_ASSERT_EQUAL_INT(prev_users - 1, pkt->users);
     }
 
     TEST_ASSERT(!gnrc_pktbuf_is_empty());
-    printf("release size: %u\n", pkt->size); gnrc_pktbuf_release(pkt);
+    printf("%s,%u release size: %u\n", RIOT_FILE_RELATIVE, __LINE__, pkt->size); gnrc_pktbuf_release(pkt);
     TEST_ASSERT(gnrc_pktbuf_is_empty());
 }
 
@@ -626,7 +626,7 @@ static void test_pktbuf_start_write__pkt_users_1(void)
 
     TEST_ASSERT_NOT_NULL((pkt_copy = gnrc_pktbuf_start_write(pkt)));
     TEST_ASSERT(pkt == pkt_copy);
-    printf("release size: %u\n", pkt->size); gnrc_pktbuf_release(pkt);
+    printf("%s,%u release size: %u\n", RIOT_FILE_RELATIVE, __LINE__, pkt->size); gnrc_pktbuf_release(pkt);
     TEST_ASSERT(gnrc_pktbuf_is_empty());
 }
 
@@ -645,8 +645,8 @@ static void test_pktbuf_start_write__pkt_users_2(void)
     TEST_ASSERT_EQUAL_INT(pkt->users, pkt_copy->users);
     TEST_ASSERT_EQUAL_INT(1, pkt->users);
 
-    printf("release size: %u\n", pkt_copy->size); gnrc_pktbuf_release(pkt_copy);
-    printf("release size: %u\n", pkt->size); gnrc_pktbuf_release(pkt);
+    printf("%s,%u release size: %u\n", RIOT_FILE_RELATIVE, __LINE__, pkt_copy->size); gnrc_pktbuf_release(pkt_copy);
+    printf("%s,%u release size: %u\n", RIOT_FILE_RELATIVE, __LINE__, pkt->size); gnrc_pktbuf_release(pkt);
     TEST_ASSERT(gnrc_pktbuf_is_empty());
 }
 
@@ -664,7 +664,7 @@ static void test_pktbuf_get_iovec__1_elem(void)
     TEST_ASSERT(snip->next->data == vec[0].iov_base);
     TEST_ASSERT_EQUAL_INT(snip->next->size, vec[0].iov_len);
 
-    printf("release size: %u\n", snip->size); gnrc_pktbuf_release(snip);
+    printf("%s,%u release size: %u\n", RIOT_FILE_RELATIVE, __LINE__, snip->size); gnrc_pktbuf_release(snip);
     TEST_ASSERT(gnrc_pktbuf_is_empty());
 }
 
@@ -688,7 +688,7 @@ static void test_pktbuf_get_iovec__3_elem(void)
     TEST_ASSERT_EQUAL_INT(sizeof(TEST_STRING8), vec[1].iov_len);
     TEST_ASSERT_EQUAL_INT(sizeof(TEST_STRING16), vec[2].iov_len);
 
-    printf("release size: %u\n", snip->size); gnrc_pktbuf_release(snip);
+    printf("%s,%u release size: %u\n", RIOT_FILE_RELATIVE, __LINE__, snip->size); gnrc_pktbuf_release(snip);
     TEST_ASSERT(gnrc_pktbuf_is_empty());
 }
 

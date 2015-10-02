@@ -836,7 +836,7 @@ int _netif_send(int argc, char **argv)
     /* and send it */
     if (gnrc_netapi_send(dev, pkt) < 1) {
         puts("error: unable to send\n");
-        printf("release size: %u\n", pkt->size); gnrc_pktbuf_release(pkt);
+        printf("%s,%u release size: %u\n", RIOT_FILE_RELATIVE, __LINE__, pkt->size); gnrc_pktbuf_release(pkt);
         return 1;
     }
 

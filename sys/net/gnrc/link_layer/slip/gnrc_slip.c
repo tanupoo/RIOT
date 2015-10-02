@@ -112,13 +112,13 @@ static void _slip_receive(gnrc_slip_dev_t *dev, size_t bytes)
 
     if (pkt == NULL) {
         DEBUG("slip: no space left in packet buffer\n");
-        printf("release size: %u\n", hdr->size); gnrc_pktbuf_release(hdr);
+        printf("%s,%u release size: %u\n", RIOT_FILE_RELATIVE, __LINE__, hdr->size); gnrc_pktbuf_release(hdr);
         return;
     }
 
     if (ringbuffer_get(&dev->in_buf, pkt->data, bytes) != bytes) {
         DEBUG("slip: could not read %u bytes from ringbuffer\n", (unsigned)bytes);
-        printf("release size: %u\n", pkt->size); gnrc_pktbuf_release(pkt);
+        printf("%s,%u release size: %u\n", RIOT_FILE_RELATIVE, __LINE__, pkt->size); gnrc_pktbuf_release(pkt);
         return;
     }
 #if ENABLE_DEBUG && defined(MODULE_OD)
@@ -136,7 +136,7 @@ static void _slip_receive(gnrc_slip_dev_t *dev, size_t bytes)
 
     if (gnrc_netapi_dispatch_receive(pkt->type, GNRC_NETREG_DEMUX_CTX_ALL, pkt) == 0) {
         DEBUG("slip: unable to forward packet of type %i\n", pkt->type);
-        printf("release size: %u\n", pkt->size); gnrc_pktbuf_release(pkt);
+        printf("%s,%u release size: %u\n", RIOT_FILE_RELATIVE, __LINE__, pkt->size); gnrc_pktbuf_release(pkt);
     }
 }
 
@@ -182,7 +182,7 @@ static void _slip_send(gnrc_slip_dev_t *dev, gnrc_pktsnip_t *pkt)
 
     _slip_send_char(dev, _SLIP_END);
 
-    printf("release size: %u\n", pkt->size); gnrc_pktbuf_release(pkt);
+    printf("%s,%u release size: %u\n", RIOT_FILE_RELATIVE, __LINE__, pkt->size); gnrc_pktbuf_release(pkt);
 }
 
 static void *_slip(void *args)

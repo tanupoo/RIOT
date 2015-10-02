@@ -95,7 +95,7 @@ void gnrc_icmpv6_echo_req_handle(kernel_pid_t iface, ipv6_hdr_t *ipv6_hdr,
 
     if (hdr == NULL) {
         DEBUG("icmpv6_echo: no space left in packet buffer\n");
-        printf("release size: %u\n", pkt->size); gnrc_pktbuf_release(pkt);
+        printf("%s,%u release size: %u\n", RIOT_FILE_RELATIVE, __LINE__, pkt->size); gnrc_pktbuf_release(pkt);
         return;
     }
 
@@ -110,7 +110,7 @@ void gnrc_icmpv6_echo_req_handle(kernel_pid_t iface, ipv6_hdr_t *ipv6_hdr,
 
     if (sendto == NULL) {
         DEBUG("icmpv6_echo: no receivers for IPv6 packets\n");
-        printf("release size: %u\n", pkt->size); gnrc_pktbuf_release(pkt);
+        printf("%s,%u release size: %u\n", RIOT_FILE_RELATIVE, __LINE__, pkt->size); gnrc_pktbuf_release(pkt);
         return;
     }
 
@@ -120,7 +120,7 @@ void gnrc_icmpv6_echo_req_handle(kernel_pid_t iface, ipv6_hdr_t *ipv6_hdr,
     while (sendto != NULL) {
         if (gnrc_netapi_send(sendto->pid, pkt) < 1) {
             DEBUG("icmpv6_echo: unable to send packet\n");
-            printf("release size: %u\n", pkt->size); gnrc_pktbuf_release(pkt);
+            printf("%s,%u release size: %u\n", RIOT_FILE_RELATIVE, __LINE__, pkt->size); gnrc_pktbuf_release(pkt);
         }
         sendto = gnrc_netreg_getnext(sendto);
     }
