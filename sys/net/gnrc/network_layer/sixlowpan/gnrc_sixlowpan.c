@@ -74,7 +74,7 @@ static void _receive(gnrc_pktsnip_t *pkt)
 #if defined(DEVELHELP) && ENABLE_DEBUG
         gnrc_pktbuf_stats();
 #endif
-        gnrc_pktbuf_release(pkt);
+        printf("release size: %u\n", pkt->size); gnrc_pktbuf_release(pkt);
         return;
     }
 
@@ -84,7 +84,7 @@ static void _receive(gnrc_pktsnip_t *pkt)
 
     if ((payload == NULL) || (payload->size < 1)) {
         DEBUG("6lo: Received packet has no 6LoWPAN payload\n");
-        gnrc_pktbuf_release(pkt);
+        printf("release size: %u\n", pkt->size); gnrc_pktbuf_release(pkt);
         return;
     }
 
@@ -100,7 +100,7 @@ static void _receive(gnrc_pktsnip_t *pkt)
 #if defined(DEVELHELP) && ENABLE_DEBUG
             gnrc_pktbuf_stats();
 #endif
-            gnrc_pktbuf_release(pkt);
+            printf("release size: %u\n", pkt->size); gnrc_pktbuf_release(pkt);
             return;
         }
 
@@ -109,7 +109,7 @@ static void _receive(gnrc_pktsnip_t *pkt)
 
         if (sixlowpan == NULL) {
             DEBUG("6lo: can not mark 6LoWPAN dispatch\n");
-            gnrc_pktbuf_release(pkt);
+            printf("release size: %u\n", pkt->size); gnrc_pktbuf_release(pkt);
             return;
         }
 
@@ -132,16 +132,16 @@ static void _receive(gnrc_pktsnip_t *pkt)
             (dispatch_size = gnrc_sixlowpan_iphc_decode(ipv6, pkt, 0, 0)) == 0) {
             DEBUG("6lo: error on IPHC decoding\n");
             if (ipv6 != NULL) {
-                gnrc_pktbuf_release(ipv6);
+                printf("release size: %u\n", ipv6->size); gnrc_pktbuf_release(ipv6);
             }
-            gnrc_pktbuf_release(pkt);
+            printf("release size: %u\n", pkt->size); gnrc_pktbuf_release(pkt);
             return;
         }
         sixlowpan = gnrc_pktbuf_mark(pkt, dispatch_size, GNRC_NETTYPE_SIXLOWPAN);
         if (sixlowpan == NULL) {
             DEBUG("6lo: error on marking IPHC dispatch\n");
-            gnrc_pktbuf_release(ipv6);
-            gnrc_pktbuf_release(pkt);
+            printf("release size: %u\n", ipv6->size); gnrc_pktbuf_release(ipv6);
+            printf("release size: %u\n", pkt->size); gnrc_pktbuf_release(pkt);
             return;
         }
 
@@ -155,7 +155,7 @@ static void _receive(gnrc_pktsnip_t *pkt)
     else {
         DEBUG("6lo: dispatch %02" PRIx8 " ... is not supported\n",
               dispatch[0]);
-        gnrc_pktbuf_release(pkt);
+        printf("release size: %u\n", pkt->size); gnrc_pktbuf_release(pkt);
         return;
     }
 
@@ -163,7 +163,7 @@ static void _receive(gnrc_pktsnip_t *pkt)
 
     if (!gnrc_netapi_dispatch_receive(GNRC_NETTYPE_IPV6, GNRC_NETREG_DEMUX_CTX_ALL, pkt)) {
         DEBUG("6lo: No receivers for this packet found\n");
-        gnrc_pktbuf_release(pkt);
+        printf("release size: %u\n", pkt->size); gnrc_pktbuf_release(pkt);
     }
 }
 
@@ -196,13 +196,13 @@ static void _send(gnrc_pktsnip_t *pkt)
 
     if ((pkt == NULL) || (pkt->size < sizeof(gnrc_netif_hdr_t))) {
         DEBUG("6lo: Sending packet has no netif header\n");
-        gnrc_pktbuf_release(pkt);
+        printf("release size: %u\n", pkt->size); gnrc_pktbuf_release(pkt);
         return;
     }
 
     if ((pkt->next == NULL) || (pkt->next->type != GNRC_NETTYPE_IPV6)) {
         DEBUG("6lo: Sending packet has no IPv6 header\n");
-        gnrc_pktbuf_release(pkt);
+        printf("release size: %u\n", pkt->size); gnrc_pktbuf_release(pkt);
         return;
     }
 
@@ -210,7 +210,7 @@ static void _send(gnrc_pktsnip_t *pkt)
 
     if (pkt2 == NULL) {
         DEBUG("6lo: no space left in packet buffer\n");
-        gnrc_pktbuf_release(pkt);
+        printf("release size: %u\n", pkt->size); gnrc_pktbuf_release(pkt);
         return;
     }
 
@@ -220,7 +220,7 @@ static void _send(gnrc_pktsnip_t *pkt)
 
     if (iface == NULL) {
         DEBUG("6lo: Can not get 6LoWPAN specific interface information.\n");
-        gnrc_pktbuf_release(pkt);
+        printf("release size: %u\n", pkt->size); gnrc_pktbuf_release(pkt);
         return;
     }
 
@@ -228,7 +228,7 @@ static void _send(gnrc_pktsnip_t *pkt)
     if (iface->iphc_enabled) {
         if (!gnrc_sixlowpan_iphc_encode(pkt2)) {
             DEBUG("6lo: error on IPHC encoding\n");
-            gnrc_pktbuf_release(pkt2);
+            printf("release size: %u\n", pkt2->size); gnrc_pktbuf_release(pkt2);
             return;
         }
         /* IPHC dispatch does not count on dispatch length since it _shortens_
@@ -238,7 +238,7 @@ static void _send(gnrc_pktsnip_t *pkt)
         if (!_add_uncompr_disp(pkt2)) {
             /* adding uncompressed dispatch failed */
             DEBUG("6lo: no space left in packet buffer\n");
-            gnrc_pktbuf_release(pkt2);
+            printf("release size: %u\n", pkt2->size); gnrc_pktbuf_release(pkt2);
             return;
         }
     }
@@ -248,7 +248,7 @@ static void _send(gnrc_pktsnip_t *pkt)
     if (!_add_uncompr_disp(pkt2)) {
         /* adding uncompressed dispatch failed */
         DEBUG("6lo: no space left in packet buffer\n");
-        gnrc_pktbuf_release(pkt2);
+        printf("release size: %u\n", pkt2->size); gnrc_pktbuf_release(pkt2);
         return;
     }
 #endif
@@ -264,7 +264,7 @@ static void _send(gnrc_pktsnip_t *pkt)
               (void *)pkt2, hdr->if_pid);
         if (gnrc_netapi_send(hdr->if_pid, pkt2) < 1) {
             DEBUG("6lo: unable to send %p over %" PRIu16 "\n", (void *)pkt, hdr->if_pid);
-            gnrc_pktbuf_release(pkt2);
+            printf("release size: %u\n", pkt2->size); gnrc_pktbuf_release(pkt2);
         }
 
         return;
@@ -278,13 +278,13 @@ static void _send(gnrc_pktsnip_t *pkt)
     else {
         DEBUG("6lo: packet too big (%u > %" PRIu16 ")\n",
               (unsigned int)datagram_size, SIXLOWPAN_FRAG_MAX_LEN);
-        gnrc_pktbuf_release(pkt2);
+        printf("release size: %u\n", pkt2->size); gnrc_pktbuf_release(pkt2);
     }
 #else
     (void) datagram_size;
     DEBUG("6lo: packet too big (%u > %" PRIu16 ")\n",
           (unsigned int)datagram_size, iface->max_frag_size);
-    gnrc_pktbuf_release(pkt2);
+    printf("release size: %u\n", pkt2->size); gnrc_pktbuf_release(pkt2);
 #endif
 }
 

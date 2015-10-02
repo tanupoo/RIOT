@@ -50,7 +50,7 @@ static void _event_cb(gnrc_netdev_event_t event, void *data)
         /* send the packet to everyone interested in it's type */
         if (!gnrc_netapi_dispatch_receive(pkt->type, GNRC_NETREG_DEMUX_CTX_ALL, pkt)) {
             DEBUG("nomac: unable to forward packet of type %i\n", pkt->type);
-            gnrc_pktbuf_release(pkt);
+            printf("release size: %u\n", pkt->size); gnrc_pktbuf_release(pkt);
         }
     }
 }

@@ -87,7 +87,7 @@ int gnrc_netapi_dispatch(gnrc_nettype_t type, uint32_t demux_ctx,
         while (sendto) {
             if (_snd_rcv(sendto->pid, cmd, pkt) < 1) {
                 /* unable to dispatch packet */
-                gnrc_pktbuf_release(pkt);
+                printf("release size: %u\n", pkt->size); gnrc_pktbuf_release(pkt);
             }
             sendto = gnrc_netreg_getnext(sendto);
         }

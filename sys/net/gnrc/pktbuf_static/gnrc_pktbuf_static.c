@@ -197,7 +197,7 @@ void gnrc_pktbuf_hold(gnrc_pktsnip_t *pkt, unsigned int num)
     mutex_unlock(&_mutex);
 }
 
-void gnrc_pktbuf_release(gnrc_pktsnip_t *pkt)
+void printf("release size: %u\n", gnrc_pktsnip_t *pkt->size); gnrc_pktbuf_release(gnrc_pktsnip_t *pkt)
 {
     mutex_lock(&_mutex);
     while (pkt) {

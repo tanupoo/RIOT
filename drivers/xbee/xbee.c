@@ -507,7 +507,7 @@ static int _send(gnrc_netdev_t *netdev, gnrc_pktsnip_t *pkt)
         return -ENOMSG;
     }
     if (dev == NULL) {
-        gnrc_pktbuf_release(pkt);
+        printf("release size: %u\n", pkt->size); gnrc_pktbuf_release(pkt);
         return -ENODEV;
     }
 
@@ -515,14 +515,14 @@ static int _send(gnrc_netdev_t *netdev, gnrc_pktsnip_t *pkt)
     size = gnrc_pkt_len(pkt->next);
     if (size > XBEE_MAX_PAYLOAD_LENGTH) {
         DEBUG("xbee: Error sending data, payload length exceeds limit\n");
-        gnrc_pktbuf_release(pkt);
+        printf("release size: %u\n", pkt->size); gnrc_pktbuf_release(pkt);
         return -EOVERFLOW;
     }
     /* get netif header check address length and flags */
     hdr = (gnrc_netif_hdr_t *)pkt->data;
     if (!((hdr->dst_l2addr_len == 2) || (hdr->dst_l2addr_len == 8) ||
           _is_broadcast(hdr))) {
-        gnrc_pktbuf_release(pkt);
+        printf("release size: %u\n", pkt->size); gnrc_pktbuf_release(pkt);
         return -ENOMSG;
     }
 
@@ -570,7 +570,7 @@ static int _send(gnrc_netdev_t *netdev, gnrc_pktsnip_t *pkt)
     /* start transmission */
     uart_tx_begin(dev->uart);
     /* release data */
-    gnrc_pktbuf_release(pkt);
+    printf("release size: %u\n", pkt->size); gnrc_pktbuf_release(pkt);
     /* return number of payload byte */
     return (int)size;
 }
@@ -742,7 +742,7 @@ static void _isr_event(gnrc_netdev_t *netdev, uint32_t event_type)
                           dev->proto);
     if (pkt == NULL) {
         DEBUG("xbee: Error allocating payload in packet buffer on RX\n");
-        gnrc_pktbuf_release(pkt_head);
+        printf("release size: %u\n", pkt_head->size); gnrc_pktbuf_release(pkt_head);
         dev->rx_count = 0;
         return;
     }

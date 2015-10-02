@@ -319,7 +319,7 @@ void gnrc_ndp_nbr_adv_handle(kernel_pid_t iface, gnrc_pktsnip_t *pkt,
             while ((queued_pkt = gnrc_pktqueue_remove_head(&nc_entry->pkts)) != NULL) {
                 if (gnrc_netapi_send(gnrc_ipv6_pid, queued_pkt->pkt) < 1) {
                     DEBUG("ndp: unable to send queued packet\n");
-                    gnrc_pktbuf_release(queued_pkt->pkt);
+                    printf("release size: %u\n", queued_pkt->pkt->size); gnrc_pktbuf_release(queued_pkt->pkt);
                 }
                 queued_pkt->pkt = NULL;
             }

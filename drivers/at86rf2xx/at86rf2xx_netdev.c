@@ -220,7 +220,7 @@ static int _send(gnrc_netdev_t *netdev, gnrc_pktsnip_t *pkt)
         return -ENOMSG;
     }
     if (dev == NULL) {
-        gnrc_pktbuf_release(pkt);
+        printf("release size: %u\n", pkt->size); gnrc_pktbuf_release(pkt);
         return -ENODEV;
     }
 
@@ -228,7 +228,7 @@ static int _send(gnrc_netdev_t *netdev, gnrc_pktsnip_t *pkt)
     len = _make_data_frame_hdr(dev, mhr, (gnrc_netif_hdr_t *)pkt->data);
     if (len == 0) {
         DEBUG("[at86rf2xx] error: unable to create 802.15.4 header\n");
-        gnrc_pktbuf_release(pkt);
+        printf("release size: %u\n", pkt->size); gnrc_pktbuf_release(pkt);
         return -ENOMSG;
     }
     /* check if packet (header + payload + FCS) fits into FIFO */
@@ -236,7 +236,7 @@ static int _send(gnrc_netdev_t *netdev, gnrc_pktsnip_t *pkt)
     if ((gnrc_pkt_len(snip) + len + 2) > AT86RF2XX_MAX_PKT_LENGTH) {
         printf("[at86rf2xx] error: packet too large (%u byte) to be send\n",
                gnrc_pkt_len(snip) + len + 2);
-        gnrc_pktbuf_release(pkt);
+        printf("release size: %u\n", pkt->size); gnrc_pktbuf_release(pkt);
         return -EOVERFLOW;
     }
 
@@ -253,7 +253,7 @@ static int _send(gnrc_netdev_t *netdev, gnrc_pktsnip_t *pkt)
         at86rf2xx_tx_exec(dev);
     }
     /* release packet */
-    gnrc_pktbuf_release(pkt);
+    printf("release size: %u\n", pkt->size); gnrc_pktbuf_release(pkt);
     /* return the number of bytes that were actually send out */
     return (int)len;
 }
@@ -309,7 +309,7 @@ static void _receive_data(at86rf2xx_t *dev)
     payload = gnrc_pktbuf_add(hdr, NULL, (pkt_len - hdr_len), dev->proto);
     if (payload == NULL) {
         DEBUG("[at86rf2xx] error: unable to allocate incoming payload\n");
-        gnrc_pktbuf_release(hdr);
+        printf("release size: %u\n", hdr->size); gnrc_pktbuf_release(hdr);
         return;
     }
     /* copy payload */

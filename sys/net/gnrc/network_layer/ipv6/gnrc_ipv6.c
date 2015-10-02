@@ -119,7 +119,7 @@ void gnrc_ipv6_demux(kernel_pid_t iface, gnrc_pktsnip_t *pkt, uint8_t nh)
             DEBUG("ipv6: handle extension header (nh = %" PRIu8 ")\n", nh);
             if (!gnrc_ipv6_ext_demux(iface, pkt, nh)) {
                 DEBUG("ipv6: unable to parse extension headers.\n");
-                gnrc_pktbuf_release(pkt);
+                printf("release size: %u\n", pkt->size); gnrc_pktbuf_release(pkt);
                 return;
             }
 #endif
@@ -138,7 +138,7 @@ void gnrc_ipv6_demux(kernel_pid_t iface, gnrc_pktsnip_t *pkt, uint8_t nh)
 
     if (receiver_num == 0) {
         DEBUG("ipv6: unable to forward packet as no one is interested in it\n");
-        gnrc_pktbuf_release(pkt);
+        printf("release size: %u\n", pkt->size); gnrc_pktbuf_release(pkt);
         return;
     }
 
@@ -278,7 +278,7 @@ static void _send_to_iface(kernel_pid_t iface, gnrc_pktsnip_t *pkt)
     assert(if_entry != NULL);
     if (gnrc_pkt_len(pkt->next) > if_entry->mtu) {
         DEBUG("ipv6: packet too big\n");
-        gnrc_pktbuf_release(pkt);
+        printf("release size: %u\n", pkt->size); gnrc_pktbuf_release(pkt);
         return;
     }
 #ifdef MODULE_GNRC_SIXLOWPAN
@@ -286,14 +286,14 @@ static void _send_to_iface(kernel_pid_t iface, gnrc_pktsnip_t *pkt)
         DEBUG("ipv6: send to 6LoWPAN instead\n");
         if (!gnrc_netapi_dispatch_send(GNRC_NETTYPE_SIXLOWPAN, GNRC_NETREG_DEMUX_CTX_ALL, pkt)) {
             DEBUG("ipv6: no 6LoWPAN thread found");
-            gnrc_pktbuf_release(pkt);
+            printf("release size: %u\n", pkt->size); gnrc_pktbuf_release(pkt);
         }
         return;
     }
 #endif
     if (gnrc_netapi_send(iface, pkt) < 1) {
         DEBUG("ipv6: unable to send packet\n");
-        gnrc_pktbuf_release(pkt);
+        printf("release size: %u\n", pkt->size); gnrc_pktbuf_release(pkt);
     }
 }
 
@@ -318,7 +318,7 @@ static void _send_unicast(kernel_pid_t iface, uint8_t *dst_l2addr,
 
     if (netif == NULL) {
         DEBUG("ipv6: error on interface header allocation, dropping packet\n");
-        gnrc_pktbuf_release(pkt);
+        printf("release size: %u\n", pkt->size); gnrc_pktbuf_release(pkt);
         return;
     }
 
@@ -412,7 +412,7 @@ static void _send_multicast(kernel_pid_t iface, gnrc_pktsnip_t *pkt,
         /* throw away packet if no one is interested */
         if (ifnum == 0) {
             DEBUG("ipv6: no interfaces registered, dropping packet\n");
-            gnrc_pktbuf_release(pkt);
+            printf("release size: %u\n", pkt->size); gnrc_pktbuf_release(pkt);
             return;
         }
     }
@@ -437,7 +437,7 @@ static void _send_multicast(kernel_pid_t iface, gnrc_pktsnip_t *pkt,
                 if (ipv6 == NULL) {
                     DEBUG("ipv6: unable to get write access to IPv6 header, "
                           "for interface %" PRIkernel_pid "\n", ifs[i]);
-                    gnrc_pktbuf_release(pkt);
+                    printf("release size: %u\n", pkt->size); gnrc_pktbuf_release(pkt);
                     return;
                 }
 
@@ -448,7 +448,7 @@ static void _send_multicast(kernel_pid_t iface, gnrc_pktsnip_t *pkt,
                     tmp->next = gnrc_pktbuf_start_write(ptr);
                     if (tmp->next == NULL) {
                         DEBUG("ipv6: unable to get write access to payload, drop it\n");
-                        gnrc_pktbuf_release(ipv6);
+                        printf("release size: %u\n", ipv6->size); gnrc_pktbuf_release(ipv6);
                         return;
                     }
                     tmp = tmp->next;
@@ -457,7 +457,7 @@ static void _send_multicast(kernel_pid_t iface, gnrc_pktsnip_t *pkt,
 
                 if (_fill_ipv6_hdr(ifs[i], ipv6, tmp) < 0) {
                     /* error on filling up header */
-                    gnrc_pktbuf_release(ipv6);
+                    printf("release size: %u\n", ipv6->size); gnrc_pktbuf_release(ipv6);
                     return;
                 }
             }
@@ -468,7 +468,7 @@ static void _send_multicast(kernel_pid_t iface, gnrc_pktsnip_t *pkt,
             if (netif == NULL) {
                 DEBUG("ipv6: error on interface header allocation, "
                       "dropping packet\n");
-                gnrc_pktbuf_release(ipv6);
+                printf("release size: %u\n", ipv6->size); gnrc_pktbuf_release(ipv6);
                 return;
             }
 
@@ -483,7 +483,7 @@ static void _send_multicast(kernel_pid_t iface, gnrc_pktsnip_t *pkt,
         if (prep_hdr) {
             if (_fill_ipv6_hdr(iface, ipv6, payload) < 0) {
                 /* error on filling up header */
-                gnrc_pktbuf_release(pkt);
+                printf("release size: %u\n", pkt->size); gnrc_pktbuf_release(pkt);
                 return;
             }
         }
@@ -502,7 +502,7 @@ static void _send_multicast(kernel_pid_t iface, gnrc_pktsnip_t *pkt,
         if (netif == NULL) {
             DEBUG("ipv6: error on interface header allocation, "
                   "dropping packet\n");
-            gnrc_pktbuf_release(pkt);
+            printf("release size: %u\n", pkt->size); gnrc_pktbuf_release(pkt);
             return;
         }
 
@@ -512,7 +512,7 @@ static void _send_multicast(kernel_pid_t iface, gnrc_pktsnip_t *pkt,
     if (prep_hdr) {
         if (_fill_ipv6_hdr(iface, ipv6, payload) < 0) {
             /* error on filling up header */
-            gnrc_pktbuf_release(pkt);
+            printf("release size: %u\n", pkt->size); gnrc_pktbuf_release(pkt);
             return;
         }
     }
@@ -563,7 +563,7 @@ static void _send(gnrc_pktsnip_t *pkt, bool prep_hdr)
                                               * in _send_unicast() */
         if (ipv6 == NULL) {
             DEBUG("ipv6: unable to get write access to netif header, dropping packet\n");
-            gnrc_pktbuf_release(pkt);
+            printf("release size: %u\n", pkt->size); gnrc_pktbuf_release(pkt);
             return;
         }
         pkt = ipv6;  /* Reset pkt from temporary variable */
@@ -577,7 +577,7 @@ static void _send(gnrc_pktsnip_t *pkt, bool prep_hdr)
     payload = gnrc_pktbuf_start_write(ipv6);
     if (payload == NULL) {
         DEBUG("ipv6: unable to get write access to IPv6 header, dropping packet\n");
-        gnrc_pktbuf_release(pkt);
+        printf("release size: %u\n", pkt->size); gnrc_pktbuf_release(pkt);
         return;
     }
     if (ipv6 != pkt) {      /* in case packet has netif header */
@@ -605,7 +605,7 @@ static void _send(gnrc_pktsnip_t *pkt, bool prep_hdr)
         if (prep_hdr) {
             if (_fill_ipv6_hdr(iface, ipv6, payload) < 0) {
                 /* error on filling up header */
-                gnrc_pktbuf_release(pkt);
+                printf("release size: %u\n", pkt->size); gnrc_pktbuf_release(pkt);
                 return;
             }
         }
@@ -614,7 +614,7 @@ static void _send(gnrc_pktsnip_t *pkt, bool prep_hdr)
 
         if (rcv_pkt == NULL) {
             DEBUG("ipv6: error on generating loopback packet\n");
-            gnrc_pktbuf_release(pkt);
+            printf("release size: %u\n", pkt->size); gnrc_pktbuf_release(pkt);
             return;
         }
 
@@ -627,13 +627,13 @@ static void _send(gnrc_pktsnip_t *pkt, bool prep_hdr)
             ptr = ptr->next;
         }
 
-        gnrc_pktbuf_release(pkt);
+        printf("release size: %u\n", pkt->size); gnrc_pktbuf_release(pkt);
 
         DEBUG("ipv6: packet is addressed to myself => loopback\n");
 
         if (gnrc_netapi_receive(gnrc_ipv6_pid, rcv_pkt) < 1) {
             DEBUG("ipv6: unable to deliver packet\n");
-            gnrc_pktbuf_release(pkt);
+            printf("release size: %u\n", pkt->size); gnrc_pktbuf_release(pkt);
         }
     }
     else {
@@ -644,14 +644,14 @@ static void _send(gnrc_pktsnip_t *pkt, bool prep_hdr)
 
         if (iface == KERNEL_PID_UNDEF) {
             DEBUG("ipv6: error determining next hop's link layer address\n");
-            gnrc_pktbuf_release(pkt);
+            printf("release size: %u\n", pkt->size); gnrc_pktbuf_release(pkt);
             return;
         }
 
         if (prep_hdr) {
             if (_fill_ipv6_hdr(iface, ipv6, payload) < 0) {
                 /* error on filling up header */
-                gnrc_pktbuf_release(pkt);
+                printf("release size: %u\n", pkt->size); gnrc_pktbuf_release(pkt);
                 return;
             }
         }
@@ -685,7 +685,7 @@ static void _dispatch_rcv_pkt(gnrc_nettype_t type, uint32_t demux_ctx,
               entry->pid);
         if (gnrc_netapi_receive(entry->pid, pkt) < 1) {
             DEBUG("ipv6: unable to deliver packet\n");
-            gnrc_pktbuf_release(pkt);
+            printf("release size: %u\n", pkt->size); gnrc_pktbuf_release(pkt);
         }
         entry = gnrc_netreg_getnext(entry);
     }
@@ -712,14 +712,14 @@ static void _receive(gnrc_pktsnip_t *pkt)
 
         if (!ipv6_hdr_is(ipv6->data)) {
             DEBUG("ipv6: Received packet was not IPv6, dropping packet\n");
-            gnrc_pktbuf_release(pkt);
+            printf("release size: %u\n", pkt->size); gnrc_pktbuf_release(pkt);
             return;
         }
     }
     else {
         if (!ipv6_hdr_is(pkt->data)) {
             DEBUG("ipv6: Received packet was not IPv6, dropping packet\n");
-            gnrc_pktbuf_release(pkt);
+            printf("release size: %u\n", pkt->size); gnrc_pktbuf_release(pkt);
             return;
         }
 
@@ -728,7 +728,7 @@ static void _receive(gnrc_pktsnip_t *pkt)
 
         if (ipv6 == NULL) {
             DEBUG("ipv6: unable to get write access to packet, drop it\n");
-            gnrc_pktbuf_release(pkt);
+            printf("release size: %u\n", pkt->size); gnrc_pktbuf_release(pkt);
             return;
         }
 
@@ -738,7 +738,7 @@ static void _receive(gnrc_pktsnip_t *pkt)
 
         if (ipv6 == NULL) {
             DEBUG("ipv6: error marking IPv6 header, dropping packet\n");
-            gnrc_pktbuf_release(pkt);
+            printf("release size: %u\n", pkt->size); gnrc_pktbuf_release(pkt);
             return;
         }
     }
@@ -772,7 +772,7 @@ static void _receive(gnrc_pktsnip_t *pkt)
         if ((ipv6_addr_is_link_local(&(hdr->src))) || (ipv6_addr_is_link_local(&(hdr->dst)))) {
             DEBUG("ipv6: do not forward packets with link-local source or"\
                   " destination address\n");
-            gnrc_pktbuf_release(pkt);
+            printf("release size: %u\n", pkt->size); gnrc_pktbuf_release(pkt);
             return;
         }
         /* TODO: check if receiving interface is router */
@@ -787,11 +787,11 @@ static void _receive(gnrc_pktsnip_t *pkt)
 
             if ((ipv6 == NULL) || (pkt == NULL)) {
                 DEBUG("ipv6: unable to get write access to packet: dropping it\n");
-                gnrc_pktbuf_release(tmp);
+                printf("release size: %u\n", tmp->size); gnrc_pktbuf_release(tmp);
                 return;
             }
 
-            gnrc_pktbuf_release(ipv6->next);    /* remove headers around IPV6 */
+            printf("release size: %u\n", ipv6->next->size); gnrc_pktbuf_release(ipv6->next);    /* remove headers around IPV6 */
             ipv6->next = pkt;                   /* reorder for sending */
             pkt->next = NULL;
             _send(ipv6, false);
@@ -799,14 +799,14 @@ static void _receive(gnrc_pktsnip_t *pkt)
         }
         else {
             DEBUG("ipv6: hop limit reached 0: drop packet\n");
-            gnrc_pktbuf_release(pkt);
+            printf("release size: %u\n", pkt->size); gnrc_pktbuf_release(pkt);
             return;
         }
 
 #else  /* MODULE_GNRC_IPV6_ROUTER */
         DEBUG("ipv6: dropping packet\n");
         /* non rounting hosts just drop the packet */
-        gnrc_pktbuf_release(pkt);
+        printf("release size: %u\n", pkt->size); gnrc_pktbuf_release(pkt);
         return;
 #endif /* MODULE_GNRC_IPV6_ROUTER */
     }

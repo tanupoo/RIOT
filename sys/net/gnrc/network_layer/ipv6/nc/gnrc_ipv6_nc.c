@@ -141,7 +141,7 @@ void gnrc_ipv6_nc_remove(kernel_pid_t iface, const ipv6_addr_t *ipv6_addr)
 
 #ifdef MODULE_GNRC_NDP_NODE
         while (entry->pkts != NULL) {
-            gnrc_pktbuf_release(entry->pkts->pkt);
+            printf("release size: %u\n", entry->pkts->pkt->size); gnrc_pktbuf_release(entry->pkts->pkt);
             entry->pkts->pkt = NULL;
             gnrc_pktqueue_remove_head(&entry->pkts);
         }

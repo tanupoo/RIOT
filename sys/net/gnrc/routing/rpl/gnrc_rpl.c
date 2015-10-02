@@ -137,7 +137,7 @@ static void _receive(gnrc_pktsnip_t *icmpv6)
             break;
     }
 
-    gnrc_pktbuf_release(icmpv6);
+    printf("release size: %u\n", icmpv6->size); gnrc_pktbuf_release(icmpv6);
 }
 
 static void *_event_loop(void *args)

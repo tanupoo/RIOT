@@ -68,7 +68,7 @@ static gnrc_pktsnip_t *_build_frag_pkt(gnrc_pktsnip_t *pkt, size_t payload_len,
 
     if (frag == NULL) {
         DEBUG("6lo frag: error allocating first fragment\n");
-        gnrc_pktbuf_release(netif);
+        printf("release size: %u\n", netif->size); gnrc_pktbuf_release(netif);
         return NULL;
     }
 
@@ -128,7 +128,7 @@ static uint16_t _send_1st_fragment(gnrc_sixlowpan_netif_t *iface, gnrc_pktsnip_t
           (unsigned int)datagram_size, _tag, local_offset);
     if (gnrc_netapi_send(iface->pid, frag) < 1) {
         DEBUG("6lo frag: unable to send first fragment\n");
-        gnrc_pktbuf_release(frag);
+        printf("release size: %u\n", frag->size); gnrc_pktbuf_release(frag);
     }
 
     return local_offset;
@@ -206,7 +206,7 @@ static uint16_t _send_nth_fragment(gnrc_sixlowpan_netif_t *iface, gnrc_pktsnip_t
           local_offset);
     if (gnrc_netapi_send(iface->pid, frag) < 1) {
         DEBUG("6lo frag: unable to send subsequent fragment\n");
-        gnrc_pktbuf_release(frag);
+        printf("release size: %u\n", frag->size); gnrc_pktbuf_release(frag);
     }
 
     return local_offset;
@@ -224,7 +224,7 @@ void gnrc_sixlowpan_frag_send(kernel_pid_t pid, gnrc_pktsnip_t *pkt,
 #if defined(DEVELHELP) && defined(ENABLE_DEBUG)
     if (iface == NULL) {
         DEBUG("6lo frag: iface == NULL, expect segmentation fault.\n");
-        gnrc_pktbuf_release(pkt);
+        printf("release size: %u\n", pkt->size); gnrc_pktbuf_release(pkt);
         return;
     }
 #endif
@@ -232,7 +232,7 @@ void gnrc_sixlowpan_frag_send(kernel_pid_t pid, gnrc_pktsnip_t *pkt,
     if ((res = _send_1st_fragment(iface, pkt, payload_len, datagram_size)) == 0) {
         /* error sending first fragment */
         DEBUG("6lo frag: error sending 1st fragment\n");
-        gnrc_pktbuf_release(pkt);
+        printf("release size: %u\n", pkt->size); gnrc_pktbuf_release(pkt);
         return;
     }
 
@@ -246,7 +246,7 @@ void gnrc_sixlowpan_frag_send(kernel_pid_t pid, gnrc_pktsnip_t *pkt,
             /* error sending subsequent fragment */
             DEBUG("6lo frag: error sending subsequent fragment (offset = %" PRIu16
                   ")\n", offset);
-            gnrc_pktbuf_release(pkt);
+            printf("release size: %u\n", pkt->size); gnrc_pktbuf_release(pkt);
             return;
         }
 
@@ -255,7 +255,7 @@ void gnrc_sixlowpan_frag_send(kernel_pid_t pid, gnrc_pktsnip_t *pkt,
     }
 
     /* remove original packet from packet buffer */
-    gnrc_pktbuf_release(pkt);
+    printf("release size: %u\n", pkt->size); gnrc_pktbuf_release(pkt);
     _tag++;
 }
 
@@ -278,14 +278,14 @@ void gnrc_sixlowpan_frag_handle_pkt(gnrc_pktsnip_t *pkt)
 
         default:
             DEBUG("6lo rbuf: Not a fragment header.\n");
-            gnrc_pktbuf_release(pkt);
+            printf("release size: %u\n", pkt->size); gnrc_pktbuf_release(pkt);
 
             return;
     }
 
     rbuf_add(hdr, pkt, frag_size, offset);
 
-    gnrc_pktbuf_release(pkt);
+    printf("release size: %u\n", pkt->size); gnrc_pktbuf_release(pkt);
 }
 
 /** @} */

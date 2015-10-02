@@ -214,7 +214,7 @@ static int _send(gnrc_netdev_t *netdev, gnrc_pktsnip_t *pkt)
 
     if ((netdev == NULL) || (netdev->driver != &_zep_driver)) {
         DEBUG("zep: wrong device on sending\n");
-        gnrc_pktbuf_release(pkt);
+        printf("release size: %u\n", pkt->size); gnrc_pktbuf_release(pkt);
         return -ENODEV;
     }
 
@@ -223,7 +223,7 @@ static int _send(gnrc_netdev_t *netdev, gnrc_pktsnip_t *pkt)
 
     if (hdr_len == 0) {
         DEBUG("zep: error on frame creation\n");
-        gnrc_pktbuf_release(pkt);
+        printf("release size: %u\n", pkt->size); gnrc_pktbuf_release(pkt);
         return -ENOMSG;
     }
 
@@ -231,7 +231,7 @@ static int _send(gnrc_netdev_t *netdev, gnrc_pktsnip_t *pkt)
 
     if (new_pkt == NULL) {
         DEBUG("zep: could not allocate ZEP header in pktbuf\n");
-        gnrc_pktbuf_release(pkt);
+        printf("release size: %u\n", pkt->size); gnrc_pktbuf_release(pkt);
         return -ENOBUFS;
     }
 
@@ -242,8 +242,8 @@ static int _send(gnrc_netdev_t *netdev, gnrc_pktsnip_t *pkt)
 
     if (hdr == NULL) {
         DEBUG("zep: could not allocate UDP header in pktbuf\n");
-        gnrc_pktbuf_release(pkt);
-        gnrc_pktbuf_release(new_pkt);
+        printf("release size: %u\n", pkt->size); gnrc_pktbuf_release(pkt);
+        printf("release size: %u\n", new_pkt->size); gnrc_pktbuf_release(new_pkt);
         return -ENOBUFS;
     }
 
@@ -254,8 +254,8 @@ static int _send(gnrc_netdev_t *netdev, gnrc_pktsnip_t *pkt)
 
     if (hdr == NULL) {
         DEBUG("zep: could not allocate IPv6 header in pktbuf\n");
-        gnrc_pktbuf_release(pkt);
-        gnrc_pktbuf_release(new_pkt);
+        printf("release size: %u\n", pkt->size); gnrc_pktbuf_release(pkt);
+        printf("release size: %u\n", new_pkt->size); gnrc_pktbuf_release(new_pkt);
         return -ENOBUFS;
     }
 
@@ -265,8 +265,8 @@ static int _send(gnrc_netdev_t *netdev, gnrc_pktsnip_t *pkt)
 
     if (mhr_offset == 0) {
         DEBUG("zep: error filling ZEP header\n");
-        gnrc_pktbuf_release(pkt);
-        gnrc_pktbuf_release(new_pkt);
+        printf("release size: %u\n", pkt->size); gnrc_pktbuf_release(pkt);
+        printf("release size: %u\n", new_pkt->size); gnrc_pktbuf_release(new_pkt);
         return -EINVAL;
     }
 
@@ -283,14 +283,14 @@ static int _send(gnrc_netdev_t *netdev, gnrc_pktsnip_t *pkt)
         ptr = ptr->next;
     }
 
-    gnrc_pktbuf_release(pkt);
+    printf("release size: %u\n", pkt->size); gnrc_pktbuf_release(pkt);
 
     DEBUG("zep: set frame FCS to 0x%04 " PRIx16 "\n", fcs);
     _set_uint16_ptr((uint16_t *)data, byteorder_btols(byteorder_htons(fcs)).u16);
 
     if (!gnrc_netapi_dispatch_send(GNRC_NETTYPE_UDP, GNRC_NETREG_DEMUX_CTX_ALL, new_pkt)) {
         DEBUG("zep: no UDP handler found: dropping packet\n");
-        gnrc_pktbuf_release(new_pkt);
+        printf("release size: %u\n", new_pkt->size); gnrc_pktbuf_release(new_pkt);
         return -ENOENT;
     }
 
@@ -831,7 +831,7 @@ static void _rx_started_event(gnrc_zep_t *dev)
 
     if (tmp == NULL) {
         DEBUG("zep: Could not get write access to received packet\n");
-        gnrc_pktbuf_release(pkt);
+        printf("release size: %u\n", pkt->size); gnrc_pktbuf_release(pkt);
         return;
     }
 
@@ -846,7 +846,7 @@ static void _rx_started_event(gnrc_zep_t *dev)
 
     if ((pkt->size < 2) || (hdr->preamble[0] != 'E') ||
         (hdr->preamble[1] != 'X')) {
-        gnrc_pktbuf_release(pkt);
+        printf("release size: %u\n", pkt->size); gnrc_pktbuf_release(pkt);
         return;
     }
 
@@ -860,7 +860,7 @@ static void _rx_started_event(gnrc_zep_t *dev)
             break;
 
         default:
-            gnrc_pktbuf_release(pkt);
+            printf("release size: %u\n", pkt->size); gnrc_pktbuf_release(pkt);
             return;
     }
 
@@ -868,7 +868,7 @@ static void _rx_started_event(gnrc_zep_t *dev)
         dev->event_cb(NETDEV_EVENT_RX_COMPLETE, pkt);
     }
     else if (pkt != NULL) {
-        gnrc_pktbuf_release(pkt);
+        printf("release size: %u\n", pkt->size); gnrc_pktbuf_release(pkt);
     }
 }
 

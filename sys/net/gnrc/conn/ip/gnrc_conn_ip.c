@@ -95,13 +95,13 @@ int conn_ip_sendto(const void *data, size_t len, const void *src, size_t src_len
             if (((src != NULL) && (src_len != sizeof(ipv6_addr_t))) ||
                 (dst_len != sizeof(ipv6_addr_t)) ||
                 (((unsigned)proto) > 256U)) {
-                gnrc_pktbuf_release(pkt);
+                printf("release size: %u\n", pkt->size); gnrc_pktbuf_release(pkt);
                 return -EINVAL;
             }
             /* addr will only be copied */
             hdr = gnrc_ipv6_hdr_build(pkt, (uint8_t *)src, src_len, (uint8_t *)dst, dst_len);
             if (hdr == NULL) {
-                gnrc_pktbuf_release(pkt);
+                printf("release size: %u\n", pkt->size); gnrc_pktbuf_release(pkt);
                 return -ENOMEM;
             }
             /* set next header to connection's proto */
@@ -118,7 +118,7 @@ int conn_ip_sendto(const void *data, size_t len, const void *src, size_t src_len
             (void)dst_len;
             (void)proto;
             (void)hdr;
-            gnrc_pktbuf_release(pkt);
+            printf("release size: %u\n", pkt->size); gnrc_pktbuf_release(pkt);
             return -EAFNOSUPPORT;
     }
 

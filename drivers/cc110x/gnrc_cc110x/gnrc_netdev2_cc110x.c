@@ -37,7 +37,7 @@ static int _send(gnrc_netdev2_t *gnrc_netdev2, gnrc_pktsnip_t *pkt)
 
     if (pkt->type != GNRC_NETTYPE_NETIF) {
         DEBUG("gnrc_netdev2_cc110x: First header was not generic netif header\n");
-        gnrc_pktbuf_release(pkt);
+        printf("release size: %u\n", pkt->size); gnrc_pktbuf_release(pkt);
         return -EBADMSG;
     }
 
@@ -84,7 +84,7 @@ static int _send(gnrc_netdev2_t *gnrc_netdev2, gnrc_pktsnip_t *pkt)
         if (payload_len > CC110X_MAX_DATA_LENGTH) {
             DEBUG("gnrc_netdev2_cc110x: payload length exceeds maximum"
                     "(%u>%u)\n", payload_len, CC110X_MAX_DATA_LENGTH);
-            gnrc_pktbuf_release(pkt);
+            printf("release size: %u\n", pkt->size); gnrc_pktbuf_release(pkt);
             return -EBADMSG;
         }
 
@@ -94,7 +94,7 @@ static int _send(gnrc_netdev2_t *gnrc_netdev2, gnrc_pktsnip_t *pkt)
     }
 
     /* pkt has been copied into iovec, we're done with it. */
-    gnrc_pktbuf_release(pkt);
+    printf("release size: %u\n", pkt->size); gnrc_pktbuf_release(pkt);
 
     cc110x_pkt.length = (uint8_t) payload_len + CC110X_HEADER_LENGTH;
 
@@ -148,7 +148,7 @@ static gnrc_pktsnip_t *_recv(gnrc_netdev2_t *gnrc_netdev2)
 
     if (netif_hdr == NULL) {
         DEBUG("gnrc_netdev2_cc110x: no space left in packet buffer\n");
-        gnrc_pktbuf_release(pkt);
+        printf("release size: %u\n", pkt->size); gnrc_pktbuf_release(pkt);
         return NULL;
     }
 

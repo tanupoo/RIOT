@@ -87,7 +87,7 @@ static void _pass_on_packet(gnrc_pktsnip_t *pkt)
     /* throw away packet if no one is interested */
     if (!gnrc_netapi_dispatch_receive(pkt->type, GNRC_NETREG_DEMUX_CTX_ALL, pkt)) {
         DEBUG("gnrc_netdev2: unable to forward packet of type %i\n", pkt->type);
-        gnrc_pktbuf_release(pkt);
+        printf("release size: %u\n", pkt->size); gnrc_pktbuf_release(pkt);
         return;
     }
 }

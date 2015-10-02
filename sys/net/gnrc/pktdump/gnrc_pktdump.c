@@ -114,7 +114,7 @@ static void _dump(gnrc_pktsnip_t *pkt)
     }
 
     printf("~~ PKT    - %2i snips, total size: %3i byte\n", snips, size);
-    gnrc_pktbuf_release(pkt);
+    printf("release size: %u\n", pkt->size); gnrc_pktbuf_release(pkt);
 }
 
 static void *_eventloop(void *arg)

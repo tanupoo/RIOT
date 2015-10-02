@@ -65,20 +65,20 @@ static void send(char *addr_str, char *port_str, char *data, unsigned int num,
         udp = gnrc_udp_hdr_build(payload, port, 2, port, 2);
         if (udp == NULL) {
             puts("Error: unable to allocate UDP header");
-            gnrc_pktbuf_release(payload);
+            printf("release size: %u\n", payload->size); gnrc_pktbuf_release(payload);
             return;
         }
         /* allocate IPv6 header */
         ip = gnrc_ipv6_hdr_build(udp, NULL, 0, (uint8_t *)&addr, sizeof(addr));
         if (ip == NULL) {
             puts("Error: unable to allocate IPv6 header");
-            gnrc_pktbuf_release(udp);
+            printf("release size: %u\n", udp->size); gnrc_pktbuf_release(udp);
             return;
         }
         /* send packet */
         if (!gnrc_netapi_dispatch_send(GNRC_NETTYPE_UDP, GNRC_NETREG_DEMUX_CTX_ALL, ip)) {
             puts("Error: unable to locate UDP thread");
-            gnrc_pktbuf_release(ip);
+            printf("release size: %u\n", ip->size); gnrc_pktbuf_release(ip);
             return;
         }
         printf("Success: send %u byte to [%s]:%u\n", (unsigned)payload->size,

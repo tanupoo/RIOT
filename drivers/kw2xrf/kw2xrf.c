@@ -1009,7 +1009,7 @@ void _receive_data(kw2xrf_t *dev)
 
     if (payload == NULL) {
         DEBUG("kw2xrf: ERROR allocating payload in packet buffer on RX\n");
-        gnrc_pktbuf_release(hdr);
+        printf("release size: %u\n", hdr->size); gnrc_pktbuf_release(hdr);
         return;
     }
 
@@ -1067,7 +1067,7 @@ int _assemble_tx_buf(kw2xrf_t *dev, gnrc_pktsnip_t *pkt)
     int index = 0;
 
     if (dev == NULL) {
-        gnrc_pktbuf_release(pkt);
+        printf("release size: %u\n", pkt->size); gnrc_pktbuf_release(pkt);
         return -ENODEV;
     }
 
@@ -1118,7 +1118,7 @@ int _assemble_tx_buf(kw2xrf_t *dev, gnrc_pktsnip_t *pkt)
         }
     }
     else {
-        gnrc_pktbuf_release(pkt);
+        printf("release size: %u\n", pkt->size); gnrc_pktbuf_release(pkt);
         return -ENOMSG;
     }
 
@@ -1162,7 +1162,7 @@ int kw2xrf_send(gnrc_netdev_t *netdev, gnrc_pktsnip_t *pkt)
     gnrc_pktsnip_t *payload = pkt->next;
 
     if (netdev == NULL) {
-        gnrc_pktbuf_release(pkt);
+        printf("release size: %u\n", pkt->size); gnrc_pktbuf_release(pkt);
         return -ENODEV;
     }
 
@@ -1193,7 +1193,7 @@ int kw2xrf_send(gnrc_netdev_t *netdev, gnrc_pktsnip_t *pkt)
     while (payload) {
         /* check we don't exceed FIFO size */
         if (index + 2 + payload->size > KW2XRF_MAX_PKT_LENGTH) {
-            gnrc_pktbuf_release(pkt);
+            printf("release size: %u\n", pkt->size); gnrc_pktbuf_release(pkt);
             DEBUG("Packet exceeded FIFO size.\n");
             return -ENOBUFS;
         }
@@ -1212,7 +1212,7 @@ int kw2xrf_send(gnrc_netdev_t *netdev, gnrc_pktsnip_t *pkt)
 
     dev->buf[0] = index + 1; /* set packet size */
 
-    gnrc_pktbuf_release(pkt);
+    printf("release size: %u\n", pkt->size); gnrc_pktbuf_release(pkt);
     DEBUG("kw2xrf: packet with size %i loaded to tx_buf\n", dev->buf[0]);
     kw2xrf_write_fifo(dev->buf, dev->buf[0]);
 

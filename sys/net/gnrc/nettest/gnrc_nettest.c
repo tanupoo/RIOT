@@ -102,7 +102,7 @@ static gnrc_nettest_res_t _pkt_test(uint16_t cmd_type, kernel_pid_t pid,
             exp = exp->next;
         }
 
-        gnrc_pktbuf_release((gnrc_pktsnip_t *)msg.content.ptr);
+        printf("release size: %u\n", (gnrc_pktsnip_t *)msg.content.ptr->size); gnrc_pktbuf_release((gnrc_pktsnip_t *)msg.content.ptr);
     }
 
     return res;
