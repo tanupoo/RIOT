@@ -1,6 +1,6 @@
 # Define the cpu used by the CC3200 board:
 export CPU        = cc3200
-# export CPU_MODEL ?= cc3200
+export CPU_MODEL ?= cc3200
 
 # setup serial terminal
 export PORT      ?= /dev/ttyUSB1
@@ -39,6 +39,8 @@ export BTEST_FLAGS = $(CURDIR)/tests $(ELFFILE) $(TEST_SUITE)
 
 
 export OBJDUMPFLAGS += --disassemble --source --disassembler-options=force-thumb
+
+export INCLUDES += -I$(RIOTCPU)/$(CPU)/sdk/inc -I$(RIOTCPU)/$(CPU)/sdk
 
 # include cortex defaults
 include $(RIOTBOARD)/Makefile.include.cortexm_common

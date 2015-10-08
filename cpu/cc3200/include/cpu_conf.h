@@ -30,6 +30,8 @@ extern "C" {
      * @{
      */
 #define CPU_DEFAULT_IRQ_PRIO            INT_PRIORITY_LVL_1
+#define CPU_IRQ_NUMOF                   (8U)
+#define CPU_FLASH_BASE                  FLASH_BASE
 
     /** @} */
 

@@ -45,9 +45,9 @@
 //*****************************************************************************
 
 #include "pin.h"
-#include <inc/hw_memmap.h>
-#include <inc/hw_ocp_shared.h>
-#include <inc/hw_types.h>
+#include "hw_memmap.h"
+#include "hw_ocp_shared.h"
+#include "hw_types.h"
 
 //*****************************************************************************
 // Macros

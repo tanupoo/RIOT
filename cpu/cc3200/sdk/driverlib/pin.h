@@ -51,7 +51,7 @@ extern "C"
 {
 #endif
 
-#include <inc/hw_types.h>
+#include "hw_types.h"
 
 //*****************************************************************************
 // Macros Defining Pins

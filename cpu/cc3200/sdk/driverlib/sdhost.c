@@ -46,11 +46,11 @@
 
 #include "interrupt.h"
 #include "sdhost.h"
-#include <inc/hw_apps_config.h>
-#include <inc/hw_ints.h>
-#include <inc/hw_memmap.h>
-#include <inc/hw_mmchs.h>
-#include <inc/hw_types.h>
+#include "hw_apps_config.h"
+#include "hw_ints.h"
+#include "hw_memmap.h"
+#include "hw_mmchs.h"
+#include "hw_types.h"
 
 //*****************************************************************************
 //
