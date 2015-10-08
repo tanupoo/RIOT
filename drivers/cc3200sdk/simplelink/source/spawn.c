@@ -62,7 +62,7 @@ typedef struct
 
 _SlInternalSpawnCB_t g_SlInternalSpawnCB;
 
-void _SlInternalSpawnTaskEntry()
+void _SlInternalSpawnTaskEntry(void)
 {
     _i16 i;
     _SlInternalSpawnEntry_t* pEntry;

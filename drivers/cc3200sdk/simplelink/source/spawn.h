@@ -43,7 +43,7 @@ extern "C" {
 
 #if (defined (SL_PLATFORM_MULTI_THREADED)) && (!defined (SL_PLATFORM_EXTERNAL_SPAWN))
 
-    extern void _SlInternalSpawnTaskEntry();
+    extern void _SlInternalSpawnTaskEntry(void);
     extern _i16 _SlInternalSpawn(_SlSpawnEntryFunc_t pEntry , void* pValue , _u32 flags);
 
 #undef sl_Spawn

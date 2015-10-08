@@ -728,7 +728,7 @@ extern "C" {
      \par        Example:
      \code       Getting wlan RX statistics:
 
-     void RxStatCollectTwice()
+     void RxStatCollectTwice(void)
      {
      SlGetRxStatResponse_t rxStat;
      _i16 rawSocket;

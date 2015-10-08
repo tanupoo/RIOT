@@ -700,7 +700,7 @@ void osi_Sleep(unsigned int MilliSecs) {
  \note
  \warning
  */
-void osi_ContextSave()
+void osi_ContextSave(void)
 {
 
 }
@@ -711,7 +711,7 @@ void osi_ContextSave()
  \note
  \warning
  */
-void osi_ContextRestore()
+void osi_ContextRestore(void)
 {
 
 }

@@ -699,7 +699,7 @@ extern "C" {
      }
 
      // ping activation
-     void PingTest()
+     void PingTest(void)
      {
      SlPingReport_t report;
      SlPingStartCommand_t pingCommand;
