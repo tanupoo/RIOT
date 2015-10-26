@@ -1,8 +1,42 @@
 #include <stdio.h>
 
+#include "sys/socket.h"
+#include "ccnl-headers.h"
+
+struct ccnl_relay_s theRelay;
+
 int main(void)
 {
+    int i;
+    int udpport = NDN_UDP_PORT;
+
     puts("Basic CCN-Lite example");
+
+    ccnl_core_init();
+
+
+    i = &theRelay.ifs[0];
+    i->mtu = NDN_DEFAULT_MTU;
+    i->fwdalli = 1;
+    i->sock = ccnl_open_udpdev(udpport);
+    if (i->sock < 0)
+        exit(-1);
+    theRelay.ifcount++;
+    fprintf(stderr, "NDN minimalrelay started, listening on UDP port %d\n",
+            udpport);
+
+    inet_aton(strtok(defaultgw,"/"), &sun.ip4.sin_addr);
+    sun.ip4.sin_port = atoi(strtok(NULL, ""));
+    fwd = (struct ccnl_forward_s *) ccnl_calloc(1, sizeof(*fwd));
+    fwd->prefix = ccnl_URItoPrefix(prefix, suite, NULL, NULL);
+    fwd->suite = suite;
+    fwd->face = ccnl_get_face_or_create(&theRelay, 0, &sun.sa, sizeof(sun.ip4));
+    fwd->face->flags |= CCNL_FACE_FLAGS_STATIC;
+    theRelay.fib = fwd;
+
+    ccnl_set_timer(1000000, ccnl_minimalrelay_ageing, &theRelay, 0);
+    ccnl_io_loop(&theRelay);
+
 
     return 0;
 }
