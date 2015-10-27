@@ -3,7 +3,6 @@
 #include "sys/socket.h"
 #include "ccnl-headers.h"
 
-struct ccnl_relay_s theRelay;
 
 int main(void)
 {
@@ -13,7 +12,6 @@ int main(void)
     puts("Basic CCN-Lite example");
 
     ccnl_core_init();
-
 
     i = &theRelay.ifs[0];
     i->mtu = NDN_DEFAULT_MTU;
