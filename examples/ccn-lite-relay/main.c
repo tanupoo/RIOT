@@ -1,5 +1,6 @@
 #include <stdio.h>
 
+#include "msg.h"
 #include "timex.h"
 #include "shell_commands.h"
 #include "sys/socket.h"
@@ -9,6 +10,8 @@
 #include "ccnl-pkt-ndntlv.h"
 #include "ccnl-defs.h"
 
+#define MAIN_QUEUE_SIZE     (8)
+static msg_t _main_msg_queue[MAIN_QUEUE_SIZE];
 //static char addr_str[IPV6_ADDR_MAX_STR_LEN];
 struct ccnl_forward_s fwd;
 
@@ -62,6 +65,7 @@ static int _ccnl_fwd(int argc, char **argv)
 
 int main(void)
 {
+    msg_init_queue(_main_msg_queue, MAIN_QUEUE_SIZE);
     struct ccnl_if_s *i;
     int udpport = NDN_UDP_PORT;
 
