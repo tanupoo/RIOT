@@ -156,7 +156,7 @@ static int _set(netdev2_t *dev, netopt_t opt, void *value, size_t value_len)
                 return -EINVAL;
             }
             else {
-                memcpy(&(cc110x->proto), value, sizeof(gnrc_nettype_t));
+                cc110x->proto = (gnrc_nettype_t) value;
                 return sizeof(gnrc_nettype_t);
             }
             break;
