@@ -140,6 +140,25 @@ endif
 	$(AD)$(OBJCOPY) $(OFLAGS) $(ELFFILE) $(HEXFILE)
 endif
 
+##
+# USE_BETTER_CLI tells which CLI is used.
+# It's supposed to be defined in each Makefile in the application build directory,
+# or, to be specified in the building time (e.g. % USE_BETTER_CLI=1 make native).
+# If it is set to 0 (i.e. USE_BETTER_CLI=0), or is not defined, original CLI is applied.
+# If it is set to 1, better-CLI is enabled.
+# better-CLI supports a tiny history feature for the native environment.
+# It assumes that the terminal is xterm or something like this, and supposes values
+# of the TCap codes because it does not use ncurses to avoid from increasing code size.
+# SHELL_HISTORY_SIZE tells how many history size the shell supports.  The default value is 3.
+# It can be specified in the building time. (e.g. % SHELL_HISTORY_SIZE=10 make native).
+#
+ifdef USE_BETTER_CLI
+CFLAGS += -DUSE_BETTER_CLI=$(USE_BETTER_CLI)
+ifdef SHELL_HISTORY_SIZE
+CFLAGS += -DSHELL_HISTORY_SIZE=$(SHELL_HISTORY_SIZE)
+endif
+endif
+
 ..build-message:
 	@echo "Building application $(APPLICATION) for $(BOARD) w/ MCU $(MCU)."
 
